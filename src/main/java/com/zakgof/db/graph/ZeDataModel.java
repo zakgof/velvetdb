@@ -1,10 +1,7 @@
 package com.zakgof.db.graph;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
@@ -23,7 +20,7 @@ public class ZeDataModel {
   private final Multimap<Class<?>, IMultiGetter<?, ?>> multis;
   private final Multimap<Class<?>, ISingleGetter<?, ?>> singles;
   private final Map<String, Class<?>> entities;
-  private Map<String, ILinkDef<?, ?>> allLinks;
+  private final Map<String, ILinkDef<?, ?>> allLinks;
 
   public ZeDataModel(Map<String, Class<?>> entities, Multimap<Class<?>, ISingleGetter<?, ?>> singles, Multimap<Class<?>, IMultiGetter<?, ?>> multis, Map<String, ILinkDef<?, ?>> allLinks) {
     this.entities = entities;
@@ -52,7 +49,8 @@ public class ZeDataModel {
     private final Map<String, ILinkDef<?, ?>> allLinks = Maps.newHashMap();
 
     public Builder entities(Class<?>... entities) {
-      this.entities.putAll(Arrays.stream(entities).collect(Collectors.toMap(cl -> PersisterUtil.kindOf(cl), cl -> cl)));
+      for(Class<?> clazz : entities)
+        this.entities.put(PersisterUtil.kindOf(clazz), clazz);
       return this;
     }
 
@@ -104,7 +102,7 @@ public class ZeDataModel {
     return entities.keySet();
   }
 
-  public ILinkProvider getLinks(Class<?> clazz) {
+  public ILinkProvider getLinks(final Class<?> clazz) {
     return new ILinkProvider() {
 
       @Override
@@ -119,11 +117,17 @@ public class ZeDataModel {
 
       @Override
       public IGetter<?, ?> get(String edgeKind) {
-        Optional<ISingleGetter<?, ?>> opSingle = singles.get(clazz).stream().filter(l -> l.getKind().equals(edgeKind)).findAny();
-        if (opSingle.isPresent())
-          return opSingle.get();
-        Optional<IMultiGetter<?, ?>> opMulti = multis.get(clazz).stream().filter(l -> l.getKind().equals(edgeKind)).findAny();
-        return opMulti.get();
+        Collection<ISingleGetter<?, ?>> singlecoll = singles.get(clazz);
+        for (ISingleGetter<?, ?> single : singlecoll) {
+          if (single.getKind().equals(edgeKind))
+            return single;
+        }
+        Collection<IMultiGetter<?, ?>> multicoll = multis.get(clazz);
+        for (IMultiGetter<?, ?> multi : multicoll) {
+          if (multi.getKind().equals(edgeKind))
+            return multi;
+        }
+        return null;
       }
     };
 
