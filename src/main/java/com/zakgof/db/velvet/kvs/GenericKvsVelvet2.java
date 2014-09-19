@@ -1,0 +1,202 @@
+package com.zakgof.db.velvet.kvs;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import com.zakgof.db.kvs.ITransactionalKvs;
+import com.zakgof.db.velvet.IRawVelvet;
+
+/**
+ * Hardcoded keys:
+ * 
+ * kvs["@k"] -> Set<String> ["kind1", "kind2", ...] 
+ * kvs["@e"] -> Set<String> ["edgekind1", "edgekind2", ...] 
+ * kvs["@n/kind1"] -> Set<kind1keyclass> [node1key, node2key, ...] 
+ * kvs["@o/edgekind1"] -> Set<linkoriginkeyclass> [linkoriginkey1, linkoriginkey2, ...] 
+ * kvs["@d/edgekind1/ * ORIGKEY"] -> Set<linkdestkeyclass> [linkoriginkey1, linkoriginkey2, ...]
+ * 
+ * kvs[@/kind1/com.kind.class/ * KEY] -> nodevalue
+ * 
+ */
+public class GenericKvsVelvet2 implements IRawVelvet {
+
+  private final ITransactionalKvs kvs;
+
+  private static final String KINDS_KEY = "@k";
+  private static final String EDGEKINDS_KEY = "@e";
+
+  private static String nodesKey(String kind) {
+    return "@n/" + kind;
+  }
+
+  private static String linkOriginsKey(String edgeKind) {
+    return "@o/-" + edgeKind;
+  }
+
+  private static Object linkDestKey(String edgeKind, Object origKey) {
+    return KeyGen.key("@d/" + edgeKind + "/", origKey);
+  }
+
+  private static Object valueKey(String kind, Object key) {
+    return KeyGen.key("@/" + kind + "/" + key.getClass().getName() + "/", key);
+  }
+
+  private Map<String, ?> parameters;
+
+  public GenericKvsVelvet2(ITransactionalKvs kvs, Map<String, ?> parameters) {
+    this.kvs = kvs;
+    this.parameters = parameters;
+  }
+
+  public GenericKvsVelvet2(ITransactionalKvs kvs) {
+    this(kvs, Collections.emptyMap());
+  }
+
+  @Override
+  public <T> T get(Class<T> clazz, String kind, Object key) {
+    Object nodeKey = valueKey(kind, key);
+    return kvs.get(clazz, nodeKey);
+  }
+
+  @Override
+  public void put(String kind, Object key, Object value) {
+
+    addToIndex(KINDS_KEY, kind);
+    addToIndex(nodesKey(kind), key);
+
+    Object nodeKey = valueKey(kind, key);
+    kvs.put(nodeKey, value);
+  }
+
+  @SuppressWarnings("unchecked")
+  private <K> void addToIndex(Object key, K indexentry) {
+    Class<K> keyClass = (Class<K>) indexentry.getClass();
+    Set<K> nodes = getIndex(key, keyClass);
+    if (nodes == null)
+      nodes = new HashSet<>();
+    if (!nodes.contains(indexentry)) {
+      nodes.add(indexentry);
+      saveIndex(key, nodes);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private <K> boolean removeFromIndex(Object key, K indexentry) {
+    Class<K> keyClass = (Class<K>) indexentry.getClass();
+    Set<K> nodes = getIndex(key, keyClass);
+    nodes.remove(indexentry);
+    saveIndex(key, nodes);
+    return !nodes.isEmpty();
+  }
+
+  private <T> Set<T> getIndex(Object key, Class<T> clazz) {
+    T[] index = kvs.get(GenericKvsVelvet2.<T> getArrayClass(clazz), key);
+    if (index == null)
+      return new HashSet<>();
+    return new HashSet<>(Arrays.asList(index)); // TODO optimize
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> Class<T[]> getArrayClass(Class<T> clazz) {
+    try {
+      return (Class<T[]>) Class.forName("[L" + clazz.getName() + ";");
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void saveIndex(Object key, Set<?> index) {
+    if (index.isEmpty())
+      kvs.delete(key);
+    else
+      kvs.put(key, index.toArray());
+  }
+
+  @Override
+  public void delete(String kind, Object key) {
+    Object nodeKey = valueKey(kind, key);
+    kvs.delete(nodeKey);
+
+    if (!removeFromIndex(nodesKey(kind), key))
+      removeFromIndex(KINDS_KEY, kind);
+  }
+
+  @Override
+  public <K> Collection<K> allKeys(String kind, Class<K> keyClass) {
+    return getIndex(nodesKey(kind), keyClass);
+  }
+
+  @Override
+  public <T, K> List<T> links(Class<T> clazz, Class<K> keyClass, Object key, String edgekind, String kind) {
+    List<T> list = new ArrayList<T>();
+    List<K> linkKeys = linkKeys(keyClass, key, edgekind);
+    for (Object linkkey : linkKeys)
+      list.add(get(clazz, kind, linkkey));
+    return list;
+  }
+
+  @Override
+  public <K> List<K> linkKeys(Class<K> clazz, Object key, String edgeKind) {
+    Object indexKey = linkDestKey(edgeKind, key);
+    Set<K> index = getIndex(indexKey, clazz);
+    return new ArrayList<>(index);
+  }
+
+  // /////////////////////////////////////////////////////////////////////
+
+  @Override
+  public void connect(Object key1, Object key2, String edgeKind) {
+    addToIndex(EDGEKINDS_KEY, edgeKind);
+    addToIndex(linkOriginsKey(edgeKind), key1);
+    addToIndex(linkDestKey(edgeKind, key1), key2);
+  }
+
+  @Override
+  public void disconnect(Object key1, Object key2, String edgeKind) {
+    // TODO : locking ?
+    if (!removeFromIndex(linkDestKey(edgeKind, key1), key2))
+      if (!removeFromIndex(linkOriginsKey(edgeKind), key1))
+        removeFromIndex(EDGEKINDS_KEY, edgeKind);
+  }
+
+  @Override
+  public void lock(String lockName, long timeout) {
+    // TODO Auto-generated method stub
+
+  }
+
+  @Override
+  public void unlock(String lockName) {
+    // TODO Auto-generated method stub
+
+  }
+
+  @Override
+  public void rollback() {
+    kvs.rollback();
+  }
+
+  @Override
+  public void commit() {
+    kvs.commit();
+  }
+  
+  public <K> Collection<K> getLinkOriginKeys(String edgeKind, Class<K> keyClass) {
+    return getIndex(linkOriginsKey(edgeKind), keyClass);
+  }
+  
+  /*
+   * Checks:
+   * 
+   * L0 - all nodes are of correct class
+   * 
+   * L1 - all nodes are of correct kind - in-node key is same as node key
+   */
+
+}
