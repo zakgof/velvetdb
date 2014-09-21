@@ -44,40 +44,8 @@ public class KeyGen {
     
   }
 
-  public static Object key(String prefix, Object key) {
+  public static CompositeKey key(String prefix, Object key) {
     return new CompositeKey(prefix, key);
   }
 
-}
-
-class CompositeKey{
-  
-  @Deprecated
-  public CompositeKey() {
-  }
-  
-  private String prefix;
-  private Object key;
-  public CompositeKey(String prefix, Object key) {
-    this.prefix = prefix;
-    this.key = key;
-  }
-  
-  @Override
-  public String toString() {
-    return "(" + prefix + " - " + key + ")";
-  }
-  
-  @Override
-  public boolean equals(Object o) {
-    CompositeKey that = (CompositeKey)o;
-    return key.equals(that.key) && prefix.equals(that.prefix); 
-  }
-  
-  @Override
-  public int hashCode() {
-    return 31 * key.hashCode() + prefix.hashCode();
-  }
-  
-  
 }
