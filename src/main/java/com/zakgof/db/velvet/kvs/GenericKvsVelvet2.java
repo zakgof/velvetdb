@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.zakgof.db.kvs.ITransactionalKvs;
 import com.zakgof.db.velvet.IRawVelvet;
@@ -47,7 +45,7 @@ public class GenericKvsVelvet2 implements IRawVelvet {
     return KeyGen.key("@/" + kind + "/" + key.getClass().getName() + "/", key);
   }
 
-  private Map<String, ?> parameters;
+  private final Map<String, ?> parameters;
 
   public GenericKvsVelvet2(ITransactionalKvs kvs, Map<String, ?> parameters) {
     this.kvs = kvs;
@@ -65,7 +63,7 @@ public class GenericKvsVelvet2 implements IRawVelvet {
   }
 
   @Override
-  public void put(String kind, Object key, Object value) {
+  public <T> void put(String kind, Object key, T value) {
 
     addToIndex(KINDS_KEY, kind);
     addToIndex(nodesKey(kind), key);
@@ -77,9 +75,9 @@ public class GenericKvsVelvet2 implements IRawVelvet {
   @SuppressWarnings("unchecked")
   private <K> void addToIndex(Object key, K indexentry) {
     Class<K> keyClass = (Class<K>) indexentry.getClass();
-    Set<K> nodes = getIndex(key, keyClass);
+    List<K> nodes = getIndex(key, keyClass);
     if (nodes == null)
-      nodes = new HashSet<>();
+      nodes = new ArrayList<>();
     if (!nodes.contains(indexentry)) {
       nodes.add(indexentry);
       saveIndex(key, nodes);
@@ -89,17 +87,15 @@ public class GenericKvsVelvet2 implements IRawVelvet {
   @SuppressWarnings("unchecked")
   private <K> boolean removeFromIndex(Object key, K indexentry) {
     Class<K> keyClass = (Class<K>) indexentry.getClass();
-    Set<K> nodes = getIndex(key, keyClass);
+    List<K> nodes = getIndex(key, keyClass);
     nodes.remove(indexentry);
     saveIndex(key, nodes);
     return !nodes.isEmpty();
   }
 
-  private <T> Set<T> getIndex(Object key, Class<T> clazz) {
+  private <T> List<T> getIndex(Object key, Class<T> clazz) {
     T[] index = kvs.get(GenericKvsVelvet2.<T> getArrayClass(clazz), key);
-    if (index == null)
-      return new HashSet<>();
-    return new HashSet<>(Arrays.asList(index)); // TODO optimize
+    return (index == null) ? new ArrayList<>() : new ArrayList<>(Arrays.asList(index));
   }
 
   @SuppressWarnings("unchecked")
@@ -111,11 +107,11 @@ public class GenericKvsVelvet2 implements IRawVelvet {
     }
   }
 
-  private void saveIndex(Object key, Set<?> index) {
+  private <K> void saveIndex(Object key, List<K> index) {
     if (index.isEmpty())
       kvs.delete(key);
     else
-      kvs.put(key, index.toArray());
+      kvs.put(key, (K[])index.toArray());
   }
 
   @Override
@@ -144,8 +140,8 @@ public class GenericKvsVelvet2 implements IRawVelvet {
   @Override
   public <K> List<K> linkKeys(Class<K> clazz, Object key, String edgeKind) {
     Object indexKey = linkDestKey(edgeKind, key);
-    Set<K> index = getIndex(indexKey, clazz);
-    return new ArrayList<>(index);
+    List<K> index = getIndex(indexKey, clazz);
+    return index;
   }
 
   // /////////////////////////////////////////////////////////////////////

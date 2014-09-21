@@ -40,7 +40,7 @@ class ABiLinkDef<A, B, OneWayLinkType extends ILinkDef<A, B>, BackLinkType exten
   }
 //
 //  @Override
-//  public void disconnectAllByKey(IPersister velvet, Object akey) {
+//  public void disconnectAllByKey(IVelvet velvet, Object akey) {
 //    // TODO !!!
 //    oneWay.disconnectKeys(velvet, akey, akey);    
 //  }
