@@ -61,12 +61,18 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
       int endIndex = indexQuery.p2 == null ? size - 1 : find(indexQuery.p2, indexQuery.inclusive2, true);
       if (endIndex < 0)
         return new ArrayList<>();
-
-      int[] a = new int[endIndex - startIndex];
-
-      for (int i = startIndex + 1; i <= endIndex; i++) {
-        a[i - startIndex - 1] = store.indices.get(i);
+      
+      int recordCount = indexQuery.limit < 0 ? endIndex - startIndex - indexQuery.offset : Math.min(indexQuery.limit, endIndex - startIndex - indexQuery.offset);
+      int[] a = new int[recordCount];
+      
+      if (indexQuery.descending) {
+        for (int i = 0; i < recordCount; i++)
+          a[i] = store.indices.get(endIndex - i);
+      } else {
+        for (int i = 0; i < recordCount; i++)
+          a[i] = store.indices.get(i + indexQuery.offset + startIndex + 1);
       }
+      
       List<B> values = Arrays.stream(a).mapToObj(i -> indexValue(i)).collect(Collectors.toList());
       return values;
     }
@@ -89,7 +95,7 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
     private int find(C p, int i1, int i2, C c1, C c2, boolean inclusive) {
       int i = (i1 + i2) / 2;
       if (i == i1 || i == i2)
-        return i1;// TODO
+        return i1;
       
       C c = indexMetric(i);
       if (greater(p, c, inclusive))
@@ -238,7 +244,7 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
     System.err.println(link.links(velvet, parent, IndexQuery.lessOrEq(2.0f)));                      // 1 2
     
     
-    
+    System.err.println(link.links(velvet, parent, IndexQuery.builder().less(5.0f).descending().limit(35).build()));                   // 2 3 3 5
     
     
 
