@@ -18,10 +18,15 @@ import com.zakgof.serialize.ZeSerializer;
 public class SqlKvs implements ITransactionalKvs, ILockable {
 
   private final Connection connection;
-  private final ISerializer serializer = new ZeSerializer();
+  private final ISerializer serializer;
 
   public SqlKvs(Connection connection) {
-    this.connection = connection;    
+    this(connection, new ZeSerializer());    
+  }
+  
+  public SqlKvs(Connection connection, ISerializer serializer) {
+    this.connection = connection;
+    this.serializer = serializer;
   }
 
   public static void checkDb(Connection connection) {
