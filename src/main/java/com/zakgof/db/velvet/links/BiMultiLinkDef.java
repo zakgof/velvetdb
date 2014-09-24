@@ -32,5 +32,11 @@ public class BiMultiLinkDef<A, B> extends ABiLinkDef<A, B, MultiLinkDef<A, B>, B
   public List<Object> linkKeys(IVelvet velvet, Object key) {
     return oneWay.linkKeys(velvet, key);
   }
+  
+  // TODO : this is code duplication
+  public void addChild(IVelvet velvet, A a, B b) {    
+    velvet.put(b);
+    connect(velvet, a, b);
+  }
 
 }
