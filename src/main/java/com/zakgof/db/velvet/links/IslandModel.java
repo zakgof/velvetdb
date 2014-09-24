@@ -1,10 +1,9 @@
 package com.zakgof.db.velvet.links;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import com.zakgof.db.velvet.IVelvet;
@@ -12,9 +11,9 @@ import com.zakgof.db.velvet.VelvetUtil;
 
 public class IslandModel {
 
-  private final Map<String, Entity<?>> entities;
+  private final Map<String, FetcherEntity<?>> entities;
 
-  public IslandModel(Map<String, Entity<?>> entities) {
+  public IslandModel(Map<String, FetcherEntity<?>> entities) {
     this.entities = entities;
   }
 
@@ -24,46 +23,51 @@ public class IslandModel {
 
   public static class Builder {
 
-    private final Map<String, Entity<?>> entities = new HashMap<String, Entity<?>>();
+    private final Map<String, FetcherEntity<?>> entities = new HashMap<String, FetcherEntity<?>>();
 
-    public <T> EntityBuilder<T> entity(Class<T> clazz) {
-      return new EntityBuilder<T>(clazz);
+    public <T> FetcherEntityBuilder<T> entity(Class<T> clazz) {
+      return new FetcherEntityBuilder<T>(clazz);
     }
 
-    public class EntityBuilder<T> {
+    public class FetcherEntityBuilder<T> {
 
       private final Class<T> clazz;
-      private final Map<String, IMultiLinkDef<T, ?>> multis = new HashMap<>();
-      private final Map<String, ISingleLinkDef<T, ?>> singles = new HashMap<>();
-      private final List<IBiLinkDef<T, ?>> detaches = new ArrayList<>();
+      private final Map<String, IMultiGetter<T, ?>> multis = new HashMap<>();
+      private final Map<String, ISingleGetter<T, ?>> singles = new HashMap<>();
+      // private final List<IBiLinkDef<T, ?>> detaches = new ArrayList<>();
 
-      public EntityBuilder(Class<T> clazz) {
+      public FetcherEntityBuilder(Class<T> clazz) {
         this.clazz = clazz;
       }
+      
+      public <L> FetcherEntityBuilder<T> include(String name, IMultiGetter<T, L> linkDef) {
+        multis.put(name, linkDef);
+        return this;
+      }
 
-      public <L> EntityBuilder<T> include(IMultiLinkDef<T, L> linkDef) {
+      public <L> FetcherEntityBuilder<T> include(IMultiLinkDef<T, L> linkDef) {
         multis.put(linkDef.getKind(), linkDef);
         return this;
       }
 
-      public <L> EntityBuilder<T> include(ISingleLinkDef<T, L> linkDef) {
+      public <L> FetcherEntityBuilder<T> include(ISingleLinkDef<T, L> linkDef) {
         singles.put(linkDef.getKind(), linkDef);
         return this;
       }
 
-      public <P> EntityBuilder<T> detach(IBiLinkDef<T, P> out) {
-        this.detaches.add(out);
-        return this;
-      }
+//      public <P> FetcherEntityBuilder<T> detach(IBiLinkDef<T, P> out) {
+//        this.detaches.add(out);
+//        return this;
+//      }
 
       public Builder done() {
-        Builder.this.addEntity(new Entity<T>(clazz, multis, singles, detaches));
+        Builder.this.addEntity(new FetcherEntity<T>(clazz, multis, singles));
         return Builder.this;
       }
 
     }
 
-    private <T> void addEntity(Entity<T> entity) {
+    private <T> void addEntity(FetcherEntity<T> entity) {
       entities.put(VelvetUtil.kindOf(entity.clazz), entity);
     }
 
@@ -73,26 +77,18 @@ public class IslandModel {
 
   }
 
-  private static class Entity<T> {
+  private static class FetcherEntity<T> {
 
     private final Class<T> clazz;
-    private final Map<String, IMultiLinkDef<T, ?>> multis;
-    private final Map<String, ISingleLinkDef<T, ?>> singles;
-    private final List<? extends IBiLinkDef<T, ?>> detaches;
+    private Map<String, IMultiGetter<T, ?>> multis = new HashMap<>();
+    private Map<String, ISingleGetter<T, ?>> singles = new HashMap<>();
+    // private final List<? extends IBiLinkDef<T, ?>> detaches;
 
-    private Entity(Class<T> clazz, Map<String, IMultiLinkDef<T, ?>> multis, Map<String, ISingleLinkDef<T, ?>> singles, List<? extends IBiLinkDef<T, ?>> detaches) {
+    private FetcherEntity(Class<T> clazz, Map<String, IMultiGetter<T, ?>> multis, Map<String, ISingleGetter<T, ?>> singles) {
       this.clazz = clazz;
       this.multis = multis;
       this.singles = singles;
-      this.detaches = detaches;
-    }
-
-    private Collection<IMultiLinkDef<T, ?>> multies() {
-      return multis.values();
-    }
-
-    private Collection<ISingleLinkDef<T, ?>> singles() {
-      return singles.values();
+      // this.detaches = detaches;
     }
 
   }
@@ -105,28 +101,28 @@ public class IslandModel {
   public <T> DataWrap<T> createWrap(IVelvet velvet, T node) {
     DataWrap.Builder<T> wrapBuilder = new DataWrap.Builder<T>(node);
     @SuppressWarnings("unchecked")
-    Entity<T> entity = (Entity<T>) entities.get(VelvetUtil.kindOf(node.getClass()));
+    FetcherEntity<T> entity = (FetcherEntity<T>) entities.get(VelvetUtil.kindOf(node.getClass()));
     if (entity != null) {
-      for (IMultiLinkDef<T, ?> multi : entity.multies()) {
-        List<?> links = multi.links(velvet, node);
-        List<DataWrap<?>> wrapperLinks = new ArrayList<DataWrap<?>>();
-        for (Object link : links)
-          wrapperLinks.add(createWrap(velvet, link));
-        wrapBuilder.addList(multi.getKind(), wrapperLinks);
+      for (Entry<String, ? extends IMultiGetter<T, ?>> entry : entity.multis.entrySet()) {
+        List<DataWrap<?>> wrappedLinks = entry.getValue().links(velvet, node).stream().map(o -> createWrap(velvet, o)).collect(Collectors.toList());        
+        wrapBuilder.addList(entry.getKey(), wrappedLinks);
       }
-      for (ISingleLinkDef<T, ?> single : entity.singles()) {
-        Object link = single.single(velvet, node);
+      for (Entry<String, ? extends ISingleGetter<T, ?>> entry : entity.singles.entrySet()) {
+        Object link = entry.getValue().single(velvet, node);
         DataWrap<?> childWrap = createWrap(velvet, link);
-        wrapBuilder.add(single.getKind(), childWrap);
+        wrapBuilder.add(entry.getKey(), childWrap);
       }
     }
     return wrapBuilder.build();
   }
 
+  // TODO: reimplement
   public <T> void deleteByKey(IVelvet velvet, Object key, Class<T> clazz) {
+    
+    /*
 
     String kind = VelvetUtil.kindOf(clazz);
-    Entity<?> entity = entities.get(kind);
+    FetcherEntity<?> entity = entities.get(kind);
 
     if (entity != null) {
       for (IMultiLinkDef<?, ?> multi : entity.multies()) {
@@ -153,6 +149,7 @@ public class IslandModel {
       }
     }
     velvet.raw().delete(kind, key);
+    */
   }
 
   public static <T> List<DataWrap<T>> rawRetchAll(IVelvet velvet, Class<T> clazz) {

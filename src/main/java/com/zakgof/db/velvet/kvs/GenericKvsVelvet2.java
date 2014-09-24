@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.zakgof.db.kvs.ITransactionalKvs;
 import com.zakgof.db.velvet.IRawVelvet;
@@ -130,11 +131,8 @@ public class GenericKvsVelvet2 implements IRawVelvet {
 
   @Override
   public <T, K> List<T> links(Class<T> clazz, Class<K> keyClass, Object key, String edgekind, String kind) {
-    List<T> list = new ArrayList<T>();
-    List<K> linkKeys = linkKeys(keyClass, key, edgekind);
-    for (Object linkkey : linkKeys)
-      list.add(get(clazz, kind, linkkey));
-    return list;
+    List<T> childNodes = linkKeys(keyClass, key, edgekind).stream().map(linkkey -> get(clazz, kind, linkkey)).collect(Collectors.toList());
+    return childNodes;
   }
 
   @Override
