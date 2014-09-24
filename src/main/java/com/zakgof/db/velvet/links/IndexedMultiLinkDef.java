@@ -20,13 +20,13 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
   private final IFunction<B, C> metric;
   private final MultiLinkDef<A, B> multiLink;
 
-  public IndexedMultiLinkDef(Class<A> aClazz, Class<B> bClazz, String edgeKind, IFunction<B,C> metric) {
+  public IndexedMultiLinkDef(Class<A> aClazz, Class<B> bClazz, String edgeKind, IFunction<B, C> metric) {
     multiLink = MultiLinkDef.of(aClazz, bClazz, edgeKind);
     this.metric = metric;
   }
 
   public static <A, B, C extends Comparable<C>> IndexedMultiLinkDef<A, B, C> of(Class<A> aClazz, Class<B> bClazz, IFunction<B, C> metrics) {
-    return new IndexedMultiLinkDef<A, B, C>(aClazz, bClazz, VelvetUtil.kindOf(aClazz) + "-" + VelvetUtil.kindOf(bClazz), metrics);
+    return new IndexedMultiLinkDef<A, B, C>(aClazz, bClazz, VelvetUtil.kindOf(aClazz) + "_" + VelvetUtil.kindOf(bClazz), metrics);
   }
 
   private class IndexRequest {
@@ -54,17 +54,17 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
 
     public List<B> run(IndexQuery<C> indexQuery) {
 
-      // range [p1, p2)      
+      // range [p1, p2)
       int startIndex = indexQuery.p1 == null ? -1 : find(indexQuery.p1, indexQuery.inclusive1, false);
       if (startIndex >= size)
         return new ArrayList<>();
       int endIndex = indexQuery.p2 == null ? size - 1 : find(indexQuery.p2, indexQuery.inclusive2, true);
       if (endIndex < 0)
         return new ArrayList<>();
-      
+
       int recordCount = indexQuery.limit < 0 ? endIndex - startIndex - indexQuery.offset : Math.min(indexQuery.limit, endIndex - startIndex - indexQuery.offset);
       int[] a = new int[recordCount];
-      
+
       if (indexQuery.descending) {
         for (int i = 0; i < recordCount; i++)
           a[i] = store.indices.get(endIndex - i);
@@ -72,15 +72,15 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
         for (int i = 0; i < recordCount; i++)
           a[i] = store.indices.get(i + indexQuery.offset + startIndex + 1);
       }
-      
+
       List<B> values = Arrays.stream(a).mapToObj(i -> indexValue(i)).collect(Collectors.toList());
       return values;
     }
 
-    private int find(C c, boolean inclusive, boolean upper) {      
+    private int find(C c, boolean inclusive, boolean upper) {
       if (store.indices.isEmpty())
         return -1;
-      
+
       C c1 = indexMetric(0);
       if (less(c, c1, inclusive))
         return -1;
@@ -96,7 +96,7 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
       int i = (i1 + i2) / 2;
       if (i == i1 || i == i2)
         return i1;
-      
+
       C c = indexMetric(i);
       if (greater(p, c, inclusive))
         return find(p, i, i2, c, c2, inclusive);
@@ -139,9 +139,15 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
 
   }
 
-  public List<B> links(IVelvet velvet, A node, IndexQuery indexQuery) {
-    List<B> collect = new IndexRequest(velvet, node).run(indexQuery);
-    return collect;
+  public List<B> links(IVelvet velvet, A node, IndexQuery<C> indexQuery) {
+    List<B> nodes = new IndexRequest(velvet, node).run(indexQuery);
+    return nodes;
+  }
+
+  // TODO : avoid fetching host node
+  public List<Object> linkKeys(IVelvet velvet, Object key, IndexQuery<C> indexQuery) {
+    List<Object> childKeys = new IndexRequest(velvet, velvet.get(multiLink.getHostClass(), key)).run(indexQuery).stream().map(node -> VelvetUtil.keyOf(node)).collect(Collectors.toList());
+    return childKeys;
   }
 
   @Override
@@ -195,8 +201,22 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
 
   @Override
   public List<B> links(IVelvet velvet, A node) {
-    // TODO Auto-generated method stub
-    return null;
+    return multiLink.links(velvet, node);
+  }
+
+  public IMultiGetter<A, B> indexGetter(final IndexQuery<C> indexQuery) {
+    return new IMultiGetter<A, B>() {
+
+      @Override
+      public List<B> links(IVelvet velvet, A node) {
+        return IndexedMultiLinkDef.this.links(velvet, node, indexQuery);
+      }
+
+      @Override
+      public List<Object> linkKeys(IVelvet velvet, Object key) {
+        return IndexedMultiLinkDef.this.linkKeys(velvet, key, indexQuery);
+      }
+    };
   }
 
   public static void main(String[] args) {
@@ -205,48 +225,44 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
 
     KK parent = new KK();
     velvet.put(parent);
-    
+
     IndexedMultiLinkDef<KK, T1, Float> link = IndexedMultiLinkDef.of(KK.class, T1.class, kk -> kk.getM());
-    
+
     T1 t1 = new T1("one", 1.0f);
     T1 t2 = new T1("two", 2.0f);
     T1 t3 = new T1("three", 3.0f);
     T1 t4 = new T1("four", 3.0f);
     T1 t5 = new T1("five", 5.0f);
-    
+
     velvet.put(t1);
     velvet.put(t2);
     velvet.put(t3);
     velvet.put(t4);
     velvet.put(t5);
-    
+
     link.connect(velvet, parent, t1);
     link.connect(velvet, parent, t5);
     link.connect(velvet, parent, t3);
     link.connect(velvet, parent, t4);
     link.connect(velvet, parent, t2);
-    
-    
-    System.err.println(link.links(velvet, parent, IndexQuery.range(-10.0f, true, 3.5f, false)));    // 1 2 3 3
-    System.err.println(link.links(velvet, parent, IndexQuery.range(-10.0f, true, 3.0f, false)));    // 1 2
-    System.err.println(link.links(velvet, parent, IndexQuery.range(-10.0f, true, 3.0f, true)));     // 1 2 3 3
-    System.err.println(link.links(velvet, parent, IndexQuery.range(2.0f, true, 30.0f, true)));      // 2 3 3 5
-    System.err.println(link.links(velvet, parent, IndexQuery.range(2.0f, false, 30.0f, true)));     // 3 3 5
-    System.err.println(link.links(velvet, parent, IndexQuery.range(2.5f, false, 30.0f, true)));     // 3 3 5
-    System.err.println(link.links(velvet, parent, IndexQuery.range(2.5f, true, 30.0f, true)));      // 3 3 5
-    System.err.println(link.links(velvet, parent, IndexQuery.range(3.0f, true, 5.0f, false)));      // 3 3
-    System.err.println(link.links(velvet, parent, IndexQuery.range(3.0f, false, 5.0f, true)));      // 5
-    System.err.println(link.links(velvet, parent, IndexQuery.greater(3.5f)));                       // 5
-    System.err.println(link.links(velvet, parent, IndexQuery.greater(2.0f)));                       // 3 3 5
-    System.err.println(link.links(velvet, parent, IndexQuery.greaterOrEq(3.5f)));                   // 5
-    System.err.println(link.links(velvet, parent, IndexQuery.greaterOrEq(2.0f)));                   // 2 3 3 5
-    System.err.println(link.links(velvet, parent, IndexQuery.less(2.0f)));                          // 1
-    System.err.println(link.links(velvet, parent, IndexQuery.lessOrEq(2.0f)));                      // 1 2
-    
-    
-    System.err.println(link.links(velvet, parent, IndexQuery.builder().less(5.0f).descending().limit(35).build()));                   // 2 3 3 5
-    
-    
+
+    System.err.println(link.links(velvet, parent, IndexQuery.range(-10.0f, true, 3.5f, false))); // 1 2 3 3
+    System.err.println(link.links(velvet, parent, IndexQuery.range(-10.0f, true, 3.0f, false))); // 1 2
+    System.err.println(link.links(velvet, parent, IndexQuery.range(-10.0f, true, 3.0f, true))); // 1 2 3 3
+    System.err.println(link.links(velvet, parent, IndexQuery.range(2.0f, true, 30.0f, true))); // 2 3 3 5
+    System.err.println(link.links(velvet, parent, IndexQuery.range(2.0f, false, 30.0f, true))); // 3 3 5
+    System.err.println(link.links(velvet, parent, IndexQuery.range(2.5f, false, 30.0f, true))); // 3 3 5
+    System.err.println(link.links(velvet, parent, IndexQuery.range(2.5f, true, 30.0f, true))); // 3 3 5
+    System.err.println(link.links(velvet, parent, IndexQuery.range(3.0f, true, 5.0f, false))); // 3 3
+    System.err.println(link.links(velvet, parent, IndexQuery.range(3.0f, false, 5.0f, true))); // 5
+    System.err.println(link.links(velvet, parent, IndexQuery.greater(3.5f))); // 5
+    System.err.println(link.links(velvet, parent, IndexQuery.greater(2.0f))); // 3 3 5
+    System.err.println(link.links(velvet, parent, IndexQuery.greaterOrEq(3.5f))); // 5
+    System.err.println(link.links(velvet, parent, IndexQuery.greaterOrEq(2.0f))); // 2 3 3 5
+    System.err.println(link.links(velvet, parent, IndexQuery.less(2.0f))); // 1
+    System.err.println(link.links(velvet, parent, IndexQuery.lessOrEq(2.0f))); // 1 2
+
+    System.err.println(link.links(velvet, parent, IndexQuery.<Float>builder().less(5.0f).descending().limit(35).build())); // 2 3 3 5
 
   }
 }
@@ -259,7 +275,7 @@ class T1 extends AutoKeyed {
     this.s = s;
     this.m = m;
   }
-  
+
   public float getM() {
     return m;
   }
