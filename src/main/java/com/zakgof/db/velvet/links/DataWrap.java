@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zakgof.db.velvet.VelvetUtil;
+
 public class DataWrap<T> {
 
   public static class Builder<T> {
@@ -63,6 +65,13 @@ public class DataWrap<T> {
   @SuppressWarnings("unchecked")
   public <L> L singleNode(SingleLinkDef<T, L> linkDef) {
     return (L)singles.get(linkDef.getKind()).getNode();
+  }
+  
+  @Override
+  public String toString() {
+    return " " + node + 
+        singles.entrySet().stream().reduce("", (s, e) -> s + e.getKey() + " [" + VelvetUtil.keyOf(e.getValue()) + " ]" , (s1, s2) -> s1 + s2) +
+        multis.entrySet().stream().reduce("", (s, e) -> s + e.getKey() + " [" + e.getValue().size() + " ]" , (s1, s2) -> s1 + s2);
   }
 
 }
