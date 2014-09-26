@@ -16,7 +16,7 @@ public class ZeDataModel {
   private final Multimap<Class<?>, IMultiLinkDef<?, ?>> multis;
   private final Multimap<Class<?>, ISingleLinkDef<?, ?>> singles;
   private final Map<String, Class<?>> entities;
-  private Map<String, ILinkDef<?, ?>> allLinks;
+  private final Map<String, ILinkDef<?, ?>> allLinks;
 
   public ZeDataModel(Map<String, Class<?>> entities, Multimap<Class<?>, ISingleLinkDef<?, ?>> singles, Multimap<Class<?>, IMultiLinkDef<?, ?>> multis, Map<String, ILinkDef<?, ?>> allLinks) {
     this.entities = entities;
@@ -58,6 +58,12 @@ public class ZeDataModel {
     }
 
     public Builder link(SingleLinkDef<?, ?> link) {
+      putLink(link);
+      putGetter(link);
+      return this;
+    }
+    
+    public Builder link(IndexedMultiLinkDef<?, ?, ?> link) {
       putLink(link);
       putGetter(link);
       return this;
