@@ -20,12 +20,36 @@ public class LinkUtil {
       return new SingleToMultiAdapter<A, B>((ISingleLinkDef<A, B>) linkDef);
     return null;
   }
+  
+  public static <A, B> ISingleGetter<A, B> toSingleGetter(final IMultiGetter<A, B> multi) {
+    return new ISingleGetter<A, B>() {
+      @Override
+      public B single(IVelvet velvet, A node) {
+        List<B> links = multi.links(velvet, node);
+        if (links.isEmpty())
+          return null;
+        if (links.size() == 1)
+          return links.get(0);
+        throw new RuntimeException("Multigetter return more than 1 entry and cannot be adapted to singlegetter " + links);
+      }
+
+      @Override
+      public Object singleKey(IVelvet velvet, Object key) {
+        List<?> linkKeys = multi.linkKeys(velvet, key);
+        if (linkKeys.isEmpty())
+          return null;
+        if (linkKeys.size() == 1)
+          return linkKeys.get(0);
+        throw new RuntimeException("Multigetter return more than 1 entry and cannot be adapted to singlegetter " + linkKeys);
+      }
+    };
+  }
 
   private static class SingleToMultiAdapter<A, B> implements IMultiGetter<A, B> {
 
-    private final ISingleLinkDef<A, B> single;
+    private final ISingleGetter<A, B> single;
 
-    public SingleToMultiAdapter(ISingleLinkDef<A, B> single) {
+    public SingleToMultiAdapter(ISingleGetter<A, B> single) {
       this.single = single;
     }
 

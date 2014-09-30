@@ -40,8 +40,13 @@ public class IslandModel {
         this.clazz = clazz;
       }
       
-      public <L> FetcherEntityBuilder<T> include(String name, IMultiGetter<T, L> linkDef) {
-        multis.put(name, linkDef);
+      public <L> FetcherEntityBuilder<T> include(String name, IMultiGetter<T, L> getter) {
+        multis.put(name, getter);
+        return this;
+      }
+      
+      public <L> FetcherEntityBuilder<T> include(String name, ISingleGetter<T, L> getter) {
+        singles.put(name, getter);
         return this;
       }
 
