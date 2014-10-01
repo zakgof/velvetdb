@@ -19,13 +19,15 @@ public class SingleLinkDef<A, B> extends ALinkDef<A, B> implements ISingleLinkDe
     return new SingleLinkDef<A, B>(aClazz, bClazz, edgeKind);
   }
 
+  @Override
   public B single(IVelvet velvet, A node) {
     Object bkey = singleKey(velvet, VelvetUtil.keyOf(node));
     return bkey == null ? null : velvet.get(bClazz, bkey);
   }
 
+  @Override
   public Object singleKey(IVelvet velvet, Object key) {
-    List<Object> keys = velvet.raw().linkKeys(Object.class, key, edgeKind);
+    List<?> keys = velvet.raw().linkKeys(VelvetUtil.keyClassOf(getChildClass()), key, edgeKind);
     if (keys.isEmpty())
       return null;
     if (keys.size() != 1)
