@@ -164,6 +164,8 @@ public class IslandModel {
 
   public <T> DataWrap<T> getByKey(IVelvet velvet, Object key, Class<T> clazz) {
     T node = velvet.get(clazz, key);
+    if (node == null)
+      return null;
     return createWrap(velvet, node);
   }
 
