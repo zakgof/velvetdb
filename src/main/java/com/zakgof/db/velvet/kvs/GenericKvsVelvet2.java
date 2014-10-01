@@ -20,7 +20,7 @@ import com.zakgof.db.velvet.IRawVelvet;
  * kvs["@o/edgekind1"] -> Set<linkoriginkeyclass> [linkoriginkey1, linkoriginkey2, ...] 
  * kvs["@d/edgekind1/ * ORIGKEY"] -> Set<linkdestkeyclass> [linkoriginkey1, linkoriginkey2, ...]
  * 
- * kvs[@/kind1/com.kind.class/ * KEY] -> nodevalue
+ * kvs[@/kind1/ * KEY] -> nodevalue
  * 
  */
 public class GenericKvsVelvet2 implements IRawVelvet {
@@ -35,7 +35,7 @@ public class GenericKvsVelvet2 implements IRawVelvet {
   }
 
   private static String linkOriginsKey(String edgeKind) {
-    return "@o/-" + edgeKind;
+    return "@o/" + edgeKind;
   }
 
   private static Object linkDestKey(String edgeKind, Object origKey) {
@@ -43,7 +43,7 @@ public class GenericKvsVelvet2 implements IRawVelvet {
   }
 
   private static Object valueKey(String kind, Object key) {
-    return KeyGen.key("@/" + kind + "/" + key.getClass().getName() + "/", key);
+    return KeyGen.key("@/" + kind + "/", key);
   }
 
   private final Map<String, ?> parameters;
