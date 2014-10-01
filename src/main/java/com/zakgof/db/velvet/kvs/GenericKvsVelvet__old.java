@@ -24,19 +24,19 @@ import com.zakgof.db.velvet.IRawVelvet;
  *  <p> every edge kind:   nodeKey -> [@@@] -> edgeKind
  *
  */
-public class GenericKvsVelvetX implements IRawVelvet {
+public class GenericKvsVelvet__old implements IRawVelvet {
   
   
   private final ITransactionalKvs kvs;
 
   private Map<String, ?> parameters;
   
-  public GenericKvsVelvetX(ITransactionalKvs kvs, Map<String, ?> parameters) {
+  public GenericKvsVelvet__old(ITransactionalKvs kvs, Map<String, ?> parameters) {
     this.kvs = kvs;
     this.parameters = parameters;
   }
   
-  public GenericKvsVelvetX(ITransactionalKvs kvs) {
+  public GenericKvsVelvet__old(ITransactionalKvs kvs) {
     this(kvs, Collections.emptyMap());
   }
 

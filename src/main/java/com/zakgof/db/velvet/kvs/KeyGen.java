@@ -1,9 +1,12 @@
 package com.zakgof.db.velvet.kvs;
 
-import java.io.Serializable;
-import java.util.Arrays;
+import java.io.UnsupportedEncodingException;
+
+import com.zakgof.serialize.ZeSerializer;
 
 public class KeyGen {
+  
+  /*
 
   public static Serializable key(String str, byte[] bytes) {
     return new Key(str, bytes);
@@ -43,9 +46,27 @@ public class KeyGen {
     }
     
   }
+  
+  */
 
-  public static CompositeKey key(String prefix, Object key) {
-    return new CompositeKey(prefix, key);
+  public static byte[] key(String prefix, Object key) {    
+    try {
+      ZeSerializer serializer = new ZeSerializer();
+      byte[] prefixBytes = prefix.getBytes("utf-8");
+      byte[] bodyBytes = serializer.serialize(key);
+      return concat(prefixBytes, bodyBytes);
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException("string to bytes error"); // TODO
+    }        
+  }
+  
+  private static byte[] concat(byte[] a, byte[] b) {
+    int aLen = a.length;
+    int bLen = b.length;
+    byte[] c = new byte[aLen + bLen];
+    System.arraycopy(a, 0, c, 0, aLen);
+    System.arraycopy(b, 0, c, aLen, bLen);
+    return c;
   }
 
 }
