@@ -36,11 +36,11 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
     private final IndexStorageRecord store;
     private final Map<Integer, B> childrenCache;
     private final A node;
-    private int size;
+    private final int size;
 
     public IndexRequest(IVelvet velvet, A node) {
       this.velvet = velvet;
-      this.linkKeys = velvet.raw().linkKeys(VelvetUtil.keyClassOf(getHostClass()), VelvetUtil.keyOf(node), multiLink.getKind());
+      this.linkKeys = velvet.raw().linkKeys(VelvetUtil.keyClassOf(getChildClass()), VelvetUtil.keyOf(node), multiLink.getKind());
       List<IndexStorageRecord> links = velvet.links(IndexStorageRecord.class, node, getIndexLinkName());
       this.store = links.isEmpty() ? new IndexStorageRecord() : links.get(0); // TODO
       this.size = store.indices.size();

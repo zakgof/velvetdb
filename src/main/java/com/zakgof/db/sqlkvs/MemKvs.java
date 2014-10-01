@@ -5,28 +5,42 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.zakgof.db.kvs.ITransactionalKvs;
 import com.zakgof.serialize.ZeSerializer;
+import com.zakgof.tools.Buffer;
+import com.zakgof.tools.io.SimpleInputStream;
+import com.zakgof.tools.io.SimpleOutputStream;
 
 public class MemKvs implements ITransactionalKvs {
   
-  private final Map<Object, Object> values = new HashMap<>();
+  private final Map<Buffer, Buffer> values = new HashMap<>();
 
   @Override
   public <T> T get(Class<T> clazz, Object key) {
-    Object object = values.get(key);
-    return (T)object;
+    ZeSerializer serializer = new ZeSerializer();
+    Buffer keyBuffer = new Buffer(serializer.serialize(key));
+    Buffer valueBuffer = values.get(keyBuffer);
+    if (valueBuffer == null)
+      return null;
+    T value = serializer.deserialize(valueBuffer.stream(), clazz);
+    return value;
   }
 
   @Override
   public <T> void put(Object key, T value) {
-    values.put(key, value);
+    ZeSerializer serializer = new ZeSerializer();
+    Buffer keyBuffer = new Buffer(serializer.serialize(key));
+    Buffer valueBuffer = new Buffer(serializer.serialize(value));
+    values.put(keyBuffer, valueBuffer);
   }
 
   @Override
   public void delete(Object key) {
-    values.remove(key);
+    ZeSerializer serializer = new ZeSerializer();
+    Buffer keyBuffer = new Buffer(serializer.serialize(key));
+    values.remove(keyBuffer);
   }
 
   @Override
@@ -40,16 +54,25 @@ public class MemKvs implements ITransactionalKvs {
   }
 
   public void persist(OutputStream stream) throws IOException {
-    ZeSerializer serializer = new ZeSerializer();
-    serializer.serialize(values, stream);
+    SimpleOutputStream sos = new SimpleOutputStream(stream);
+    sos.write(values.size());
+    for (Entry<Buffer, Buffer> entry : values.entrySet()) {
+      sos.write(entry.getKey().bytes());
+      sos.write(entry.getValue().bytes());
+    }    
     stream.flush();
     stream.close();
   }
 
-  public void load(InputStream is) {
-    ZeSerializer serializer = new ZeSerializer();
-    Map<?, ?> map = serializer.deserialize(is, Map.class);
-    this.values.putAll(map);    
+  public void load(InputStream is) throws IOException {
+    SimpleInputStream sis = new SimpleInputStream(is);
+    int size = sis.readInt();
+    for (int i=0; i<size; i++) {
+      byte[] keyBytes = sis.readBytes();
+      byte[] valueBytes = sis.readBytes();
+      values.put(new Buffer(keyBytes), new Buffer(valueBytes));
+    }
+    sis.close();
   }
 
 }

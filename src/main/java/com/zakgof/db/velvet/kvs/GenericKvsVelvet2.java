@@ -1,5 +1,6 @@
 package com.zakgof.db.velvet.kvs;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -75,22 +76,22 @@ public class GenericKvsVelvet2 implements IRawVelvet {
 
   @SuppressWarnings("unchecked")
   private <K> void addToIndex(Object key, K indexentry) {
-    Class<K> keyClass = (Class<K>) indexentry.getClass();
-    List<K> nodes = getIndex(key, keyClass);
+    Class<K> indexEntryClazz = (Class<K>) indexentry.getClass();
+    List<K> nodes = getIndex(key, indexEntryClazz);
     if (nodes == null)
       nodes = new ArrayList<>();
     if (!nodes.contains(indexentry)) {
       nodes.add(indexentry);
-      saveIndex(key, nodes);
+      saveIndex(key, nodes, indexEntryClazz);
     }
   }
 
   @SuppressWarnings("unchecked")
   private <K> boolean removeFromIndex(Object key, K indexentry) {
-    Class<K> keyClass = (Class<K>) indexentry.getClass();
-    List<K> nodes = getIndex(key, keyClass);
+    Class<K> indexEntryClazz = (Class<K>) indexentry.getClass();
+    List<K> nodes = getIndex(key, indexEntryClazz);
     nodes.remove(indexentry);
-    saveIndex(key, nodes);
+    saveIndex(key, nodes, indexEntryClazz);
     return !nodes.isEmpty();
   }
 
@@ -108,11 +109,12 @@ public class GenericKvsVelvet2 implements IRawVelvet {
     }
   }
 
-  private <K> void saveIndex(Object key, List<K> index) {
+  @SuppressWarnings("unchecked")
+  private <K> void saveIndex(Object key, List<K> index, Class<K> clazz) {
     if (index.isEmpty())
       kvs.delete(key);
     else
-      kvs.put(key, (K[])index.toArray());
+      kvs.put(key, index.toArray((K[])Array.newInstance(clazz, 0)));
   }
 
   @Override
