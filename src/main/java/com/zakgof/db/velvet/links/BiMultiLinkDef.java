@@ -7,20 +7,28 @@ import java.util.List;
 import com.zakgof.db.velvet.IVelvet;
 
 public class BiMultiLinkDef<A, B> extends ABiLinkDef<A, B, MultiLinkDef<A, B>, BiParentLinkDef<B, A>> implements IMultiLinkDef<A, B> {
-  public BiMultiLinkDef(Class<A> aClazz, Class<B> bClazz, String edgeKind) {
-    super(new MultiLinkDef<>(aClazz, bClazz, edgeKind));
+  
+  protected BiMultiLinkDef(Class<A> aClazz, Class<B> bClazz, String edgeKind, String backLinkKind) {
+    this(new MultiLinkDef<>(aClazz, bClazz, edgeKind), backLinkKind);        
+  }
+
+  protected BiMultiLinkDef(MultiLinkDef<A, B> oneWay, String backLinkKind) {
+    super(oneWay);
+    BiParentLinkDef<B, A> backLink = new BiParentLinkDef<B, A>(oneWay.getChildClass(), oneWay.getHostClass(), backLinkKind);
+    setBackLink(backLink);
+    backLink.setBackLink(this);
   }
 
   public static <A, B> BiMultiLinkDef<A, B> of(Class<A> aClazz, Class<B> bClazz) {
     return of(aClazz, bClazz, kindOf(aClazz) + "-" + kindOf(bClazz), kindOf(bClazz) + "-" + kindOf(aClazz));
   }
 
-  public static <A, B> BiMultiLinkDef<A, B> of(Class<A> aClazz, Class<B> bClazz, String edgeKind, String backLinkKind) {
-    BiMultiLinkDef<A, B> link = new BiMultiLinkDef<A, B>(aClazz, bClazz, edgeKind);
-    BiParentLinkDef<B, A> backLink = new BiParentLinkDef<B, A>(bClazz, aClazz, backLinkKind);
-    link.setBackLink(backLink);
-    backLink.setBackLink(link);
-    return link;
+  public static <A, B> BiMultiLinkDef<A, B> of(Class<A> aClazz, Class<B> bClazz, String edgeKind, String backLinkKind) {    
+    return new BiMultiLinkDef<A, B>(aClazz, bClazz, edgeKind, backLinkKind);
+  }
+  
+  public static <A, B> BiMultiLinkDef<A, B> of(MultiLinkDef<A, B> oneWay, String backLinkKind) {    
+    return new BiMultiLinkDef<A, B>(oneWay, backLinkKind);
   }
 
   @Override

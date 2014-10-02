@@ -1,4 +1,4 @@
-package com.zakgof.db.velvet.links;
+package com.zakgof.db.velvet.links.index;
 
 import java.util.ArrayList;
 import java.util.List;

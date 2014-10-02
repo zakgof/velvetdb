@@ -1,4 +1,4 @@
-package com.zakgof.db.velvet.links;
+package com.zakgof.db.velvet.links.index;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,15 +13,18 @@ import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.Velvet;
 import com.zakgof.db.velvet.VelvetUtil;
 import com.zakgof.db.velvet.kvs.GenericKvsVelvet2;
+import com.zakgof.db.velvet.links.IMultiGetter;
+import com.zakgof.db.velvet.links.LinkUtil;
+import com.zakgof.db.velvet.links.MultiLinkDef;
+import com.zakgof.db.velvet.links.index.IndexQuery.Level;
 import com.zakgof.tools.generic.IFunction;
 
-public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMultiLinkDef<A, B> {
+public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLinkDef<A, B> implements IIndexedGetter<A, B, C> {
 
   private final IFunction<B, C> metric;
-  private final MultiLinkDef<A, B> multiLink;
 
   public IndexedMultiLinkDef(Class<A> aClazz, Class<B> bClazz, String edgeKind, IFunction<B, C> metric) {
-    multiLink = MultiLinkDef.of(aClazz, bClazz, edgeKind);
+    super(aClazz, bClazz, edgeKind);
     this.metric = metric;
   }
 
@@ -40,7 +43,7 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
 
     public IndexRequest(IVelvet velvet, A node) {
       this.velvet = velvet;
-      this.linkKeys = velvet.raw().linkKeys(VelvetUtil.keyClassOf(getChildClass()), VelvetUtil.keyOf(node), multiLink.getKind());
+      this.linkKeys = velvet.raw().linkKeys(VelvetUtil.keyClassOf(getChildClass()), VelvetUtil.keyOf(node), getKind());
       List<IndexStorageRecord> links = velvet.links(IndexStorageRecord.class, node, getIndexLinkName());
       this.store = links.isEmpty() ? new IndexStorageRecord() : links.get(0); // TODO
       this.size = store.indices.size();
@@ -49,16 +52,16 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
     }
 
     private String getIndexLinkName() {
-      return "@idx/cool/" + multiLink.getKind();
+      return "@idx/cool/" + getKind();
     }
 
-    public List<B> run(IndexQuery<C> indexQuery) {
+    public List<B> run(IndexQuery<B, C> indexQuery) {
 
       // range [p1, p2)
-      int startIndex = indexQuery.p1 == null ? -1 : find(indexQuery.p1, indexQuery.inclusive1, false);
+      int startIndex = find(indexQuery.l1, false);
       if (startIndex >= size)
         return new ArrayList<>();
-      int endIndex = indexQuery.p2 == null ? size - 1 : find(indexQuery.p2, indexQuery.inclusive2, true);
+      int endIndex = find(indexQuery.l2, true);
       if (endIndex < 0)
         return new ArrayList<>();
 
@@ -77,19 +80,46 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
       return values;
     }
 
-    private int find(C c, boolean inclusive, boolean upper) {
+    private int find(IndexQuery.Level<B, C> l, boolean upper) {
+      
+      if (l == null)
+         return upper ? size - 1 : -1;
+      
+      if (l.node != null)
+        return findIndexByNode(l, upper);        
+      
+      
       if (store.indices.isEmpty())
         return -1;
-
+      
       C c1 = indexMetric(0);
-      if (less(c, c1, inclusive))
+      if (less(l.p, c1, l.inclusive ^ upper))
         return -1;
 
       C c2 = indexMetric(size - 1);
-      if (greater(c, c2, inclusive))
+      if (greater(l.p, c2, l.inclusive ^ !upper))
         return size - 1;
 
-      return find(c, 0, size - 1, c1, c2, inclusive ^ !upper);
+      return find(l.p, 0, size - 1, c1, c2, l.inclusive ^ !upper);
+    }
+
+    private int findIndexByNode(IndexQuery.Level<B, C> l, boolean upper) {
+      int low = find(new Level<B, C>(metric.get(l.node), true), false);
+      if (low >= size)
+        throwNoNode();
+      int high = find(new Level<B, C>(metric.get(l.node), true), true);
+      if (high < 0)
+        throwNoNode();
+      Object key = VelvetUtil.keyOf(l.node);
+      for (int i = low + 1; i<=high; i++)
+        if (VelvetUtil.keyOf(indexValue(store.indices.get(i))).equals(key))
+          return i + (upper ? -1 : 1);
+      throwNoNode();
+      return -1;
+    }
+
+    private void throwNoNode() {
+      throw new RuntimeException("Node specified in index query does not exist");      
     }
 
     private int find(C p, int i1, int i2, C c1, C c2, boolean inclusive) {
@@ -129,7 +159,7 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
 
     public void add(B b) {
       C c = metric.get(b);
-      int index = find(c, false, true);
+      int index = find(new Level<>(c, false), true);
       store.indices.add(index + 1, size);
       boolean needLink = (store.getKey() == null);
       velvet.put(store);
@@ -139,72 +169,49 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
 
   }
 
-  public List<B> links(IVelvet velvet, A node, IndexQuery<C> indexQuery) {
+  public List<B> links(IVelvet velvet, A node, IndexQuery<B, C> indexQuery) {
     List<B> nodes = new IndexRequest(velvet, node).run(indexQuery);
     return nodes;
   }
 
   // TODO : avoid fetching host node
-  public List<Object> linkKeys(IVelvet velvet, Object key, IndexQuery<C> indexQuery) {
-    List<Object> childKeys = new IndexRequest(velvet, velvet.get(multiLink.getHostClass(), key)).run(indexQuery).stream().map(node -> VelvetUtil.keyOf(node)).collect(Collectors.toList());
+  public List<Object> linkKeys(IVelvet velvet, Object key, IndexQuery<B, C> indexQuery) {
+    List<Object> childKeys = new IndexRequest(velvet, velvet.get(getHostClass(), key)).run(indexQuery).stream().map(node -> VelvetUtil.keyOf(node)).collect(Collectors.toList());
     return childKeys;
   }
 
   @Override
-  public List<Object> linkKeys(IVelvet velvet, Object key) {
-    return multiLink.linkKeys(velvet, key);
-  }
-
-  @Override
   public String toString() {
-    return "indexed " + multiLink;
+    return "indexed " + super.toString();
   }
-
-  @Override
-  public String getKind() {
-    return multiLink.getKind();
-  }
-
-  @Override
-  public Class<A> getHostClass() {
-    return multiLink.getHostClass();
-  }
-
-  @Override
-  public Class<B> getChildClass() {
-    return multiLink.getChildClass();
-  }
-
+ 
   @Override
   public void connect(IVelvet velvet, A a, B b) {
-    multiLink.connect(velvet, a, b);
+    super.connect(velvet, a, b);
     new IndexRequest(velvet, a).add(b);
   }
 
   @Override
   public void connectKeys(IVelvet velvet, Object akey, Object bkey) {
-    // TODO Auto-generated method stub
+    // TODO
 
   }
 
   @Override
   public void disconnect(IVelvet velvet, A a, B b) {
-    // TODO Auto-generated method stub
+ // TODO
+    //    super.disconnect(velvet, a, b);
+    //    new IndexRequest(velvet, a).remove(b);
 
   }
 
   @Override
   public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
-    // TODO Auto-generated method stub
+    // TODO
 
   }
 
-  @Override
-  public List<B> links(IVelvet velvet, A node) {
-    return multiLink.links(velvet, node);
-  }
-
-  public IMultiGetter<A, B> indexGetter(final IndexQuery<C> indexQuery) {
+  public IMultiGetter<A, B> indexGetter(final IndexQuery<B, C> indexQuery) {
     return new IMultiGetter<A, B>() {
 
       @Override
@@ -231,7 +238,7 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
     T1 t1 = new T1("one", 1.0f);
     T1 t2 = new T1("two", 2.0f);
     T1 t3 = new T1("three", 3.0f);
-    T1 t4 = new T1("four", 3.0f);
+    T1 t4 = new T1("three-o", 3.0f);
     T1 t5 = new T1("five", 5.0f);
 
     velvet.put(t1);
@@ -245,7 +252,7 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
     link.connect(velvet, parent, t3);
     link.connect(velvet, parent, t4);
     link.connect(velvet, parent, t2);
-
+    
     System.err.println(link.links(velvet, parent, IndexQuery.range(-10.0f, true, 3.5f, false))); // 1 2 3 3
     System.err.println(link.links(velvet, parent, IndexQuery.range(-10.0f, true, 3.0f, false))); // 1 2
     System.err.println(link.links(velvet, parent, IndexQuery.range(-10.0f, true, 3.0f, true))); // 1 2 3 3
@@ -261,10 +268,20 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> implements IMult
     System.err.println(link.links(velvet, parent, IndexQuery.greaterOrEq(2.0f))); // 2 3 3 5
     System.err.println(link.links(velvet, parent, IndexQuery.less(2.0f))); // 1
     System.err.println(link.links(velvet, parent, IndexQuery.lessOrEq(2.0f))); // 1 2
-
-    System.err.println(link.links(velvet, parent, IndexQuery.<Float>builder().less(5.0f).descending().limit(35).build())); // 2 3 3 5
-
+    System.err.println(link.links(velvet, parent, IndexQuery.<T1, Float>builder().less(5.0f).descending().limit(35).build())); // 3 3 2 1
+    
+    
+    
+    T1 t = LinkUtil.toSingleGetter(link.indexGetter(IndexQuery.<T1, Float>builder().descending().limit(1).build())).single(velvet, parent);
+    while(t != null) {
+      System.err.println("sequence : " + t);
+      t = LinkUtil.toSingleGetter(link.indexGetter(IndexQuery.<T1, Float>builder().lessO(t).descending().limit(1).build())).single(velvet, parent);      
+    }
+    
+    
+    
   }
+
 }
 
 class T1 extends AutoKeyed {

@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.links.index.IIndexedGetter;
+import com.zakgof.db.velvet.links.index.IndexQuery;
 
 public class LinkUtil {
 
@@ -66,5 +68,25 @@ public class LinkUtil {
     }
 
   }
+  
+  public static <A, B, C extends Comparable<C>> IMultiGetter<A, B> toMultiGetter(final IIndexedGetter<A, B, C> indexedGetter, final IndexQuery<B, C> indexQuery) {
+    return new IMultiGetter<A, B>() {
+
+      @Override
+      public List<B> links(IVelvet velvet, A node) {
+        return indexedGetter.links(velvet, node, indexQuery);
+      }
+
+      @Override
+      public List<Object> linkKeys(IVelvet velvet, Object key) {
+        return indexedGetter.linkKeys(velvet, key, indexQuery);
+      }
+    };
+  }
+  
+  public static <A, B, C extends Comparable<C>> ISingleGetter<A, B> toSingleGetter(final IIndexedGetter<A, B, C> indexedGetter, final IndexQuery<B, C> indexQuery) {
+    return toSingleGetter(toMultiGetter(indexedGetter, indexQuery));
+  }
+     
 
 }

@@ -10,6 +10,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.zakgof.db.velvet.VelvetUtil;
+import com.zakgof.db.velvet.links.index.IndexedMultiLinkDef;
 
 public class ZeDataModel {
 

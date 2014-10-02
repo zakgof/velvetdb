@@ -4,7 +4,7 @@ import com.zakgof.db.velvet.IVelvet;
 
 class ABiLinkDef<A, B, OneWayLinkType extends ILinkDef<A, B>, BackLinkType extends ABiLinkDef<B, A, ?, ?>> implements IBiLinkDef<A, B> {
 
-  OneWayLinkType oneWay;
+  protected OneWayLinkType oneWay;
   private BackLinkType backLink;
 
   protected ABiLinkDef(OneWayLinkType oneWay) {
