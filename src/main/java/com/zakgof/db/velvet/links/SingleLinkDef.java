@@ -66,7 +66,7 @@ public class SingleLinkDef<A, B> extends ALinkDef<A, B> implements ISingleLinkDe
   private void checkExisting(IVelvet velvet, Object akey) {
     Object existingBKey = singleKey(velvet, akey);
     if (existingBKey != null)
-      throw new RuntimeException("Attempt to connect multiple objects to " + toString()); // TODO : own exception type
+      throw new RuntimeException("Attempt to connect multiple objects to " + toString() + " " + akey + " -> " + existingBKey); // TODO : own exception type
   }
   
 }
