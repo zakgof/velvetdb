@@ -104,44 +104,47 @@ public class ZeDataModel {
     return entities.keySet();
   }
 
-  public ILinkProvider getLinks(Class<?> clazz) {
-    return new ILinkProvider() {
+  public <A> ILinkProvider<A> getLinks(Class<A> clazz) {
+    return new ILinkProvider<A>() {
 
+      @SuppressWarnings({ "unchecked", "rawtypes" })
       @Override
-      public Collection<ISingleLinkDef<?, ?>> singles() {
-        return singles.get(clazz);
+      public Collection<ISingleLinkDef<A, ?>> singles() {
+        return (Collection<ISingleLinkDef<A, ?>>)(Collection)singles.get(clazz);
       }
 
+      @SuppressWarnings({ "unchecked", "rawtypes" })
       @Override
-      public Collection<IMultiLinkDef<?, ?>> multis() {
-        return multis.get(clazz);
+      public Collection<IMultiLinkDef<A, ?>> multis() {
+        return (Collection)multis.get(clazz);
       }
       
+      @SuppressWarnings({ "rawtypes", "unchecked" })
       @Override
-      public Collection<ILinkDef<?,?>> declaredLinks() {
-        return allLinks.values();
+      public Collection<ILinkDef<A,?>> declaredLinks() {
+        return (Collection)allLinks.values();
       }
 
       @Override
-      public ILinkDef<?, ?> get(String edgeKind) {
-        Optional<ISingleLinkDef<?, ?>> opSingle = singles.get(clazz).stream().filter(l -> l.getKind().equals(edgeKind)).findAny();
+      public ILinkDef<A, ?> get(String edgeKind) {
+        Optional<ISingleLinkDef<A, ?>> opSingle = singles().stream().filter(l -> l.getKind().equals(edgeKind)).findAny();
         if (opSingle.isPresent())
           return opSingle.get();
-        Optional<IMultiLinkDef<?, ?>> opMulti = multis.get(clazz).stream().filter(l -> l.getKind().equals(edgeKind)).findAny();
+        Optional<IMultiLinkDef<A, ?>> opMulti = multis().stream().filter(l -> l.getKind().equals(edgeKind)).findAny();
         return opMulti.get();
       }
     };
 
   }
 
-  public interface ILinkProvider {
-    Collection<ISingleLinkDef<?, ?>> singles();
+  public interface ILinkProvider<A> {
+    Collection<ISingleLinkDef<A, ?>> singles();
 
-    Collection<IMultiLinkDef<?, ?>> multis();
+    Collection<IMultiLinkDef<A, ?>> multis();
     
-    ILinkDef<?, ?> get(String edgeKind);
+    ILinkDef<A, ?> get(String edgeKind);
 
-    Collection<ILinkDef<?,?>> declaredLinks();
+    Collection<ILinkDef<A,?>> declaredLinks();
   }
 
 }

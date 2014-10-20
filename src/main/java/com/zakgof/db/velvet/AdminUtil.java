@@ -1,15 +1,9 @@
 package com.zakgof.db.velvet;
 
-import java.util.Collection;
-import java.util.List;
-
-import com.zakgof.db.velvet.links.ILinkDef;
-import com.zakgof.db.velvet.links.IMultiLinkDef;
-import com.zakgof.db.velvet.links.ISingleLinkDef;
-import com.zakgof.db.velvet.links.ZeDataModel;
-import com.zakgof.db.velvet.links.ZeDataModel.ILinkProvider;
 
 public class AdminUtil {
+  
+  /*
 
   public static void copy(IVelvet dest, IVelvet source, ZeDataModel model) {
     copyNodes(dest, source, model);
@@ -73,5 +67,6 @@ public class AdminUtil {
     }
     System.err.println(" done.");
   }
+  */
 
 }

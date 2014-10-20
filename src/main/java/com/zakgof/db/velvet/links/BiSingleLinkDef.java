@@ -27,10 +27,12 @@ public class BiSingleLinkDef<A, B> extends ABiLinkDef<A, B, SingleLinkDef<A, B>,
     return oneWay.single(velvet, node);
   }
 
+  /*
   @Override
   public Object singleKey(IVelvet velvet, Object key) {
     return oneWay.singleKey(velvet, key);
   }
+  */
   
   // TODO : this is code duplication
   public void addChild(IVelvet velvet, A a, B b) {    

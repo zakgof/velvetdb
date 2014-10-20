@@ -6,6 +6,6 @@ public interface ISingleGetter<A, B> {
   
   public B single(IVelvet velvet, A node);
 
-  public Object singleKey(IVelvet velvet, Object key);
+  // public Object singleKey(IVelvet velvet, Object key);
   
 }

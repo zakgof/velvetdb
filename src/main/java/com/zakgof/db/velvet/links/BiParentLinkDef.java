@@ -13,10 +13,12 @@ public class BiParentLinkDef<A, B> extends ABiLinkDef<A, B, SingleLinkDef<A, B>,
     return oneWay.single(velvet, node);
   }
 
+  /*
   @Override
   public Object singleKey(IVelvet velvet, Object key) {
     return oneWay.singleKey(velvet, key);
   }
+  */
   
   @Override
   public String toString() {
