@@ -8,5 +8,4 @@ public interface IMultiGetter<A, B> {
   
   public List<B> links(IVelvet velvet, A node);
 
-  public List<Object> linkKeys(IVelvet velvet, Object key);
 }

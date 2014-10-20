@@ -219,10 +219,12 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
         return IndexedMultiLinkDef.this.links(velvet, node, indexQuery);
       }
 
+      /*
       @Override
       public List<Object> linkKeys(IVelvet velvet, Object key) {
         return IndexedMultiLinkDef.this.linkKeys(velvet, key, indexQuery);
       }
+      */
     };
   }
 

@@ -25,8 +25,7 @@ public class SingleLinkDef<A, B> extends ALinkDef<A, B> implements ISingleLinkDe
     return bkey == null ? null : velvet.get(bClazz, bkey);
   }
 
-  @Override
-  public Object singleKey(IVelvet velvet, Object key) {
+  private Object singleKey(IVelvet velvet, Object key) {
     List<?> keys = velvet.raw().linkKeys(VelvetUtil.keyClassOf(getChildClass()), key, edgeKind);
     if (keys.isEmpty())
       return null;
@@ -34,6 +33,7 @@ public class SingleLinkDef<A, B> extends ALinkDef<A, B> implements ISingleLinkDe
       throw new RuntimeException("Multiple values under singleKey");
     return keys.get(0);
   }
+  
 
   public void disconnect(IVelvet velvet, A a) {
     disconnect(velvet, a, single(velvet, a));
