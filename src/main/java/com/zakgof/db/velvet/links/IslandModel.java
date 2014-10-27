@@ -34,6 +34,7 @@ public class IslandModel {
       private final Class<T> clazz;
       private final Map<String, IMultiGetter<T, ?>> multis = new HashMap<>();
       private final Map<String, ISingleGetter<T, ?>> singles = new HashMap<>();
+      private final Map<String, IContextSingleGetter<?>> singleContexts = new HashMap<>();
       // private final List<IBiLinkDef<T, ?>> detaches = new ArrayList<>();
 
       public FetcherEntityBuilder(Class<T> clazz) {
@@ -65,8 +66,13 @@ public class IslandModel {
 //        return this;
 //      }
 
+      public <L> FetcherEntityBuilder<T> include(String name, IContextSingleGetter<L> contextSingleGetter) {
+        singleContexts.put(name, contextSingleGetter);
+        return this;
+      }
+
       public Builder done() {
-        Builder.this.addEntity(new FetcherEntity<T>(clazz, multis, singles));
+        Builder.this.addEntity(new FetcherEntity<T>(clazz, multis, singles, singleContexts));
         return Builder.this;
       }
 
@@ -85,36 +91,48 @@ public class IslandModel {
   private static class FetcherEntity<T> {
 
     private final Class<T> clazz;
-    private Map<String, IMultiGetter<T, ?>> multis = new HashMap<>();
-    private Map<String, ISingleGetter<T, ?>> singles = new HashMap<>();
+    private Map<String, IMultiGetter<T, ?>> multis;
+    private Map<String, ISingleGetter<T, ?>> singles;
+    private Map<String, IContextSingleGetter<?>> singleContexts;
     // private final List<? extends IBiLinkDef<T, ?>> detaches;
 
-    private FetcherEntity(Class<T> clazz, Map<String, IMultiGetter<T, ?>> multis, Map<String, ISingleGetter<T, ?>> singles) {
+    private FetcherEntity(Class<T> clazz, Map<String, IMultiGetter<T, ?>> multis, Map<String, ISingleGetter<T, ?>> singles, Map<String, IContextSingleGetter<?>> singleContexts) {
       this.clazz = clazz;
       this.multis = multis;
       this.singles = singles;
+      this.singleContexts = singleContexts;
       // this.detaches = detaches;
     }
 
   }
 
   public <T> List<DataWrap<T>> fetchAll(IVelvet velvet, Class<T> clazz) {
-    List<DataWrap<T>> wrap = velvet.allOf(clazz).stream().map(node -> createWrap(velvet, node)).collect(Collectors.toList());
+    List<DataWrap<T>> wrap = velvet.allOf(clazz).stream().map(node -> createWrap(velvet, node, new Context())).collect(Collectors.toList());
     return wrap;
   }
-
+  
   public <T> DataWrap<T> createWrap(IVelvet velvet, T node) {
+    return createWrap(velvet, node, new Context());
+  }
+
+  private <T> DataWrap<T> createWrap(IVelvet velvet, T node, Context context) {
+    context.add(node);
     DataWrap.Builder<T> wrapBuilder = new DataWrap.Builder<T>(node);
     @SuppressWarnings("unchecked")
     FetcherEntity<T> entity = (FetcherEntity<T>) entities.get(VelvetUtil.kindOf(node.getClass()));
     if (entity != null) {
-      for (Entry<String, ? extends IMultiGetter<T, ?>> entry : entity.multis.entrySet()) {
-        List<DataWrap<?>> wrappedLinks = entry.getValue().links(velvet, node).stream().map(o -> createWrap(velvet, o)).collect(Collectors.toList());        
+      for (Entry<String, ? extends IMultiGetter<T, ?>> entry : entity.multis.entrySet()) {        
+        List<DataWrap<?>> wrappedLinks = entry.getValue().links(velvet, node).stream().map(o -> createWrap(velvet, o, context)).collect(Collectors.toList());        
         wrapBuilder.addList(entry.getKey(), wrappedLinks);
       }
       for (Entry<String, ? extends ISingleGetter<T, ?>> entry : entity.singles.entrySet()) {
-        Object link = entry.getValue().single(velvet, node);
-        DataWrap<?> childWrap = createWrap(velvet, link);
+        Object link = entry.getValue().single(velvet, node);        
+        DataWrap<?> childWrap = createWrap(velvet, link, context);
+        wrapBuilder.add(entry.getKey(), childWrap);
+      }
+      for (Entry<String, IContextSingleGetter<?>> entry : entity.singleContexts.entrySet()) {
+        Object link = entry.getValue().single(velvet, context);        
+        DataWrap<?> childWrap = createWrap(velvet, link, context);
         wrapBuilder.add(entry.getKey(), childWrap);
       }
     }
@@ -166,7 +184,26 @@ public class IslandModel {
     T node = velvet.get(clazz, key);
     if (node == null)
       return null;
-    return createWrap(velvet, node);
+    return createWrap(velvet, node, new Context());
+  }
+    
+  public interface IIslandContext {
+    public <T> T get(Class<T> clazz);    
+  }
+  
+  private class Context implements IIslandContext {
+
+    private Map<Class<?>, Object> map = new HashMap<>();
+
+    public void add(Object node) {
+      map.put(node.getClass(), node);
+    }
+
+    @Override
+    public <T> T get(Class<T> clazz) {
+      return clazz.cast(map.get(clazz));
+    }
+    
   }
 
 }

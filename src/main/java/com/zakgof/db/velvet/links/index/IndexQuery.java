@@ -99,23 +99,23 @@ public class IndexQuery<B, C> {
     
   }
 
-  static <B, C> IndexQuery<B, C> range(C p1, boolean inclusive1, C p2, boolean inclusive2) {
+  public static <B, C> IndexQuery<B, C> range(C p1, boolean inclusive1, C p2, boolean inclusive2) {
     return new IndexQuery<B, C>(new Level<>(p1, inclusive1), new Level<>(p2, inclusive2), 0, -1, false);
   }
   
-  static <B, C> IndexQuery<B, C> greater(C p1) {
+  public static <B, C> IndexQuery<B, C> greater(C p1) {
     return IndexQuery.<B, C>builder().greater(p1).build();
   }
   
-  static <B, C> IndexQuery<B, C> less(C p2) {
+  public static <B, C> IndexQuery<B, C> less(C p2) {
     return IndexQuery.<B, C>builder().less(p2).build();
   }
   
-  static <B, C> IndexQuery<B, C> greaterOrEq(C p1) {
+  public static <B, C> IndexQuery<B, C> greaterOrEq(C p1) {
     return IndexQuery.<B, C>builder().greaterOrEq(p1).build();
   }
   
-  static <B, C> IndexQuery<B, C> lessOrEq(C p2) {
+  public static <B, C> IndexQuery<B, C> lessOrEq(C p2) {
     return IndexQuery.<B, C>builder().lessOrEq(p2).build();
   }
 
@@ -125,6 +125,10 @@ public class IndexQuery<B, C> {
   
   public static <B, C> IndexQuery<B, C> prev(B node) {
     return IndexQuery.<B, C>builder().lessO(node).descending().limit(1).build();
+  }
+  
+  public static <B, C> IndexQuery<B, C> next(B node) {
+    return IndexQuery.<B, C>builder().greaterO(node).limit(1).build();
   }
   
 }
