@@ -74,7 +74,7 @@ public class Velvet implements IVelvet {
 
   private Long genUniqueId(String kind, Class<?> clazz) {
     for (;;) {
-      Long key = UUID.randomUUID().getLeastSignificantBits(); // TODO : lock and check
+      Long key = -UUID.randomUUID().getLeastSignificantBits(); // TODO : lock and check
       if (get(clazz, key) == null)
         return key;
     }
