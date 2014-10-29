@@ -126,9 +126,11 @@ public class IslandModel {
         wrapBuilder.addList(entry.getKey(), wrappedLinks);
       }
       for (Entry<String, ? extends ISingleGetter<T, ?>> entry : entity.singles.entrySet()) {
-        Object link = entry.getValue().single(velvet, node);        
-        DataWrap<?> childWrap = createWrap(velvet, link, context);
-        wrapBuilder.add(entry.getKey(), childWrap);
+        Object link = entry.getValue().single(velvet, node);
+        if (link != null) {
+          DataWrap<?> childWrap = createWrap(velvet, link, context);
+          wrapBuilder.add(entry.getKey(), childWrap);
+        }
       }
       for (Entry<String, IContextSingleGetter<?>> entry : entity.singleContexts.entrySet()) {
         Object link = entry.getValue().single(velvet, context);        
