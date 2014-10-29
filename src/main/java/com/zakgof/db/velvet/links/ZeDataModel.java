@@ -76,7 +76,7 @@ public class ZeDataModel {
       return this;
     }
 
-    public Builder biLink(BiSingleLinkDef<?, ?> link) {
+    public Builder link(BiSingleLinkDef<?, ?> link) {
       putLink(link);
       putGetter(link);
       putGetter(link.back());
@@ -110,7 +110,7 @@ public class ZeDataModel {
       @SuppressWarnings({ "unchecked", "rawtypes" })
       @Override
       public Collection<ISingleLinkDef<A, ?>> singles() {
-        return (Collection<ISingleLinkDef<A, ?>>)(Collection)singles.get(clazz);
+        return (Collection)singles.get(clazz);
       }
 
       @SuppressWarnings({ "unchecked", "rawtypes" })
