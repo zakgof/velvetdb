@@ -43,6 +43,11 @@ public class VelvetUtil {
         if (field.getAnnotation(Key.class) != null || field.getAnnotation(AutoKey.class) != null)
           return field.getName();
       }
+      for (Method method : clazz.getDeclaredMethods()) {
+        method.setAccessible(true);
+        if (method.getAnnotation(Key.class) != null)
+          return method.getName();
+      }
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -55,6 +60,11 @@ public class VelvetUtil {
         field.setAccessible(true);
         if (field.getAnnotation(Key.class) != null || field.getAnnotation(AutoKey.class) != null)
           return field.getType();
+      }
+      for (Method method : clazz.getDeclaredMethods()) {
+        method.setAccessible(true);
+        if (method.getAnnotation(Key.class) != null)
+          return method.getReturnType();
       }
     } catch (Exception e) {
       throw new RuntimeException(e);
