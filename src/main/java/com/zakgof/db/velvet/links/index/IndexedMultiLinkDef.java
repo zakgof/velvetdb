@@ -213,18 +213,10 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
 
   public IMultiGetter<A, B> indexGetter(final IndexQuery<B, C> indexQuery) {
     return new IMultiGetter<A, B>() {
-
       @Override
       public List<B> links(IVelvet velvet, A node) {
         return IndexedMultiLinkDef.this.links(velvet, node, indexQuery);
       }
-
-      /*
-      @Override
-      public List<Object> linkKeys(IVelvet velvet, Object key) {
-        return IndexedMultiLinkDef.this.linkKeys(velvet, key, indexQuery);
-      }
-      */
     };
   }
 

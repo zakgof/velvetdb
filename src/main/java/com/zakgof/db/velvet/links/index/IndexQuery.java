@@ -131,4 +131,8 @@ public class IndexQuery<B, C> {
     return IndexQuery.<B, C>builder().greaterO(node).limit(1).build();
   }
   
+  public static <B, C> IndexQuery<B, C> equalsTo(C p) {
+    return IndexQuery.<B, C>builder().greaterOrEq(p).lessOrEq(p).build();
+  }
+  
 }
