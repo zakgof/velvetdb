@@ -13,13 +13,13 @@ import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.Velvet;
 import com.zakgof.db.velvet.VelvetUtil;
 import com.zakgof.db.velvet.kvs.GenericKvsVelvet2;
-import com.zakgof.db.velvet.links.IMultiGetter;
+import com.zakgof.db.velvet.links.IMultiLinkDef;
 import com.zakgof.db.velvet.links.LinkUtil;
 import com.zakgof.db.velvet.links.MultiLinkDef;
 import com.zakgof.db.velvet.links.index.IndexQuery.Level;
 import com.zakgof.tools.generic.IFunction;
 
-public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLinkDef<A, B> implements IIndexedGetter<A, B, C> {
+public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLinkDef<A, B> implements IIndexedMultiLink<A, B, C> {
 
   private final IFunction<B, C> metric;
 
@@ -211,11 +211,47 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
 
   }
 
-  public IMultiGetter<A, B> indexGetter(final IndexQuery<B, C> indexQuery) {
-    return new IMultiGetter<A, B>() {
+  public IMultiLinkDef<A, B> indexGetter(final IndexQuery<B, C> indexQuery) {
+    return new IMultiLinkDef<A, B>() {
       @Override
       public List<B> links(IVelvet velvet, A node) {
         return IndexedMultiLinkDef.this.links(velvet, node, indexQuery);
+      }
+
+      @Override
+      public String getKind() {
+        // TODO Auto-generated method stub
+        return null;
+      }
+
+      @Override
+      public Class<A> getHostClass() {
+        return IndexedMultiLinkDef.this.getHostClass();
+      }
+
+      @Override
+      public Class<B> getChildClass() {
+        return IndexedMultiLinkDef.this.getChildClass();
+      }
+
+      @Override
+      public void connect(IVelvet velvet, A a, B b) {
+        IndexedMultiLinkDef.this.connect(velvet, a, b);
+      }
+
+      @Override
+      public void connectKeys(IVelvet velvet, Object akey, Object bkey) {
+        IndexedMultiLinkDef.this.connectKeys(velvet, akey, bkey);
+      }
+
+      @Override
+      public void disconnect(IVelvet velvet, A a, B b) {
+        IndexedMultiLinkDef.this.disconnect(velvet, a, b);        
+      }
+
+      @Override
+      public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
+        IndexedMultiLinkDef.this.disconnectKeys(velvet, akey, bkey);
       }
     };
   }
