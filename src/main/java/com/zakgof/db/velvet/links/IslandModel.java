@@ -149,27 +149,34 @@ public class IslandModel {
   }
   
   public <T> void deleteNode(IVelvet velvet, T node) {
-    
     String kind = VelvetUtil.kindOf(node.getClass());
     @SuppressWarnings("unchecked")
     FetcherEntity<T> entity = (FetcherEntity<T>) entities.get(kind);
     if (entity != null) {
-      for (IMultiLinkDef<T, ?> multi : entity.multis.values()) {
-        List<?> children = multi.links(velvet, node);
-        for (Object child : children) 
-          deleteNode(velvet, child);                
-      }
-      for (ISingleLinkDef<T, ?> single : entity.singles.values()) {
-        Object child = single.single(velvet, node);
-        if (child != null) {
-          deleteNode(velvet, child);
-        }
-      }
-      for (IBiLinkDef<T, ?> detach : entity.detaches) {
+      for (IMultiLinkDef<T, ?> multi : entity.multis.values())
+        dropChildren(velvet, node, multi);
+      for (ISingleLinkDef<T, ?> single : entity.singles.values())
+        dropChild(velvet, node, single);
+      for (IBiLinkDef<T, ?> detach : entity.detaches)
         detach(velvet, node, detach);
-      }
     }
     velvet.delete(node);
+  }
+
+  private <T, B> void dropChild(IVelvet velvet, T node, ISingleLinkDef<T, B> single) {
+    B child = single.single(velvet, node);
+    if (child != null) {
+      single.disconnect(velvet, node, child);
+      deleteNode(velvet, child);
+    }
+  }
+
+  private <T, B> void dropChildren(IVelvet velvet, T node, IMultiLinkDef<T, B> multi) {
+    List<B> children = multi.links(velvet, node);
+    for (B child : children)  {
+      multi.disconnect(velvet, node, child);
+      deleteNode(velvet, child);    
+    }
   }
 
   private <T, A> void detach(IVelvet velvet, T node, IBiLinkDef<T, A> detach) {
