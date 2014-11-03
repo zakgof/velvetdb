@@ -6,10 +6,10 @@ import java.util.List;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.links.BiMultiLinkDef;
-import com.zakgof.db.velvet.links.IMultiGetter;
+import com.zakgof.db.velvet.links.IMultiLinkDef;
 import com.zakgof.tools.generic.IFunction;
 
-public class IndexedBiMultiLinkDef<A, B, C extends Comparable<C>> extends BiMultiLinkDef<A, B> implements IIndexedGetter<A, B, C> {
+public class IndexedBiMultiLinkDef<A, B, C extends Comparable<C>> extends BiMultiLinkDef<A, B> implements IIndexedMultiLink<A, B, C> {
 
   public IndexedBiMultiLinkDef(Class<A> aClazz, Class<B> bClazz, IFunction<B, C> metrics) {
     super(IndexedMultiLinkDef.of(aClazz, bClazz, metrics), kindOf(bClazz) + "-" + kindOf(aClazz));
@@ -24,14 +24,8 @@ public class IndexedBiMultiLinkDef<A, B, C extends Comparable<C>> extends BiMult
     // TODO avoid cast by subclassing one more level: ABiMultiLinkDef
     return ((IndexedMultiLinkDef<A, B, C>)oneWay).links(velvet, node, indexQuery);
   }
-
-  @Override
-  public List<Object> linkKeys(IVelvet velvet, Object key, IndexQuery<B, C> indexQuery) {
- // TODO avoid cast by subclassing one more level: ABiMultiLinkDef
-    return ((IndexedMultiLinkDef<A, B, C>)oneWay).linkKeys(velvet, key, indexQuery);
-  }
   
-  public IMultiGetter<A, B> indexGetter(final IndexQuery<B, C> indexQuery) {
+  public IMultiLinkDef<A, B> indexGetter(final IndexQuery<B, C> indexQuery) {
     return ((IndexedMultiLinkDef<A, B, C>)oneWay).indexGetter(indexQuery);
   }
 

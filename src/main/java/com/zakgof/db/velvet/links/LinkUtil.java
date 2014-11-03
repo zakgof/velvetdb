@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.links.index.IIndexedGetter;
+import com.zakgof.db.velvet.links.index.IIndexedMultiLink;
 import com.zakgof.db.velvet.links.index.IndexQuery;
 
 public class LinkUtil {
@@ -23,8 +23,8 @@ public class LinkUtil {
     return null;
   }
   
-  public static <A, B> ISingleGetter<A, B> toSingleGetter(final IMultiGetter<A, B> multi) {
-    return new ISingleGetter<A, B>() {
+  public static <A, B> ISingleLinkDef<A, B> toSingleGetter(final IMultiLinkDef<A, B> multi) {
+    return new ISingleLinkDef<A, B>() {
       @Override
       public B single(IVelvet velvet, A node) {
         List<B> links = multi.links(velvet, node);
@@ -35,17 +35,42 @@ public class LinkUtil {
         throw new RuntimeException("Multigetter return more than 1 entry and cannot be adapted to singlegetter " + links);
       }
 
-      /*
       @Override
-      public Object singleKey(IVelvet velvet, Object key) {
-        List<?> linkKeys = multi.linkKeys(velvet, key);
-        if (linkKeys.isEmpty())
-          return null;
-        if (linkKeys.size() == 1)
-          return linkKeys.get(0);
-        throw new RuntimeException("Multigetter return more than 1 entry and cannot be adapted to singlegetter " + linkKeys);
+      public String getKind() {
+        return multi.getKind();
       }
-      */
+
+      @Override
+      public Class<A> getHostClass() {
+        return multi.getHostClass();
+      }
+
+      @Override
+      public Class<B> getChildClass() {
+        return multi.getChildClass();
+      }
+
+      @Override
+      public void connect(IVelvet velvet, A a, B b) {
+        multi.connect(velvet, a, b);
+      }
+
+      @Override
+      public void connectKeys(IVelvet velvet, Object akey, Object bkey) {
+        multi.connectKeys(velvet, akey, bkey);
+      }
+
+      @Override
+      public void disconnect(IVelvet velvet, A a, B b) {
+        multi.disconnect(velvet, a, b);
+      }
+
+      @Override
+      public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
+        multi.disconnectKeys(velvet, akey, bkey);
+      }
+
+      
     };
   }
 
@@ -73,24 +98,54 @@ public class LinkUtil {
 
   }
   
-  public static <A, B, C extends Comparable<C>> IMultiGetter<A, B> toMultiGetter(final IIndexedGetter<A, B, C> indexedGetter, final IndexQuery<B, C> indexQuery) {
-    return new IMultiGetter<A, B>() {
+  public static <A, B, C extends Comparable<C>> IMultiLinkDef<A, B> toMultiGetter(final IIndexedMultiLink<A, B, C> indexedGetter, final IndexQuery<B, C> indexQuery) {
+    
+    return new IMultiLinkDef<A, B>() {
 
       @Override
       public List<B> links(IVelvet velvet, A node) {
         return indexedGetter.links(velvet, node, indexQuery);
       }
 
-      /*
       @Override
-      public List<Object> linkKeys(IVelvet velvet, Object key) {
-        return indexedGetter.linkKeys(velvet, key, indexQuery);
+      public String getKind() {
+        return indexedGetter.getKind();
       }
-      */
+
+      @Override
+      public Class<A> getHostClass() {
+        return indexedGetter.getHostClass();
+      }
+
+      @Override
+      public Class<B> getChildClass() {
+        return indexedGetter.getChildClass();
+      }
+
+      @Override
+      public void connect(IVelvet velvet, A a, B b) {
+        indexedGetter.connect(velvet, a, b);
+      }
+
+      @Override
+      public void connectKeys(IVelvet velvet, Object akey, Object bkey) {
+        indexedGetter.connectKeys(velvet, akey, bkey);
+      }
+
+      @Override
+      public void disconnect(IVelvet velvet, A a, B b) {
+        indexedGetter.disconnect(velvet, a, b);
+      }
+
+      @Override
+      public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
+        indexedGetter.disconnectKeys(velvet, akey, bkey);
+      }
+
     };
   }
   
-  public static <A, B, C extends Comparable<C>> ISingleGetter<A, B> toSingleGetter(final IIndexedGetter<A, B, C> indexedGetter, final IndexQuery<B, C> indexQuery) {
+  public static <A, B, C extends Comparable<C>> ISingleLinkDef<A, B> toSingleGetter(final IIndexedMultiLink<A, B, C> indexedGetter, final IndexQuery<B, C> indexQuery) {
     return toSingleGetter(toMultiGetter(indexedGetter, indexQuery));
   }
      

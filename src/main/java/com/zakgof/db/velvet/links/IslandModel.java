@@ -33,24 +33,24 @@ public class IslandModel {
     public class FetcherEntityBuilder<T> {
 
       private final Class<T> clazz;
-      private final Map<String, IMultiGetter<T, ?>> multis = new HashMap<>();
-      private final Map<String, ISingleGetter<T, ?>> singles = new HashMap<>();
+      private final Map<String, IMultiLinkDef<T, ?>> multis = new HashMap<>();
+      private final Map<String, ISingleLinkDef<T, ?>> singles = new HashMap<>();
       private final Map<String, IContextSingleGetter<?>> singleContexts = new HashMap<>();
       private final List<IBiLinkDef<T, ?>> detaches = new ArrayList<>();
 
       public FetcherEntityBuilder(Class<T> clazz) {
         this.clazz = clazz;
       }
-      
-      public <L> FetcherEntityBuilder<T> include(String name, IMultiGetter<T, L> getter) {
-        multis.put(name, getter);
-        return this;
-      }
-      
-      public <L> FetcherEntityBuilder<T> include(String name, ISingleGetter<T, L> getter) {
-        singles.put(name, getter);
-        return this;
-      }
+//      
+//      public <L> FetcherEntityBuilder<T> include(String name, IMultiLinkDef<T, L> getter) {
+//        multis.put(name, getter);
+//        return this;
+//      }
+//      
+//      public <L> FetcherEntityBuilder<T> include(String name, ISingleLinkDef<T, L> getter) {
+//        singles.put(name, getter);
+//        return this;
+//      }
 
       public <L> FetcherEntityBuilder<T> include(IMultiLinkDef<T, L> linkDef) {
         multis.put(linkDef.getKind(), linkDef);
@@ -92,12 +92,12 @@ public class IslandModel {
   private static class FetcherEntity<T> {
 
     private final Class<T> clazz;
-    private Map<String, IMultiGetter<T, ?>> multis;
-    private Map<String, ISingleGetter<T, ?>> singles;
+    private Map<String, IMultiLinkDef<T, ?>> multis;
+    private Map<String, ISingleLinkDef<T, ?>> singles;
     private Map<String, IContextSingleGetter<?>> singleContexts;
     private final List<? extends IBiLinkDef<T, ?>> detaches;
 
-    private FetcherEntity(Class<T> clazz, Map<String, IMultiGetter<T, ?>> multis, Map<String, ISingleGetter<T, ?>> singles, Map<String, IContextSingleGetter<?>> singleContexts, List<? extends IBiLinkDef<T, ?>> detaches) {
+    private FetcherEntity(Class<T> clazz, Map<String, IMultiLinkDef<T, ?>> multis, Map<String, ISingleLinkDef<T, ?>> singles, Map<String, IContextSingleGetter<?>> singleContexts, List<? extends IBiLinkDef<T, ?>> detaches) {
       this.clazz = clazz;
       this.multis = multis;
       this.singles = singles;
@@ -122,11 +122,11 @@ public class IslandModel {
     @SuppressWarnings("unchecked")
     FetcherEntity<T> entity = (FetcherEntity<T>) entities.get(VelvetUtil.kindOf(node.getClass()));
     if (entity != null) {
-      for (Entry<String, ? extends IMultiGetter<T, ?>> entry : entity.multis.entrySet()) {        
+      for (Entry<String, ? extends IMultiLinkDef<T, ?>> entry : entity.multis.entrySet()) {        
         List<DataWrap<?>> wrappedLinks = entry.getValue().links(velvet, node).stream().map(o -> createWrap(velvet, o, context)).collect(Collectors.toList());        
         wrapBuilder.addList(entry.getKey(), wrappedLinks);
       }
-      for (Entry<String, ? extends ISingleGetter<T, ?>> entry : entity.singles.entrySet()) {
+      for (Entry<String, ? extends ISingleLinkDef<T, ?>> entry : entity.singles.entrySet()) {
         Object link = entry.getValue().single(velvet, node);
         if (link != null) {
           DataWrap<?> childWrap = createWrap(velvet, link, context);
@@ -154,12 +154,12 @@ public class IslandModel {
     @SuppressWarnings("unchecked")
     FetcherEntity<T> entity = (FetcherEntity<T>) entities.get(kind);
     if (entity != null) {
-      for (IMultiGetter<T, ?> multi : entity.multis.values()) {
+      for (IMultiLinkDef<T, ?> multi : entity.multis.values()) {
         List<?> children = multi.links(velvet, node);
         for (Object child : children) 
           deleteNode(velvet, child);                
       }
-      for (ISingleGetter<T, ?> single : entity.singles.values()) {
+      for (ISingleLinkDef<T, ?> single : entity.singles.values()) {
         Object child = single.single(velvet, node);
         if (child != null) {
           deleteNode(velvet, child);
