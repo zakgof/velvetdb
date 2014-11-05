@@ -167,6 +167,27 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
         velvet.connect(node, store, getIndexLinkName());
     }
 
+    public void remove(B b) {
+      int index = findIndexByNode(new Level<B,C>(b), false);
+      
+      /** TEMP */
+      B b2 = indexValue(store.indices.get(index - 1));      
+      if (!VelvetUtil.equals(b2,  b))
+        throw new IllegalArgumentException(); // FATAL
+      /** TEMP */
+      
+      int removedIdx = store.indices.remove(index - 1);
+      for (int i = 0; i<store.indices.size(); i++) {
+        int oldval = store.indices.get(i);
+        if (oldval > removedIdx) {
+          oldval--;
+          store.indices.set(i, oldval);
+        }
+      }
+      
+      velvet.put(store);
+    }
+
   }
 
   public List<B> links(IVelvet velvet, A node, IndexQuery<B, C> indexQuery) {
@@ -192,17 +213,9 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
   }
 
   @Override
-  public void connectKeys(IVelvet velvet, Object akey, Object bkey) {
-    // TODO
-
-  }
-
-  @Override
-  public void disconnect(IVelvet velvet, A a, B b) {
- // TODO
-    //    super.disconnect(velvet, a, b);
-    //    new IndexRequest(velvet, a).remove(b);
-
+  public void disconnect(IVelvet velvet, A a, B b) {    
+    new IndexRequest(velvet, a).remove(b);
+    super.disconnect(velvet, a, b);
   }
 
   @Override
@@ -220,8 +233,7 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
 
       @Override
       public String getKind() {
-        // TODO Auto-generated method stub
-        return null;
+        return IndexedMultiLinkDef.this.getKind();
       }
 
       @Override
@@ -283,6 +295,7 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
     link.connect(velvet, parent, t4);
     link.connect(velvet, parent, t2);
     
+    
     System.err.println(link.links(velvet, parent, IndexQuery.range(-10.0f, true, 3.5f, false))); // 1 2 3 3
     System.err.println(link.links(velvet, parent, IndexQuery.range(-10.0f, true, 3.0f, false))); // 1 2
     System.err.println(link.links(velvet, parent, IndexQuery.range(-10.0f, true, 3.0f, true))); // 1 2 3 3
@@ -300,6 +313,8 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
     System.err.println(link.links(velvet, parent, IndexQuery.lessOrEq(2.0f))); // 1 2
     System.err.println(link.links(velvet, parent, IndexQuery.<T1, Float>builder().less(5.0f).descending().limit(35).build())); // 3 3 2 1
     
+    link.disconnect(velvet, parent, t3);
+    System.err.println(link.links(velvet, parent)); // 3 3 2 1
     
     
     T1 t = LinkUtil.toSingleGetter(link.indexGetter(IndexQuery.<T1, Float>builder().descending().limit(1).build())).single(velvet, parent);

@@ -9,7 +9,7 @@ public class IndexQuery<B, C> {
       this.p = p;
       this.inclusive = inclusive;
     }
-    private Level(B node) {
+    Level(B node) {
       this.node = node;
     }
     B node;
