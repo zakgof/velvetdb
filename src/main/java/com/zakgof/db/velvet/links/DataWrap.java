@@ -58,8 +58,18 @@ public class DataWrap<T> {
     return multis.get(name);
   }
   
+  @SuppressWarnings("unchecked")
+  public <L> List<DataWrap<L>> multi(IMultiLinkDef<T, L> link) {
+    return (List<DataWrap<L>>)(List<?>)multis.get(link.getKind());
+  }
+  
   public DataWrap<?> single(String name) {
     return singles.get(name);
+  }
+  
+  @SuppressWarnings("unchecked")
+  public <L> DataWrap<L> single(ISingleLinkDef<T, L> link) {
+    return (DataWrap<L>) singles.get(link.getKind());
   }
   
   @SuppressWarnings("unchecked")
