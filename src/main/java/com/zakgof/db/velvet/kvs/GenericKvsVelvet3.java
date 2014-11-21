@@ -323,8 +323,11 @@ public class GenericKvsVelvet3 implements IRawVelvet {
 
       if (info.isArray(bucketIndex)) {
         K[] entries = kvss.get(GenericKvsVelvet3.<K> getArrayClass(indexEntryClazz), bucketKey);
+        if (Functions.contains(entries, indexentry))
+          return;
         if (entries.length + 1 > MAX_ARRAY_BUCKET) {
           // Array -> Hash
+          System.out.println("migrate ");
           MixedIndex bucketMixedIndexer = new MixedIndex(kvss, origKey, hashLevel + 1);
           K[] newEntries = Arrays.copyOf(entries, entries.length + 1);
           newEntries[entries.length] = indexentry;
