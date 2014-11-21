@@ -25,6 +25,7 @@ public class GenericKvsVelvet3Test {
     for (int d=0; d<15000; d++) {    
       T1 t1 = new T1("k" + d, d);
       velvet.put(t1);
+      System.out.println(d);
     }
     velvet.put(new T1("final", -1.0f));
     
