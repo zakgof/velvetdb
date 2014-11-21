@@ -16,6 +16,11 @@ import com.zakgof.tools.io.SimpleOutputStream;
 public class MemKvs implements ITransactionalKvs {
   
   private final Map<Buffer, Buffer> values = new HashMap<>();
+  
+  private long reads = 0;
+  private long readBytes = 0;  
+  private long writes = 0;
+  private long writeBytes = 0;
 
   @Override
   public <T> T get(Class<T> clazz, Object key) {
@@ -25,6 +30,8 @@ public class MemKvs implements ITransactionalKvs {
     if (valueBuffer == null)
       return null;
     T value = serializer.deserialize(valueBuffer.stream(), clazz);
+    reads++;
+    readBytes += keyBuffer.size() + valueBuffer.size();
     return value;
   }
 
@@ -34,6 +41,8 @@ public class MemKvs implements ITransactionalKvs {
     Buffer keyBuffer = new Buffer(serializer.serialize(key));
     Buffer valueBuffer = new Buffer(serializer.serialize(value));
     values.put(keyBuffer, valueBuffer);
+    writes++;
+    writeBytes += keyBuffer.size() + valueBuffer.size();
   }
 
   @Override
@@ -41,6 +50,8 @@ public class MemKvs implements ITransactionalKvs {
     ZeSerializer serializer = new ZeSerializer();
     Buffer keyBuffer = new Buffer(serializer.serialize(key));
     values.remove(keyBuffer);
+    writes++;
+    writeBytes += keyBuffer.size();
   }
 
   @Override
@@ -73,6 +84,11 @@ public class MemKvs implements ITransactionalKvs {
       values.put(new Buffer(keyBytes), new Buffer(valueBytes));
     }
     sis.close();
+  }
+
+  public void dump() {
+    System.err.println("reads  " + reads + "\t" + readBytes);
+    System.err.println("writes " + writes + "\t" + writeBytes);        
   }
 
 }
