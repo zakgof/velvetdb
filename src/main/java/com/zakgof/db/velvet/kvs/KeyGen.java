@@ -49,8 +49,12 @@ public class KeyGen {
   
   */
 
-  public static byte[] key(String prefix, Object key) {    
+  public static Object key(String prefix, Object key) {    
     try {
+      
+      if (key instanceof String)
+        return prefix + "/" + (String)key;
+      
       ZeSerializer serializer = new ZeSerializer();
       byte[] prefixBytes = prefix.getBytes("utf-8");
       byte[] bodyBytes = serializer.serialize(key);

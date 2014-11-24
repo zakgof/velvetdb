@@ -19,8 +19,22 @@ public interface IRawVelvet extends ITransactional, ILockable {
 
   public void connect(Object key1, Object key2, String edgekind);
   public void disconnect(Object key1, Object key2, String edgekind);
-  
-  
+
+  interface IIndex {
+    <K> void add(Object key, K indexentry);
+    <K> boolean remove(Object key, K indexentry);
+    <K> List<K> getAll(Class<K> clazz, Object key);
+  }
+  /**
+   * 
+   * VELVET
+   * RAW VELVET
+   * INDEXER
+   * KVS
+   * DB
+   */
   
 
 }
+
+
