@@ -51,7 +51,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
 
   private final Map<String, ?> parameters;
 
-  private IFunction<IKvs, IIndex> indexer;
+  private final IFunction<IKvs, IIndex> indexer;
 
   public GenericKvsVelvet3(ITransactionalKvs kvs, Map<String, ?> parameters) {
     this.kvs = kvs;
@@ -276,23 +276,25 @@ public class GenericKvsVelvet3 implements IRawVelvet {
     private static final int BUCKETS = 1 << HASH_BITS;
     private static final int MAX_ARRAY_BUCKET = 64;
 
-    private int hashLevel;
-    private Object origKey;
+    private final int hashLevel;
+    private final Object origKey;
+    private final String indexPath;
 
     public MixedIndex(IKvs kvss) {
-      this(kvss, null, 0);
+      this(kvss, null, 0, "+");
     }
 
-    public MixedIndex(IKvs kvss, Object origKey, int hashLevel) {
+    public MixedIndex(IKvs kvss, Object origKey, int hashLevel, String indexPath) {
       super(kvss);
       this.hashLevel = hashLevel;
       this.origKey = origKey;
+      this.indexPath = indexPath;
     }
 
     private <K> void addAll(Object key, Class<K> clazz, K[] entries) {
       MixedInfo info = new MixedInfo();
       @SuppressWarnings("unchecked")
-      List<K>[] buckets = (List<K>[]) new List[BUCKETS];
+      List<K>[] buckets = new List[BUCKETS];
       for (K entry : entries) {
         int bucketIndex = getBucketIndex(entry);
         List<K> list = buckets[bucketIndex];
@@ -306,7 +308,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
       for (int i = 0; i < BUCKETS; i++) {
         if (info.isArray(i)) {
           K[] array = Functions.toArray(clazz, buckets[i]);
-          kvss.put(bucketKey(key, i), array);
+          kvss.put(bucketKey(origKey, i), array);
         }
       }
       kvss.put(key, info);
@@ -327,8 +329,8 @@ public class GenericKvsVelvet3 implements IRawVelvet {
           return;
         if (entries.length + 1 > MAX_ARRAY_BUCKET) {
           // Array -> Hash
-          System.out.println("migrate ");
-          MixedIndex bucketMixedIndexer = new MixedIndex(kvss, origKey, hashLevel + 1);
+          MixedIndex bucketMixedIndexer = childIndexer(key, bucketIndex);
+          System.out.println("migrate " + bucketKey);
           K[] newEntries = Arrays.copyOf(entries, entries.length + 1);
           newEntries[entries.length] = indexentry;
           bucketMixedIndexer.addAll(bucketKey, indexEntryClazz, newEntries);
@@ -339,10 +341,11 @@ public class GenericKvsVelvet3 implements IRawVelvet {
           K[] newEntries = Arrays.copyOf(entries, entries.length + 1);
           newEntries[entries.length] = indexentry;
           kvss.put(bucketKey, newEntries);
+          // System.err.println("- array - " + bucketKey + " " + newEntries.length);
         }
       } else if (info.isHash(bucketIndex)) {
         // Hash
-        MixedIndex bucketMixedIndexer = new MixedIndex(kvss, origKey, hashLevel + 1);
+        MixedIndex bucketMixedIndexer = childIndexer(key, bucketIndex);
         bucketMixedIndexer.add(bucketKey, indexentry);
       } else {
         // Empty -> Array
@@ -358,7 +361,11 @@ public class GenericKvsVelvet3 implements IRawVelvet {
     }
 
     private Object bucketKey(Object key, int bucketIndex) {
-      return KeyGen.key("@h/" + hashLevel + "/" + bucketIndex + "/", key);
+      return KeyGen.key("@h/" + indexPath  + bucketIndex + "+", key);
+    }
+    
+    private MixedIndex childIndexer(Object key, int bucketIndex) {
+      return new MixedIndex(kvss, origKey == null ? key : origKey, hashLevel + 1, indexPath + bucketIndex + "+");
     }
 
     @Override
@@ -392,7 +399,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
         }
 
       } else if (info.isHash(bucketIndex)) {
-        MixedIndex bucketMixedIndexer = new MixedIndex(kvss, origKey, hashLevel + 1);
+        MixedIndex bucketMixedIndexer = childIndexer(key, bucketIndex);
         if (!bucketMixedIndexer.remove(bucketKey, indexentry)) {
           removeBucket(key, info, bucketIndex);
         }
@@ -404,6 +411,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
       return !info.isEmpty();
     }
 
+    
     private void removeBucket(Object key, MixedInfo info, int bucketIndex) {
       info.setEmpty(bucketIndex);
       kvss.put(key, info);
@@ -426,13 +434,42 @@ public class GenericKvsVelvet3 implements IRawVelvet {
           for (K entry : entries)
             result.add(entry);
         } else if (info.isHash(i)) {
-          MixedIndex bucketMixedIndexer = new MixedIndex(kvss, origKey, hashLevel + 1);
+          MixedIndex bucketMixedIndexer = childIndexer(key, i);
           Collection<K> bucketEntries = bucketMixedIndexer.getAll(clazz, bucketKey);
           result.addAll(bucketEntries);
         }
       }
       return result;
     }
+
+    public <K> void dumpIndex(Object key, Class<K> entryClass, int indent) {
+      MixedInfo info = kvss.get(MixedInfo.class, key);
+      for (int i=0; i<BUCKETS; i++) {
+        Object bucketKey = bucketKey(origKey == null ? key : origKey, i);
+
+        System.err.print(spaces(indent) + "Bucket " + i + " ");
+        if (info.isArray(i)) {
+            K[] entries = kvss.get(GenericKvsVelvet3.<K> getArrayClass(entryClass), bucketKey);
+            System.err.println("Array [" + entries.length + "]");
+        } else if (info.isHash(i)) {
+          MixedIndex bucketMixedIndexer = childIndexer(key, i);
+          System.err.println("Hash");
+          bucketMixedIndexer.dumpIndex(bucketKey, entryClass, indent + 2);
+        } else {
+          System.err.println("Empty");
+        }
+      }
+      
+    }
+
+    private String spaces(int len) {
+      // TODO Auto-generated method stub
+      return "                                   ".substring(0, len);
+    }
+  }
+  
+  public <K> void dumpIndex(Class<K> clazz, Object key) {
+    ((MixedIndex)indexer.get(kvs)).dumpIndex(key, clazz, 0);
   }
 
 }
