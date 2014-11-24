@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import com.zakgof.db.kvs.IKvs;
 import com.zakgof.db.kvs.ITransactionalKvs;
 import com.zakgof.db.velvet.IRawVelvet;
+import com.zakgof.db.velvet.kvs.GenericKvsVelvet3.MixedIndex;
 import com.zakgof.tools.generic.Functions;
 import com.zakgof.tools.generic.IFunction;
 
@@ -180,14 +181,6 @@ public class GenericKvsVelvet3 implements IRawVelvet {
    * 
    * L1 - all nodes are of correct kind - in-node key is same as node key
    */
-
-  interface IIndex {
-    <K> void add(Object key, K indexentry);
-
-    <K> boolean remove(Object key, K indexentry);
-
-    <K> List<K> getAll(Class<K> clazz, Object key);
-  }
 
   abstract static class AIndex implements IIndex {
     protected IKvs kvss;
