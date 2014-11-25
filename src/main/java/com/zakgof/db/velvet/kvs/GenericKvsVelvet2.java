@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -77,7 +78,7 @@ public class GenericKvsVelvet2 implements IRawVelvet {
   @SuppressWarnings("unchecked")
   private <K> void addToIndex(Object key, K indexentry) {
     Class<K> indexEntryClazz = (Class<K>) indexentry.getClass();
-    List<K> nodes = getIndex(key, indexEntryClazz);
+    List<K> nodes = loadIndex(key, indexEntryClazz);
     if (nodes == null)
       nodes = new ArrayList<>();
     if (!nodes.contains(indexentry)) {
@@ -89,13 +90,13 @@ public class GenericKvsVelvet2 implements IRawVelvet {
   @SuppressWarnings("unchecked")
   private <K> boolean removeFromIndex(Object key, K indexentry) {
     Class<K> indexEntryClazz = (Class<K>) indexentry.getClass();
-    List<K> nodes = getIndex(key, indexEntryClazz);
+    List<K> nodes = loadIndex(key, indexEntryClazz);
     nodes.remove(indexentry);
     saveIndex(key, nodes, indexEntryClazz);
     return !nodes.isEmpty();
   }
 
-  private <T> List<T> getIndex(Object key, Class<T> clazz) {
+  private <T> List<T> loadIndex(Object key, Class<T> clazz) {
     T[] index = kvs.get(GenericKvsVelvet2.<T> getArrayClass(clazz), key);
     return (index == null) ? new ArrayList<>() : new ArrayList<>(Arrays.asList(index));
   }
@@ -128,7 +129,7 @@ public class GenericKvsVelvet2 implements IRawVelvet {
 
   @Override
   public <K> Collection<K> allKeys(String kind, Class<K> keyClass) {
-    return getIndex(nodesKey(kind), keyClass);
+    return loadIndex(nodesKey(kind), keyClass);
   }
 
   @Override
@@ -140,7 +141,7 @@ public class GenericKvsVelvet2 implements IRawVelvet {
   @Override
   public <K> List<K> linkKeys(Class<K> clazz, Object key, String edgeKind) {
     Object indexKey = linkDestKey(edgeKind, key);
-    List<K> index = getIndex(indexKey, clazz);
+    List<K> index = loadIndex(indexKey, clazz);
     return index;
   }
 
@@ -184,7 +185,19 @@ public class GenericKvsVelvet2 implements IRawVelvet {
   }
   
   public <K> Collection<K> getLinkOriginKeys(String edgeKind, Class<K> keyClass) {
-    return getIndex(linkOriginsKey(edgeKind), keyClass);
+    return loadIndex(linkOriginsKey(edgeKind), keyClass);
+  }
+
+  @Override
+  public <K> IIndex<K> getIndex(Object key, Class<K> clazz) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public <K> ISortedIndex<K> getSortedIndex(Object key, Class<K> clazz, Comparator<K> comparator) {
+    // TODO Auto-generated method stub
+    return null;
   }
   
   /*

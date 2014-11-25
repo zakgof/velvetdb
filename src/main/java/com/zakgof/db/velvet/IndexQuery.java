@@ -1,4 +1,4 @@
-package com.zakgof.db.velvet.links.index;
+package com.zakgof.db.velvet;
 
 
 

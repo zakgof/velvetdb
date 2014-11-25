@@ -5,8 +5,8 @@ import java.util.Collections;
 import java.util.List;
 
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.IndexQuery;
 import com.zakgof.db.velvet.links.index.IIndexedMultiLink;
-import com.zakgof.db.velvet.links.index.IndexQuery;
 
 public class LinkUtil {
 

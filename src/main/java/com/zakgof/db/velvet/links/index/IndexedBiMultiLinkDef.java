@@ -5,6 +5,7 @@ import static com.zakgof.db.velvet.VelvetUtil.kindOf;
 import java.util.List;
 
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.IndexQuery;
 import com.zakgof.db.velvet.links.BiMultiLinkDef;
 import com.zakgof.db.velvet.links.IMultiLinkDef;
 import com.zakgof.tools.generic.IFunction;
