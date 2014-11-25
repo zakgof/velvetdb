@@ -5,18 +5,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 import com.zakgof.db.kvs.IKvs;
 import com.zakgof.db.kvs.ITransactionalKvs;
 import com.zakgof.db.velvet.IRawVelvet;
-import com.zakgof.db.velvet.kvs.GenericKvsVelvet3.MixedIndex;
 import com.zakgof.tools.generic.Functions;
-import com.zakgof.tools.generic.IFunction;
 
 /**
  * Hardcoded keys:
@@ -28,6 +26,13 @@ import com.zakgof.tools.generic.IFunction;
  * 
  */
 public class GenericKvsVelvet3 implements IRawVelvet {
+  
+  interface IIndex<K> {
+    void add(K indexentry);
+    boolean remove(K indexentry);
+    boolean contains(K indexentry);
+    List<K> getAll();
+  }
 
   private final ITransactionalKvs kvs;
 
@@ -52,12 +57,9 @@ public class GenericKvsVelvet3 implements IRawVelvet {
 
   private final Map<String, ?> parameters;
 
-  private IFunction<IKvs, IIndex> indexer;
-
   public GenericKvsVelvet3(ITransactionalKvs kvs, Map<String, ?> parameters) {
     this.kvs = kvs;
     this.parameters = parameters;
-    this.indexer = kvss -> new MixedIndex(kvss);
   }
 
   public GenericKvsVelvet3(ITransactionalKvs kvs) {
@@ -80,12 +82,14 @@ public class GenericKvsVelvet3 implements IRawVelvet {
     kvs.put(nodeKey, value);
   }
 
+  @SuppressWarnings("unchecked")
   private <K> void addToIndex(Object key, K indexentry) {
-    indexer.get(kvs).add(key, indexentry);
+    new MixedIndex<K>(kvs, key, (Class<K>)indexentry.getClass()).add(indexentry);
   }
 
+  @SuppressWarnings("unchecked")
   private <K> boolean removeFromIndex(Object key, K indexentry) {
-    return indexer.get(kvs).remove(key, indexentry);
+    return new MixedIndex<K>(kvs, key, (Class<K>)indexentry.getClass()).remove(indexentry);
   }
 
   @SuppressWarnings("unchecked")
@@ -96,15 +100,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
       throw new RuntimeException(e);
     }
   }
-
-  @SuppressWarnings("unchecked")
-  private <K> void saveIndex(Object key, List<K> index, Class<K> clazz) {
-    if (index.isEmpty())
-      kvs.delete(key);
-    else
-      kvs.put(key, index.toArray((K[]) Array.newInstance(clazz, 0)));
-  }
-
+ 
   @Override
   public void delete(String kind, Object key) {
     Object nodeKey = valueKey(kind, key);
@@ -116,37 +112,110 @@ public class GenericKvsVelvet3 implements IRawVelvet {
 
   @Override
   public <K> Collection<K> allKeys(String kind, Class<K> keyClass) {
-    return indexer.get(kvs).getAll(keyClass, nodesKey(kind));
+    return new MixedIndex<K>(kvs, nodesKey(kind), keyClass).getAll();
+  }
+  
+  @Override
+  public <T> ISortedIndexLink index(Object key1, String edgekind, Comparator<T> comparator, Class<T> clazz, String kind) {
+    // TODO
+    return null;
+  }
+  
+  @Override
+  public ILink index(Object key1, String edgekind, LinkType type) {
+    // TODO Auto-generated method stub
+    if (type == LinkType.Single)
+      return new SingleLink(key1, edgekind);
+    else
+      return new MultiLink(key1, edgekind);
+  }
+  
+  private class MultiLink implements ILink {
+
+    private Object key1;
+    private String edgeKind;
+
+    public MultiLink(Object key1, String edgeKind) {
+      this.key1 = key1;
+      this.edgeKind = edgeKind;
+    }
+
+    @Override
+    public void connect(Object key2) {
+      addToIndex(EDGEKINDS_KEY, edgeKind);
+      addToIndex(linkOriginsKey(edgeKind), key1);
+      addToIndex(linkDestKey(edgeKind, key1), key2);
+    }
+
+    @Override
+    public void disconnect(Object key2) {
+      // TODO : locking ?
+      if (!removeFromIndex(linkDestKey(edgeKind, key1), key2))
+        if (!removeFromIndex(linkOriginsKey(edgeKind), key1))
+          removeFromIndex(EDGEKINDS_KEY, edgeKind);
+    }
+
+    @Override
+    public <K> List<K> linkKeys(Class<K> clazz) {
+      return new MixedIndex<K>(kvs, linkDestKey(edgeKind, key1), clazz).getAll();  
+    }
+    
+  }
+  
+  private class SingleLink implements ILink {
+
+    private Object key1;
+    private String edgeKind;
+
+    public SingleLink(Object key1, String edgeKind) {
+      this.key1 = key1;
+      this.edgeKind = edgeKind;
+    }
+
+    @Override
+    public void connect(Object key2) {
+      addToIndex(EDGEKINDS_KEY, edgeKind);
+      addToIndex(linkOriginsKey(edgeKind), key1);
+      // TODO : test for existing ?
+      kvs.put(linkDestKey(edgeKind, key1), key2);
+    }
+
+    @Override
+    public void disconnect(Object key2) {
+      // TODO : locking ?
+      if (!removeFromIndex(linkDestKey(edgeKind, key1), key2))
+        if (!removeFromIndex(linkOriginsKey(edgeKind), key1))
+          removeFromIndex(EDGEKINDS_KEY, edgeKind);
+    }
+
+    @Override
+    public <K> List<K> linkKeys(Class<K> clazz) {
+      return new MixedIndex<K>(kvs, linkDestKey(edgeKind, key1), clazz).getAll();  
+    }
+    
   }
 
-  @Override
-  public <T, K> List<T> links(Class<T> clazz, Class<K> keyClass, Object key, String edgekind, String kind) {
-    List<T> childNodes = linkKeys(keyClass, key, edgekind).stream().map(linkkey -> get(clazz, kind, linkkey)).collect(Collectors.toList());
-    return childNodes;
-  }
+//  @Override
+//  public <T, K> List<T> links(Class<T> clazz, Class<K> keyClass, Object key, String edgekind, String kind) {
+//    List<T> childNodes = linkKeys(keyClass, key, edgekind).stream().map(linkkey -> get(clazz, kind, linkkey)).collect(Collectors.toList());
+//    return childNodes;
+//  }
 
-  @Override
-  public <K> List<K> linkKeys(Class<K> clazz, Object key, String edgeKind) {
-    Object indexKey = linkDestKey(edgeKind, key);
-    return indexer.get(kvs).getAll(clazz, indexKey);   
-  }
+//  @Override
+//  public <K> List<K> linkKeys(Class<K> clazz, Object key, String edgeKind) {
+//    return new MixedIndex<K>(kvs, linkDestKey(edgeKind, key), clazz).getAll();   
+//  }
 
   // /////////////////////////////////////////////////////////////////////
 
-  @Override
-  public void connect(Object key1, Object key2, String edgeKind) {
-    addToIndex(EDGEKINDS_KEY, edgeKind);
-    addToIndex(linkOriginsKey(edgeKind), key1);
-    addToIndex(linkDestKey(edgeKind, key1), key2);
-  }
-
-  @Override
-  public void disconnect(Object key1, Object key2, String edgeKind) {
-    // TODO : locking ?
-    if (!removeFromIndex(linkDestKey(edgeKind, key1), key2))
-      if (!removeFromIndex(linkOriginsKey(edgeKind), key1))
-        removeFromIndex(EDGEKINDS_KEY, edgeKind);
-  }
+//
+//  @Override
+//  public void disconnect(Object key1, Object key2, String edgeKind) {
+//    // TODO : locking ?
+//    if (!removeFromIndex(linkDestKey(edgeKind, key1), key2))
+//      if (!removeFromIndex(linkOriginsKey(edgeKind), key1))
+//        removeFromIndex(EDGEKINDS_KEY, edgeKind);
+//  }
 
   @Override
   public void lock(String lockName, long timeout) {
@@ -171,7 +240,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
   }
 
   public <K> Collection<K> getLinkOriginKeys(String edgeKind, Class<K> keyClass) {
-    return indexer.get(kvs).getAll(keyClass, linkOriginsKey(edgeKind));
+    return new MixedIndex<K>(kvs, linkOriginsKey(edgeKind), keyClass).getAll();
   }
 
   /*
@@ -181,58 +250,149 @@ public class GenericKvsVelvet3 implements IRawVelvet {
    * 
    * L1 - all nodes are of correct kind - in-node key is same as node key
    */
-
-  abstract static class AIndex implements IIndex {
-    protected IKvs kvss;
-
-    public AIndex(IKvs kvss) {
-      this.kvss = kvss;
-    }
+  
+  @Override
+  public <K> IIndex<K> getIndex(Object key, Class<K> clazz) {
+    return new MixedIndex<K>(kvs, key, clazz);
+  }
+  
+  @Override
+  public <K> ISortedIndex<K> getSortedIndex(Object key, Class<K> clazz, Comparator<K> comparator) {
+    // TODO 
+    return null;
   }
 
-  static class ArrayIndex extends AIndex {
+  public <K> void dumpIndex(Class<K> clazz, Object key) {
+    new MixedIndex<K>(kvs, key, clazz).dumpIndex(0);
+  }
 
-    public ArrayIndex(IKvs kvss) {
-      super(kvss);
+  static class ArrayIndex<K> implements IIndex<K> {
+
+    private IKvs kvs;
+    private Object key;
+    private Class<K> clazz;
+
+    public ArrayIndex(IKvs kvss, Class<K> clazz, Object key) {
+      this.kvs = kvss;
+      this.key = key;
+      this.clazz = clazz;
     }
 
     @Override
-    public <K> void add(Object key, K indexentry) {
-      Class<K> indexEntryClazz = (Class<K>) indexentry.getClass();
-      List<K> nodes = getAll(indexEntryClazz, key);
+    public void add(K indexentry) {
+      List<K> nodes = getAll();
       if (nodes == null)
         nodes = new ArrayList<>();
       if (!nodes.contains(indexentry)) {
         nodes.add(indexentry);
-        saveIndex(key, nodes, indexEntryClazz);
+        saveIndex(nodes);
       }
     }
 
     @Override
-    public <K> boolean remove(Object key, K indexentry) {
-      Class<K> indexEntryClazz = (Class<K>) indexentry.getClass();
-      List<K> nodes = getAll(indexEntryClazz, key);
+    public boolean remove(K indexentry) {
+      List<K> nodes = getAll();
       nodes.remove(indexentry);
-      saveIndex(key, nodes, indexEntryClazz);
+      saveIndex(nodes);
       return !nodes.isEmpty();
     }
 
     @Override
-    public <K> List<K> getAll(Class<K> clazz, Object key) {
-      K[] index = kvss.get(GenericKvsVelvet3.<K> getArrayClass(clazz), key);
-      return (index == null) ? new ArrayList<>() : new ArrayList<>(Arrays.asList(index));
+    public List<K> getAll() {
+      K[] index = load();
+      return (index == null) ? new ArrayList<>() : Arrays.asList(index);
     }
 
-    private <K> void saveIndex(Object key, List<K> index, Class<K> clazz) {
+    protected K[] load() {
+      return kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), key);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void saveIndex(List<K> index) {
       if (index.isEmpty())
-        kvss.delete(key);
+        kvs.delete(key);
       else
-        kvss.put(key, index.toArray((K[]) Array.newInstance(clazz, 0)));
+        kvs.put(key, index.toArray((K[]) Array.newInstance(clazz, 0)));
+    }
+
+    @Override
+    public boolean contains(K indexentry) {
+      K[] index = load();
+      if (index == null)
+        return false;
+      return Functions.contains(index, indexentry);
     }
 
   }
+  
+  static class SortedArrayIndex<K> extends ArrayIndex<K> implements ISortedIndex<K> {
+    
+    public SortedArrayIndex(IKvs kvss, Class<K> clazz, Object key) {
+      super(kvss, clazz, key);
+    }
 
-  static class MixedIndex extends AIndex {
+    @Override
+    public K first() {
+      K[] index = load();
+      return index == null ? null : index[0];
+    }
+
+    @Override
+    public K last() {
+      K[] index = load();
+      return index == null ? null : index[index.length - 1];
+    }
+
+    @Override
+    public K next(K value) {
+      K[] index = load();
+      if (index == null)
+        return null;
+      int pos = Functions.indexOf(index, value);
+      if (pos < 0 || pos + 1 >= index.length)
+        return null;      
+      return index == null ? null : index[pos + 1];
+    }
+
+    @Override
+    public K prev(K value) {
+      K[] index = load();
+      if (index == null)
+        return null;
+      int pos = Functions.indexOf(index, value);
+      if (pos <= 0)
+        return null;      
+      return index == null ? null : index[pos - 1];
+    }
+
+    @Override
+    public K greater(K value) {
+      // TODO Auto-generated method stub
+      return null;
+    }
+
+    @Override
+    public K lower(K value) {
+      // TODO Auto-generated method stub
+      return null;
+    }
+
+    @Override
+    public K floor(K value) {
+      // TODO Auto-generated method stub
+      return null;
+    }
+
+    @Override
+    public K ceiling(K value) {
+      // TODO Auto-generated method stub
+      return null;
+    }
+
+   
+  }
+
+  static class MixedIndex<K> implements IIndex<K> {
 
     private static class MixedInfo {
       public byte bucketArray;
@@ -269,23 +429,30 @@ public class GenericKvsVelvet3 implements IRawVelvet {
     private static final int BUCKETS = 1 << HASH_BITS;
     private static final int MAX_ARRAY_BUCKET = 64;
 
-    private int hashLevel;
-    private Object origKey;
+    private final int hashLevel;
+    private final Object origKey;
+    private final String indexPath;
+    private Class<K> clazz;
+    private Object key;
+    private IKvs kvss;
 
-    public MixedIndex(IKvs kvss) {
-      this(kvss, null, 0);
+    public MixedIndex(IKvs kvss, Object key, Class<K> clazz) {
+      this(kvss, key, clazz, null, 0, "+");
     }
 
-    public MixedIndex(IKvs kvss, Object origKey, int hashLevel) {
-      super(kvss);
+    private MixedIndex(IKvs kvss, Object key, Class<K> clazz, Object origKey, int hashLevel, String indexPath) {
+      this.kvss = kvss;
       this.hashLevel = hashLevel;
       this.origKey = origKey;
+      this.indexPath = indexPath;
+      this.clazz = clazz;
+      this.key = key;
     }
 
-    private <K> void addAll(Object key, Class<K> clazz, K[] entries) {
+    private void addAll(K[] entries) {
       MixedInfo info = new MixedInfo();
       @SuppressWarnings("unchecked")
-      List<K>[] buckets = (List<K>[]) new List[BUCKETS];
+      List<K>[] buckets = new List[BUCKETS];
       for (K entry : entries) {
         int bucketIndex = getBucketIndex(entry);
         List<K> list = buckets[bucketIndex];
@@ -299,32 +466,31 @@ public class GenericKvsVelvet3 implements IRawVelvet {
       for (int i = 0; i < BUCKETS; i++) {
         if (info.isArray(i)) {
           K[] array = Functions.toArray(clazz, buckets[i]);
-          kvss.put(bucketKey(key, i), array);
+          kvss.put(bucketKey(origKey, i), array);
         }
       }
       kvss.put(key, info);
     }
 
     @Override
-    public <K> void add(Object key, K indexentry) {
+    public void add(K indexentry) {
       MixedInfo info = kvss.get(MixedInfo.class, key);
       if (info == null)
         info = new MixedInfo();
       int bucketIndex = getBucketIndex(indexentry);
       Object bucketKey = bucketKey(origKey == null ? key : origKey, bucketIndex);
-      Class<K> indexEntryClazz = (Class<K>) indexentry.getClass();
 
       if (info.isArray(bucketIndex)) {
-        K[] entries = kvss.get(GenericKvsVelvet3.<K> getArrayClass(indexEntryClazz), bucketKey);
+        K[] entries = kvss.get(GenericKvsVelvet3.<K> getArrayClass(clazz), bucketKey);
         if (Functions.contains(entries, indexentry))
           return;
         if (entries.length + 1 > MAX_ARRAY_BUCKET) {
           // Array -> Hash
-          System.out.println("migrate ");
-          MixedIndex bucketMixedIndexer = new MixedIndex(kvss, origKey, hashLevel + 1);
+          MixedIndex<K> bucketMixedIndexer = childIndexer(bucketKey, key, bucketIndex);
+          System.out.println("migrate " + bucketKey);
           K[] newEntries = Arrays.copyOf(entries, entries.length + 1);
           newEntries[entries.length] = indexentry;
-          bucketMixedIndexer.addAll(bucketKey, indexEntryClazz, newEntries);
+          bucketMixedIndexer.addAll(newEntries);
           info.arrayToHash(bucketIndex);
           kvss.put(key, info);
         } else {
@@ -332,44 +498,48 @@ public class GenericKvsVelvet3 implements IRawVelvet {
           K[] newEntries = Arrays.copyOf(entries, entries.length + 1);
           newEntries[entries.length] = indexentry;
           kvss.put(bucketKey, newEntries);
+          // System.err.println("- array - " + bucketKey + " " + newEntries.length);
         }
       } else if (info.isHash(bucketIndex)) {
         // Hash
-        MixedIndex bucketMixedIndexer = new MixedIndex(kvss, origKey, hashLevel + 1);
-        bucketMixedIndexer.add(bucketKey, indexentry);
+        MixedIndex<K> bucketMixedIndexer = childIndexer(bucketKey, key, bucketIndex);
+        bucketMixedIndexer.add(indexentry);
       } else {
         // Empty -> Array
-        K[] newEntries = Functions.newArray(indexEntryClazz, indexentry);
+        K[] newEntries = Functions.newArray(clazz, indexentry);
         kvss.put(bucketKey, newEntries);
         info.setArray(bucketIndex);
         kvss.put(key, info);
       }
     }
 
-    private <K> int getBucketIndex(K indexentry) {
+    private int getBucketIndex(K indexentry) {
       return (Math.abs(indexentry.hashCode()) >> (hashLevel * HASH_BITS)) % BUCKETS;
     }
 
     private Object bucketKey(Object key, int bucketIndex) {
-      return KeyGen.key("@h/" + hashLevel + "/" + bucketIndex + "/", key);
+      return KeyGen.key("@h/" + indexPath  + bucketIndex + "+", key);
+    }
+    
+    private MixedIndex<K> childIndexer(Object bucketKey, Object key, int bucketIndex) {
+      return new MixedIndex<K>(kvss, bucketKey, clazz, origKey == null ? key : origKey, hashLevel + 1, indexPath + bucketIndex + "+");
     }
 
     @Override
-    public <K> boolean remove(Object key, K indexentry) {
+    public boolean remove(K indexentry) {
       MixedInfo info = kvss.get(MixedInfo.class, key);
       if (info == null)
         throw new NoSuchElementException();
       int bucketIndex = getBucketIndex(indexentry);
       Object bucketKey = bucketKey(origKey == null ? key : origKey, bucketIndex);
-      Class<K> indexEntryClazz = (Class<K>) indexentry.getClass();
 
       if (info.isArray(bucketIndex)) {
 
-        K[] entries = kvss.get(GenericKvsVelvet3.<K> getArrayClass(indexEntryClazz), bucketKey);
+        K[] entries = kvss.get(GenericKvsVelvet3.<K> getArrayClass(clazz), bucketKey);
         if (entries == null)
           throw new NoSuchElementException();
 
-        K[] newEntries = Functions.newArray(indexEntryClazz, entries.length - 1);
+        K[] newEntries = Functions.newArray(clazz, entries.length - 1);
         int j = 0;
         for (int i = 0; i < entries.length; i++) {
           if (!entries[i].equals(indexentry)) {
@@ -385,11 +555,11 @@ public class GenericKvsVelvet3 implements IRawVelvet {
         }
 
       } else if (info.isHash(bucketIndex)) {
-        MixedIndex bucketMixedIndexer = new MixedIndex(kvss, origKey, hashLevel + 1);
-        if (!bucketMixedIndexer.remove(bucketKey, indexentry)) {
+        MixedIndex<K> bucketMixedIndexer = childIndexer(bucketKey, key, bucketIndex);
+        if (!bucketMixedIndexer.remove(indexentry)) {
           removeBucket(key, info, bucketIndex);
         }
-        // TODO : shrink hash to simple array. Keep count ?
+        // TODO : shrink hash back to simple array. Keep count ?
       } else {
         throw new NoSuchElementException();
       }
@@ -397,6 +567,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
       return !info.isEmpty();
     }
 
+    
     private void removeBucket(Object key, MixedInfo info, int bucketIndex) {
       info.setEmpty(bucketIndex);
       kvss.put(key, info);
@@ -405,7 +576,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
     }
 
     @Override
-    public <K> List<K> getAll(Class<K> clazz, Object key) {
+    public List<K> getAll() {
       List<K> result = new ArrayList<>();
 
       MixedInfo info = kvss.get(MixedInfo.class, key);
@@ -419,13 +590,44 @@ public class GenericKvsVelvet3 implements IRawVelvet {
           for (K entry : entries)
             result.add(entry);
         } else if (info.isHash(i)) {
-          MixedIndex bucketMixedIndexer = new MixedIndex(kvss, origKey, hashLevel + 1);
-          Collection<K> bucketEntries = bucketMixedIndexer.getAll(clazz, bucketKey);
+          MixedIndex<K> bucketMixedIndexer = childIndexer(bucketKey, key, i);
+          Collection<K> bucketEntries = bucketMixedIndexer.getAll();
           result.addAll(bucketEntries);
         }
       }
       return result;
     }
+
+    public void dumpIndex(int indent) {
+      MixedInfo info = kvss.get(MixedInfo.class, key);
+      for (int i=0; i<BUCKETS; i++) {
+        Object bucketKey = bucketKey(origKey == null ? key : origKey, i);
+
+        System.err.print(spaces(indent) + "Bucket " + i + " ");
+        if (info.isArray(i)) {
+            K[] entries = kvss.get(GenericKvsVelvet3.<K> getArrayClass(clazz), bucketKey);
+            System.err.println("Array [" + entries.length + "]");
+        } else if (info.isHash(i)) {
+          MixedIndex<K> bucketMixedIndexer = childIndexer(bucketKey, key, i);
+          System.err.println("Hash");
+          bucketMixedIndexer.dumpIndex(indent + 2);
+        } else {
+          System.err.println("Empty");
+        }
+      }
+      
+    }
+
+    private String spaces(int len) {
+      return "                                   ".substring(0, len);
+    }
+
+    @Override
+    public boolean contains(K indexentry) {
+      // TODO Auto-generated method stub
+      return false;
+    }
+   
   }
 
 }

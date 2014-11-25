@@ -10,13 +10,14 @@ import java.util.stream.Collectors;
 import com.zakgof.db.sqlkvs.MemKvs;
 import com.zakgof.db.velvet.AutoKeyed;
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.IndexQuery;
 import com.zakgof.db.velvet.Velvet;
 import com.zakgof.db.velvet.VelvetUtil;
-import com.zakgof.db.velvet.kvs.GenericKvsVelvet2;
+import com.zakgof.db.velvet.IndexQuery.Level;
+import com.zakgof.db.velvet.kvs.GenericKvsVelvet3;
 import com.zakgof.db.velvet.links.IMultiLinkDef;
 import com.zakgof.db.velvet.links.LinkUtil;
 import com.zakgof.db.velvet.links.MultiLinkDef;
-import com.zakgof.db.velvet.links.index.IndexQuery.Level;
 import com.zakgof.tools.generic.IFunction;
 
 public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLinkDef<A, B> implements IIndexedMultiLink<A, B, C> {
@@ -190,6 +191,7 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
 
   }
 
+  @Override
   public List<B> links(IVelvet velvet, A node, IndexQuery<B, C> indexQuery) {
     List<B> nodes = new IndexRequest(velvet, node).run(indexQuery);
     return nodes;
@@ -270,7 +272,7 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
 
   public static void main(String[] args) {
 
-    IVelvet velvet = new Velvet(new GenericKvsVelvet2(new MemKvs()));
+    IVelvet velvet = new Velvet(new GenericKvsVelvet3(new MemKvs()));
 
     KK parent = new KK();
     velvet.put(parent);

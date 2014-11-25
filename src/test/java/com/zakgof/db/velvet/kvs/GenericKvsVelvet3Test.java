@@ -8,6 +8,7 @@ import com.zakgof.db.sqlkvs.MemKvs;
 import com.zakgof.db.velvet.AutoKeyed;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.Velvet;
+import com.zakgof.db.velvet.VelvetUtil;
 
 public class GenericKvsVelvet3Test {
 
@@ -20,7 +21,8 @@ public class GenericKvsVelvet3Test {
   public void testMixedKvs() {
 
     MemKvs kvs = new MemKvs();
-    IVelvet velvet = new Velvet(new GenericKvsVelvet3(kvs));    
+    GenericKvsVelvet3 raw = new GenericKvsVelvet3(kvs);
+    IVelvet velvet = new Velvet(raw);    
     
     for (int d=0; d<15000; d++) {    
       T1 t1 = new T1("k" + d, d);
@@ -35,6 +37,7 @@ public class GenericKvsVelvet3Test {
     T1 t5_r = velvet.get(T1.class, "final");
     
     kvs.dump();
+    raw.dumpIndex(VelvetUtil.keyClassOf(T1.class), "@n/t1");
     
   }
 
