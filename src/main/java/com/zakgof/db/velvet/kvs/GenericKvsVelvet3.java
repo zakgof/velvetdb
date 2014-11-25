@@ -183,7 +183,11 @@ public class GenericKvsVelvet3 implements IRawVelvet {
     @Override
     public void disconnect(Object key2) {
       // TODO : locking ?
-      if (!removeFromIndex(linkDestKey(edgeKind, key1), key2))
+     // TODO : optional check
+      Object key2ref = kvs.get(key2.getClass(), linkDestKey(edgeKind, key1));
+      if (!key2.equals(key2))
+        throw new E 
+      
         if (!removeFromIndex(linkOriginsKey(edgeKind), key1))
           removeFromIndex(EDGEKINDS_KEY, edgeKind);
     }
