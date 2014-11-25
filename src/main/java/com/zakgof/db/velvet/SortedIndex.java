@@ -43,6 +43,11 @@ public class SortedIndex<K, C> implements ISortedLink<K, C> {
     kvs.put(link(key1), list);    
   }
   
+  private int search(List<K> list, K key2) {
+    int i1 = 0;
+    int i2 = list.get();
+  }
+
   public void disconnect(K key2) {
     K[] index = kvs.get(GenericKvsVelvet3.<K>getArrayClass(clazz), link(key1));
     List<K> list = index == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(index)); // TODO : perf
@@ -66,7 +71,7 @@ public class SortedIndex<K, C> implements ISortedLink<K, C> {
 
   @Override
   public List<K> get(IndexQuery<K, C> query) {
-    // TODO Auto-generated method stub
+    query.l1
     return null;
   }
   
