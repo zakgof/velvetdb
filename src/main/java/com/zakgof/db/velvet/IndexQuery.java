@@ -12,13 +12,13 @@ public class IndexQuery<B, C> {
     Level(B node) {
       this.node = node;
     }
-    B node;
-    C p;
-    boolean inclusive;
+    public B node;
+    public C p;
+    public boolean inclusive;
   }
   
-  Level<B, C> l1;
-  Level<B, C> l2;
+  public Level<B, C> l1;
+  public Level<B, C> l2;
   
 //  C p1;
 //  boolean inclusive1;

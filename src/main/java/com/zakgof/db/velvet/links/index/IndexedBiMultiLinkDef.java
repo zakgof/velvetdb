@@ -3,20 +3,20 @@ package com.zakgof.db.velvet.links.index;
 import static com.zakgof.db.velvet.VelvetUtil.kindOf;
 
 import java.util.List;
+import java.util.function.Function;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IndexQuery;
 import com.zakgof.db.velvet.links.BiMultiLinkDef;
 import com.zakgof.db.velvet.links.IMultiLinkDef;
-import com.zakgof.tools.generic.IFunction;
 
 public class IndexedBiMultiLinkDef<A, B, C extends Comparable<C>> extends BiMultiLinkDef<A, B> implements IIndexedMultiLink<A, B, C> {
 
-  public IndexedBiMultiLinkDef(Class<A> aClazz, Class<B> bClazz, IFunction<B, C> metrics) {
+  public IndexedBiMultiLinkDef(Class<A> aClazz, Class<B> bClazz, Function<B, C> metrics) {
     super(IndexedMultiLinkDef.of(aClazz, bClazz, metrics), kindOf(bClazz) + "-" + kindOf(aClazz));
   }
 
-  public static <A, B, C extends Comparable<C>> IndexedBiMultiLinkDef<A, B, C> of(Class<A> aClazz, Class<B> bClazz, IFunction<B, C> metrics) {
+  public static <A, B, C extends Comparable<C>> IndexedBiMultiLinkDef<A, B, C> of(Class<A> aClazz, Class<B> bClazz, Function<B, C> metrics) {
     return new IndexedBiMultiLinkDef<A, B, C>(aClazz, bClazz, metrics);
   }
 

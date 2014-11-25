@@ -2,6 +2,7 @@ package com.zakgof.db.velvet.links;
 
 import java.util.List;
 
+import com.zakgof.db.velvet.IRawVelvet.LinkType;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetUtil;
 
@@ -25,48 +26,20 @@ public class SingleLinkDef<A, B> extends ALinkDef<A, B> implements ISingleLinkDe
     return bkey == null ? null : velvet.get(bClazz, bkey);
   }
 
-  private Object singleKey(IVelvet velvet, Object key) {
-    List<?> keys = velvet.raw().linkKeys(VelvetUtil.keyClassOf(getChildClass()), key, edgeKind);
-    if (keys.isEmpty())
-      return null;
-    if (keys.size() != 1)
-      throw new RuntimeException("Multiple values under singleKey");
-    return keys.get(0);
-  }
-  
-
-  public void disconnect(IVelvet velvet, A a) {
-    disconnect(velvet, a, single(velvet, a));
+  private Object singleKey(IVelvet velvet, Object key) {    
+    List<?> linkKeys = velvet.raw().index(key, edgeKind, LinkType.Single).linkKeys(VelvetUtil.keyClassOf(getChildClass()));
+    return linkKeys.isEmpty() ? null : linkKeys.get(0);    
   }
 
-  public void disconnectAllByKey(IVelvet velvet, Object akey) {
-    Object bkey = singleKey(velvet, akey);
-    if (bkey != null)
-      disconnectKeys(velvet, akey, bkey);
-  }
-
-  public void addChild(IVelvet velvet, A a, B b) {
-    checkExisting(velvet, VelvetUtil.keyOf(a));    
-    velvet.put(b);
-    connect(velvet, a, b);
-  }
-  
-  @Override
-  public void connect(IVelvet velvet, A a, B b) {
-    checkExisting(velvet, VelvetUtil.keyOf(a));  
-    super.connect(velvet, a, b);
-  }
-  
   @Override
   public void connectKeys(IVelvet velvet, Object akey, Object bkey) {
-    checkExisting(velvet, akey);
-    super.connectKeys(velvet, akey, bkey);
+    velvet.raw().index(akey, edgeKind, LinkType.Single).connect(bkey);
   }
 
-  private void checkExisting(IVelvet velvet, Object akey) {
-    Object existingBKey = singleKey(velvet, akey);
-    if (existingBKey != null)
-      throw new RuntimeException("Attempt to connect multiple objects to " + toString() + " " + akey + " -> " + existingBKey); // TODO : own exception type
+  @Override
+  public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
+    velvet.raw().index(akey, edgeKind, LinkType.Single).disconnect(bkey);
   }
+ 
   
 }

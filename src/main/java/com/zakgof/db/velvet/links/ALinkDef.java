@@ -1,13 +1,13 @@
 package com.zakgof.db.velvet.links;
 
 import com.zakgof.db.velvet.IVelvet;
-
+import com.zakgof.db.velvet.VelvetUtil;
 
 abstract class ALinkDef<A, B> implements ILinkDef<A, B> {
   private final Class<A> aClazz;
   protected final Class<B> bClazz;
   protected final String edgeKind;
-  
+
   public ALinkDef(Class<A> aClazz, Class<B> bClazz, String edgeKind) {
     this.aClazz = aClazz;
     this.bClazz = bClazz;
@@ -16,34 +16,24 @@ abstract class ALinkDef<A, B> implements ILinkDef<A, B> {
 
   @Override
   public void connect(IVelvet velvet, A a, B b) {
-    velvet.connect(a, b, edgeKind);
+    connectKeys(velvet, VelvetUtil.keyOf(a), VelvetUtil.keyOf(b));
   }
-  
-  @Override
-  public void connectKeys(IVelvet velvet,  Object akey, Object bkey) {
-    velvet.raw().connect(akey, bkey, edgeKind);
-  }
-  
+
   @Override
   public void disconnect(IVelvet velvet, A a, B b) {
-    velvet.disconnect(a, b, edgeKind);
+    disconnectKeys(velvet, VelvetUtil.keyOf(a), VelvetUtil.keyOf(b));
   }
-  
-  @Override
-  public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
-    velvet.raw().disconnect(akey, bkey, edgeKind);
-  }
-  
+
   @Override
   public String getKind() {
     return edgeKind;
   }
-  
+
   @Override
   public Class<A> getHostClass() {
     return aClazz;
   }
-  
+
   @Override
   public Class<B> getChildClass() {
     return bClazz;

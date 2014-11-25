@@ -101,7 +101,7 @@ public class VelvetUtil {
     return keyOf(node1).equals(keyOf(node2));
   }
 
-  public static <T> List<T> getAll(IVelvet velvet, List<Object> keys, Class<T> clazz) {
+  public static <T> List<T> getAll(IVelvet velvet, List<?> keys, Class<T> clazz) {
     List<T> nodes = new ArrayList<T>(keys.size());
     for (Object key : keys) {
       T node = velvet.get(clazz, key);

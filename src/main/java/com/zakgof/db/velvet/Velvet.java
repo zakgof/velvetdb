@@ -20,12 +20,6 @@ public class Velvet implements IVelvet {
   }
 
   @Override
-  public <T> List<T> links(Class<T> clazz, Object node, String edgeKind) {
-    List<T> links = raw.links(clazz, keyClassOf(clazz), keyOf(node), edgeKind, kindOf(clazz));
-    return links;
-  }
-
-  @Override
   public <T> List<T> allOf(Class<T> clazz) {
     String kind = kindOf(clazz);
     return raw.allKeys(kind, keyClassOf(clazz)).stream().map(key -> raw.get(clazz, kind, key)).collect(Collectors.toList());
@@ -79,18 +73,6 @@ public class Velvet implements IVelvet {
         return key;
     }
   }
-
-  @Override
-  public void connect(Object node1, Object node2, String kind) {
-    raw.connect(keyOf(node1), keyOf(node2), kind);
-  }
-
-  @Override
-  public void disconnect(Object node1, Object node2, String kind) {
-    raw.disconnect(keyOf(node1), keyOf(node2), kind);
-  }
-  
-
 
   /*
  
