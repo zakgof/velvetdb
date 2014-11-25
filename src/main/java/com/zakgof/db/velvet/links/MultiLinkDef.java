@@ -20,12 +20,14 @@ public class MultiLinkDef<A, B> extends ALinkDef<A, B> implements IMultiLinkDef<
     return new MultiLinkDef<A, B>(aClazz, bClazz, edgeKind);
   }
   
+  @Override
   public List<B> links(IVelvet velvet, A node) {
     return VelvetUtil.getAll(velvet, linkKeys(velvet, VelvetUtil.keyOf(node)), getChildClass());
   }
   
+  @SuppressWarnings("unchecked")
   public List<?> linkKeys(IVelvet velvet, Object key) {
-    return velvet.raw().index(key, edgeKind, LinkType.Multi).linkKeys(VelvetUtil.keyClassOf(getChildClass()));
+    return velvet.raw().index(key, edgeKind, LinkType.Multi).linkKeys((Class<Object>) VelvetUtil.keyClassOf(getChildClass()));
   }
 
   /*

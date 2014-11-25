@@ -23,13 +23,14 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
     return new IndexedMultiLinkDef<A, B, C>(aClazz, bClazz, VelvetUtil.kindOf(aClazz) + "_" + VelvetUtil.kindOf(bClazz), metrics);
   }
   
-  private ISortedIndexLink index(IVelvet velvet, Object akey) {
-    return velvet.raw().<B, C>index(akey, edgeKind, getChildClass(), VelvetUtil.kindOf(getChildClass()), metric);
+  private ISortedIndexLink<Object, B, C> index(IVelvet velvet, Object akey) {
+    return velvet.raw().<Object, B, C>index(akey, edgeKind, getChildClass(), VelvetUtil.kindOf(getChildClass()), metric);
   }
   
+  @SuppressWarnings("unchecked")
   @Override
   public List<?> linkKeys(IVelvet velvet, Object akey) {
-    return index(velvet, akey).linkKeys(VelvetUtil.keyClassOf(getChildClass()));
+    return index(velvet, akey).linkKeys((Class<Object>)VelvetUtil.keyClassOf(getChildClass()));
   }
   
   @Override
@@ -44,7 +45,8 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
 
   @Override
   public List<B> links(IVelvet velvet, A node, IndexQuery<B, C> indexQuery) {
-    List<?> keys = index(velvet, VelvetUtil.keyOf(node)).linkKeys(VelvetUtil.keyClassOf(getChildClass()), indexQuery);
+    @SuppressWarnings("unchecked")
+    List<?> keys = index(velvet, VelvetUtil.keyOf(node)).linkKeys((Class<Object>) VelvetUtil.keyClassOf(getChildClass()), indexQuery);
     return VelvetUtil.getAll(velvet, keys, getChildClass());
   }
   

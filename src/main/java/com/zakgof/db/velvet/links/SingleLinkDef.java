@@ -27,7 +27,8 @@ public class SingleLinkDef<A, B> extends ALinkDef<A, B> implements ISingleLinkDe
   }
 
   private Object singleKey(IVelvet velvet, Object key) {    
-    List<?> linkKeys = velvet.raw().index(key, edgeKind, LinkType.Single).linkKeys(VelvetUtil.keyClassOf(getChildClass()));
+    @SuppressWarnings("unchecked")
+    List<?> linkKeys = velvet.raw().index(key, edgeKind, LinkType.Single).linkKeys((Class<Object>) VelvetUtil.keyClassOf(getChildClass()));
     return linkKeys.isEmpty() ? null : linkKeys.get(0);    
   }
 
