@@ -17,21 +17,19 @@ public interface IRawVelvet extends ITransactional, ILockable {
 
   public void delete(String kind, Object key);
 
-  public ILink index(Object key1, String edgekind, LinkType type);
+  public <K> ILink<K> index(Object key1, String edgekind, LinkType type);
 
-  public <T, M extends Comparable<M>> ISortedIndexLink index(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric);
+  public <K, T, M extends Comparable<M>> ISortedIndexLink<K, T, M> index(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric);
 
-  public interface ILink {
-    <K> void connect(K key2);
-
-    <K> void disconnect(K key2);
-
-    <K> List<K> linkKeys(Class<K> clazz);
+  public interface ILink<K> {
+    void connect(K key2);
+    void disconnect(K key2);
+    List<K> linkKeys(Class<K> clazz);
   }
 
-  public interface ISortedIndexLink extends ILink {
-    void update(Object key2);
-    List<?> linkKeys(Class<?> clazz, IndexQuery<?, ?> query);
+  public interface ISortedIndexLink<K, T, M extends Comparable<M> > extends ILink<K> {
+    void update(K key2);
+    List<K> linkKeys(Class<K> clazz, IndexQuery<T, M> query);
   }
 
   enum LinkType {

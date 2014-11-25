@@ -100,7 +100,7 @@ public class VelvetUtil {
   public static boolean equals(Object node1, Object node2) {
     return keyOf(node1).equals(keyOf(node2));
   }
-
+  
   public static <T> List<T> getAll(IVelvet velvet, List<?> keys, Class<T> clazz) {
     List<T> nodes = new ArrayList<T>(keys.size());
     for (Object key : keys) {

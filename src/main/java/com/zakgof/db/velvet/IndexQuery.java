@@ -24,8 +24,8 @@ public class IndexQuery<B, C> {
 //  boolean inclusive1;
 //  C p2;
 //  boolean inclusive2;
-  int limit = -1;
-  int offset = 0;
+  public int limit = -1;
+  public int offset = 0;
   public boolean descending;
   
   public IndexQuery(Level<B, C> l1, Level<B, C> l2, int offset, int limit, boolean descending) {
