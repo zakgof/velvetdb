@@ -1,17 +1,5 @@
 package com.zakgof.db.velvet.kvs;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import com.zakgof.db.kvs.ITransactionalKvs;
-import com.zakgof.db.velvet.IRawVelvet;
 
 /**
  * Hardcoded keys:
@@ -25,6 +13,7 @@ import com.zakgof.db.velvet.IRawVelvet;
  * kvs[@/kind1/ * KEY] -> nodevalue
  * 
  */
+/*
 public class GenericKvsVelvet2 implements IRawVelvet {
 
   private final ITransactionalKvs kvs;
@@ -199,13 +188,6 @@ public class GenericKvsVelvet2 implements IRawVelvet {
     // TODO Auto-generated method stub
     return null;
   }
-  
-  /*
-   * Checks:
-   * 
-   * L0 - all nodes are of correct class
-   * 
-   * L1 - all nodes are of correct kind - in-node key is same as node key
-   */
 
 }
+*/

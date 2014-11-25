@@ -1,37 +1,100 @@
 package com.zakgof.db.velvet.links.index;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
-import com.zakgof.db.sqlkvs.MemKvs;
-import com.zakgof.db.velvet.AutoKeyed;
+import com.zakgof.db.velvet.IRawVelvet.ISortedIndexLink;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IndexQuery;
-import com.zakgof.db.velvet.Velvet;
 import com.zakgof.db.velvet.VelvetUtil;
-import com.zakgof.db.velvet.IndexQuery.Level;
-import com.zakgof.db.velvet.kvs.GenericKvsVelvet3;
 import com.zakgof.db.velvet.links.IMultiLinkDef;
-import com.zakgof.db.velvet.links.LinkUtil;
 import com.zakgof.db.velvet.links.MultiLinkDef;
-import com.zakgof.tools.generic.IFunction;
 
 public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLinkDef<A, B> implements IIndexedMultiLink<A, B, C> {
 
-  private final IFunction<B, C> metric;
+  private final Function<B, C> metric;
 
-  public IndexedMultiLinkDef(Class<A> aClazz, Class<B> bClazz, String edgeKind, IFunction<B, C> metric) {
+  public IndexedMultiLinkDef(Class<A> aClazz, Class<B> bClazz, String edgeKind, Function<B, C> metric) {
     super(aClazz, bClazz, edgeKind);
     this.metric = metric;
   }
 
-  public static <A, B, C extends Comparable<C>> IndexedMultiLinkDef<A, B, C> of(Class<A> aClazz, Class<B> bClazz, IFunction<B, C> metrics) {
+  public static <A, B, C extends Comparable<C>> IndexedMultiLinkDef<A, B, C> of(Class<A> aClazz, Class<B> bClazz, Function<B, C> metrics) {
     return new IndexedMultiLinkDef<A, B, C>(aClazz, bClazz, VelvetUtil.kindOf(aClazz) + "_" + VelvetUtil.kindOf(bClazz), metrics);
   }
+  
+  private ISortedIndexLink index(IVelvet velvet, Object akey) {
+    return velvet.raw().<B, C>index(akey, edgeKind, getChildClass(), VelvetUtil.kindOf(getChildClass()), metric);
+  }
+  
+  @Override
+  public List<?> linkKeys(IVelvet velvet, Object akey) {
+    return index(velvet, akey).linkKeys(VelvetUtil.keyClassOf(getChildClass()));
+  }
+  
+  @Override
+  public void connectKeys(IVelvet velvet, Object akey, Object bkey) {
+    index(velvet, akey).connect(bkey);
+  }
+  
+  @Override
+  public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
+    index(velvet, akey).disconnect(bkey);
+  }
+
+  @Override
+  public List<B> links(IVelvet velvet, A node, IndexQuery<B, C> indexQuery) {
+    List<?> keys = index(velvet, VelvetUtil.keyOf(node)).linkKeys(VelvetUtil.keyClassOf(getChildClass()), indexQuery);
+    return VelvetUtil.getAll(velvet, keys, getChildClass());
+  }
+  
+  // TODO : use ALinkDef
+  public IMultiLinkDef<A, B> indexGetter(final IndexQuery<B, C> indexQuery) {
+    return new IMultiLinkDef<A, B>() {
+      @Override
+      public List<B> links(IVelvet velvet, A node) {
+        return IndexedMultiLinkDef.this.links(velvet, node, indexQuery);
+      }
+
+      @Override
+      public String getKind() {
+        return IndexedMultiLinkDef.this.getKind();
+      }
+
+      @Override
+      public Class<A> getHostClass() {
+        return IndexedMultiLinkDef.this.getHostClass();
+      }
+
+      @Override
+      public Class<B> getChildClass() {
+        return IndexedMultiLinkDef.this.getChildClass();
+      }
+
+      @Override
+      public void connect(IVelvet velvet, A a, B b) {
+        IndexedMultiLinkDef.this.connect(velvet, a, b);
+      }
+
+      @Override
+      public void connectKeys(IVelvet velvet, Object akey, Object bkey) {
+        IndexedMultiLinkDef.this.connectKeys(velvet, akey, bkey);
+      }
+
+      @Override
+      public void disconnect(IVelvet velvet, A a, B b) {
+        IndexedMultiLinkDef.this.disconnect(velvet, a, b);        
+      }
+
+      @Override
+      public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
+        IndexedMultiLinkDef.this.disconnectKeys(velvet, akey, bkey);
+      }
+    };
+  }
+}
+  
+  /*
 
   private class IndexRequest {
 
@@ -171,11 +234,10 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
     public void remove(B b) {
       int index = findIndexByNode(new Level<B,C>(b), false);
       
-      /** TEMP */
       B b2 = indexValue(store.indices.get(index - 1));      
       if (!VelvetUtil.equals(b2,  b))
         throw new IllegalArgumentException(); // FATAL
-      /** TEMP */
+      
       
       int removedIdx = store.indices.remove(index - 1);
       for (int i = 0; i<store.indices.size(); i++) {
@@ -226,49 +288,7 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
 
   }
 
-  public IMultiLinkDef<A, B> indexGetter(final IndexQuery<B, C> indexQuery) {
-    return new IMultiLinkDef<A, B>() {
-      @Override
-      public List<B> links(IVelvet velvet, A node) {
-        return IndexedMultiLinkDef.this.links(velvet, node, indexQuery);
-      }
-
-      @Override
-      public String getKind() {
-        return IndexedMultiLinkDef.this.getKind();
-      }
-
-      @Override
-      public Class<A> getHostClass() {
-        return IndexedMultiLinkDef.this.getHostClass();
-      }
-
-      @Override
-      public Class<B> getChildClass() {
-        return IndexedMultiLinkDef.this.getChildClass();
-      }
-
-      @Override
-      public void connect(IVelvet velvet, A a, B b) {
-        IndexedMultiLinkDef.this.connect(velvet, a, b);
-      }
-
-      @Override
-      public void connectKeys(IVelvet velvet, Object akey, Object bkey) {
-        IndexedMultiLinkDef.this.connectKeys(velvet, akey, bkey);
-      }
-
-      @Override
-      public void disconnect(IVelvet velvet, A a, B b) {
-        IndexedMultiLinkDef.this.disconnect(velvet, a, b);        
-      }
-
-      @Override
-      public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
-        IndexedMultiLinkDef.this.disconnectKeys(velvet, akey, bkey);
-      }
-    };
-  }
+  
 
   public static void main(String[] args) {
 
@@ -355,3 +375,5 @@ class T1 extends AutoKeyed {
 
 class KK extends AutoKeyed {
 }
+
+*/

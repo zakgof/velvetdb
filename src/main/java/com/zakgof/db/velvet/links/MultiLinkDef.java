@@ -2,6 +2,7 @@ package com.zakgof.db.velvet.links;
 
 import java.util.List;
 
+import com.zakgof.db.velvet.IRawVelvet.LinkType;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetUtil;
 
@@ -20,13 +21,14 @@ public class MultiLinkDef<A, B> extends ALinkDef<A, B> implements IMultiLinkDef<
   }
   
   public List<B> links(IVelvet velvet, A node) {
-    return velvet.links(bClazz, node, edgeKind);
+    return VelvetUtil.getAll(velvet, linkKeys(velvet, VelvetUtil.keyOf(node)), getChildClass());
   }
   
-  public List<Object> linkKeys(IVelvet velvet, Object key) {
-    return velvet.raw().linkKeys(Object.class, key, edgeKind);
+  public List<?> linkKeys(IVelvet velvet, Object key) {
+    return velvet.raw().index(key, edgeKind, LinkType.Multi).linkKeys(VelvetUtil.keyClassOf(getChildClass()));
   }
 
+  /*
   public void disconnectAll(IVelvet velvet, A node) {
     // TODO : lock
     List<B> links = links(velvet, node);
@@ -44,10 +46,21 @@ public class MultiLinkDef<A, B> extends ALinkDef<A, B> implements IMultiLinkDef<
     velvet.put(b);
     connect(velvet, a, b);    
   }
+  */
   
   @Override
   public String toString() {
     return "multi " + edgeKind + " " + getHostClass() + "->" + getChildClass();
+  }
+
+  @Override
+  public void connectKeys(IVelvet velvet, Object akey, Object bkey) {
+    velvet.raw().index(akey, edgeKind, LinkType.Multi).connect(bkey); 
+  }
+
+  @Override
+  public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
+    velvet.raw().index(akey, edgeKind, LinkType.Multi).connect(bkey);    
   }
   
 }
