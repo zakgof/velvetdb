@@ -1,24 +1,22 @@
 package com.zakgof.db.velvet;
 
-
-
-public class IndexQuery<B, C> {
+public class IndexQuery<K, M> {
   
-  public static class Level<B, C> {
-    Level(C p, boolean inclusive) {
-      this.p = p;
+  public static class Level<K, M> {
+    Level(M m, boolean inclusive) {
+      this.m = m;
       this.inclusive = inclusive;
     }
-    Level(B node) {
-      this.node = node;
+    Level(K key) {
+      this.key = key;
     }
-    public B node;
-    public C p;
+    public K key;
+    public M m;
     public boolean inclusive;
   }
   
-  public Level<B, C> l1;
-  public Level<B, C> l2;
+  public Level<K, M> l1;
+  public Level<K, M> l2;
   
 //  C p1;
 //  boolean inclusive1;
@@ -28,7 +26,7 @@ public class IndexQuery<B, C> {
   public int offset = 0;
   public boolean descending;
   
-  public IndexQuery(Level<B, C> l1, Level<B, C> l2, int offset, int limit, boolean descending) {
+  public IndexQuery(Level<K, M> l1, Level<K, M> l2, int offset, int limit, boolean descending) {
     this.l1 = l1;
     this.l2 = l2;
     this.offset = offset;
@@ -53,8 +51,8 @@ public class IndexQuery<B, C> {
       return this;
     }
     
-    public Builder<B, C> greaterO(B node1) {
-      this.l1 = new Level<>(node1);      
+    public Builder<B, C> greaterO(B key1) {
+      this.l1 = new Level<>(key1);      
       return this;
     }
     
@@ -68,8 +66,8 @@ public class IndexQuery<B, C> {
       return this;
     }
     
-    public Builder<B, C> lessO(B node2) {
-      this.l2 = new Level<>(node2);      
+    public Builder<B, C> lessO(B key2) {
+      this.l2 = new Level<>(key2);      
       return this;
     }
     
@@ -97,42 +95,6 @@ public class IndexQuery<B, C> {
       return new IndexQuery<B, C>(l1, l2, offset, limit, descending);
     }
     
-  }
-
-  public static <B, C> IndexQuery<B, C> range(C p1, boolean inclusive1, C p2, boolean inclusive2) {
-    return new IndexQuery<B, C>(new Level<>(p1, inclusive1), new Level<>(p2, inclusive2), 0, -1, false);
-  }
-  
-  public static <B, C> IndexQuery<B, C> greater(C p1) {
-    return IndexQuery.<B, C>builder().greater(p1).build();
-  }
-  
-  public static <B, C> IndexQuery<B, C> less(C p2) {
-    return IndexQuery.<B, C>builder().less(p2).build();
-  }
-  
-  public static <B, C> IndexQuery<B, C> greaterOrEq(C p1) {
-    return IndexQuery.<B, C>builder().greaterOrEq(p1).build();
-  }
-  
-  public static <B, C> IndexQuery<B, C> lessOrEq(C p2) {
-    return IndexQuery.<B, C>builder().lessOrEq(p2).build();
-  }
-
-  public static <B, C> IndexQuery<B, C> last() {
-    return IndexQuery.<B, C>builder().descending().limit(1).build();
-  }
-  
-  public static <B, C> IndexQuery<B, C> prev(B node) {
-    return IndexQuery.<B, C>builder().lessO(node).descending().limit(1).build();
-  }
-  
-  public static <B, C> IndexQuery<B, C> next(B node) {
-    return IndexQuery.<B, C>builder().greaterO(node).limit(1).build();
-  }
-  
-  public static <B, C> IndexQuery<B, C> equalsTo(C p) {
-    return IndexQuery.<B, C>builder().greaterOrEq(p).lessOrEq(p).build();
   }
   
 }

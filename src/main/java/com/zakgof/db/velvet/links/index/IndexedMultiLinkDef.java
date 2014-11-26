@@ -23,8 +23,8 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
     return new IndexedMultiLinkDef<A, B, C>(aClazz, bClazz, VelvetUtil.kindOf(aClazz) + "_" + VelvetUtil.kindOf(bClazz), metrics);
   }
   
-  private ISortedIndexLink<Object, B, C> index(IVelvet velvet, Object akey) {
-    return velvet.raw().<Object, B, C>index(akey, edgeKind, getChildClass(), VelvetUtil.kindOf(getChildClass()), metric);
+  private <K> ISortedIndexLink<K, B, C> index(IVelvet velvet, Object akey) {
+    return velvet.raw().<K, B, C>index(akey, edgeKind, getChildClass(), VelvetUtil.kindOf(getChildClass()), metric);
   }
   
   @SuppressWarnings("unchecked")
@@ -44,14 +44,14 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
   }
 
   @Override
-  public List<B> links(IVelvet velvet, A node, IndexQuery<B, C> indexQuery) {
+  public <K> List<B> links(IVelvet velvet, A node, IndexQuery<K, C> indexQuery) {
     @SuppressWarnings("unchecked")
-    List<?> keys = index(velvet, VelvetUtil.keyOf(node)).linkKeys((Class<Object>) VelvetUtil.keyClassOf(getChildClass()), indexQuery);
+    List<K> keys = this.<K>index(velvet, (K)VelvetUtil.keyOf(node)).linkKeys((Class<K>)VelvetUtil.keyClassOf(getChildClass()), indexQuery);
     return VelvetUtil.getAll(velvet, keys, getChildClass());
   }
   
   // TODO : use ALinkDef
-  public IMultiLinkDef<A, B> indexGetter(final IndexQuery<B, C> indexQuery) {
+  public IMultiLinkDef<A, B> indexGetter(final IndexQuery<? extends Object, C> indexQuery) {
     return new IMultiLinkDef<A, B>() {
       @Override
       public List<B> links(IVelvet velvet, A node) {
@@ -104,17 +104,17 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
     private final IVelvet velvet;
     private final IndexStorageRecord store;
     private final Map<Integer, B> childrenCache;
-    private final A node;
+    private final A key;
     private final int size;
 
-    public IndexRequest(IVelvet velvet, A node) {
+    public IndexRequest(IVelvet velvet, A key) {
       this.velvet = velvet;
-      this.linkKeys = velvet.raw().linkKeys(VelvetUtil.keyClassOf(getChildClass()), VelvetUtil.keyOf(node), getKind());
-      List<IndexStorageRecord> links = velvet.links(IndexStorageRecord.class, node, getIndexLinkName());
+      this.linkKeys = velvet.raw().linkKeys(VelvetUtil.keyClassOf(getChildClass()), VelvetUtil.keyOf(key), getKind());
+      List<IndexStorageRecord> links = velvet.links(IndexStorageRecord.class, key, getIndexLinkName());
       this.store = links.isEmpty() ? new IndexStorageRecord() : links.get(0); // TODO
       this.size = store.indices.size();
       this.childrenCache = new HashMap<>();
-      this.node = node;
+      this.node = key;
     }
 
     private String getIndexLinkName() {
@@ -151,7 +151,7 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
       if (l == null)
          return upper ? size - 1 : -1;
       
-      if (l.node != null)
+      if (l.key != null)
         return findIndexByNode(l, upper);        
       
       
@@ -159,24 +159,24 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
         return -1;
       
       C c1 = indexMetric(0);
-      if (less(l.p, c1, l.inclusive ^ upper))
+      if (less(l.m, c1, l.inclusive ^ upper))
         return -1;
 
       C c2 = indexMetric(size - 1);
-      if (greater(l.p, c2, l.inclusive ^ !upper))
+      if (greater(l.m, c2, l.inclusive ^ !upper))
         return size - 1;
 
-      return find(l.p, 0, size - 1, c1, c2, l.inclusive ^ !upper);
+      return find(l.m, 0, size - 1, c1, c2, l.inclusive ^ !upper);
     }
 
     private int findIndexByNode(IndexQuery.Level<B, C> l, boolean upper) {
-      int low = find(new Level<B, C>(metric.get(l.node), true), false);
+      int low = find(new Level<B, C>(metric.get(l.key), true), false);
       if (low >= size)
         throwNoNode();
-      int high = find(new Level<B, C>(metric.get(l.node), true), true);
+      int high = find(new Level<B, C>(metric.get(l.key), true), true);
       if (high < 0)
         throwNoNode();
-      Object key = VelvetUtil.keyOf(l.node);
+      Object key = VelvetUtil.keyOf(l.key);
       for (int i = low + 1; i<=high; i++)
         if (VelvetUtil.keyOf(indexValue(store.indices.get(i))).equals(key))
           return i + (upper ? -1 : 1);
@@ -188,16 +188,16 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
       throw new RuntimeException("Node specified in index query does not exist");      
     }
 
-    private int find(C p, int i1, int i2, C c1, C c2, boolean inclusive) {
+    private int find(C m, int i1, int i2, C c1, C c2, boolean inclusive) {
       int i = (i1 + i2) / 2;
       if (i == i1 || i == i2)
         return i1;
 
       C c = indexMetric(i);
-      if (greater(p, c, inclusive))
-        return find(p, i, i2, c, c2, inclusive);
+      if (greater(m, c, inclusive))
+        return find(m, i, i2, c, c2, inclusive);
       else
-        return find(p, i1, i, c1, c, inclusive);
+        return find(m, i1, i, c1, c, inclusive);
     }
 
     private C indexMetric(int flatindex) {
@@ -230,7 +230,7 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
       boolean needLink = (store.getKey() == null);
       velvet.put(store);
       if (needLink)
-        velvet.connect(node, store, getIndexLinkName());
+        velvet.connect(key, store, getIndexLinkName());
     }
 
     public void remove(B b) {
@@ -256,14 +256,14 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
   }
 
   @Override
-  public List<B> links(IVelvet velvet, A node, IndexQuery<B, C> indexQuery) {
-    List<B> nodes = new IndexRequest(velvet, node).run(indexQuery);
+  public List<B> links(IVelvet velvet, A key, IndexQuery<B, C> indexQuery) {
+    List<B> nodes = new IndexRequest(velvet, key).run(indexQuery);
     return nodes;
   }
 
-  // TODO : avoid fetching host node
+  // TODO : avoid fetching host key
   public List<Object> linkKeys(IVelvet velvet, Object key, IndexQuery<B, C> indexQuery) {
-    List<Object> childKeys = new IndexRequest(velvet, velvet.get(getHostClass(), key)).run(indexQuery).stream().map(node -> VelvetUtil.keyOf(node)).collect(Collectors.toList());
+    List<Object> childKeys = new IndexRequest(velvet, velvet.get(getHostClass(), key)).run(indexQuery).stream().map(key -> VelvetUtil.keyOf(key)).collect(Collectors.toList());
     return childKeys;
   }
 

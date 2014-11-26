@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.zakgof.db.sqlkvs.MemKvs;
@@ -12,10 +13,14 @@ import com.zakgof.db.velvet.IRawVelvet;
 import com.zakgof.db.velvet.IRawVelvet.ISortedIndexLink;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IndexQuery;
+import com.zakgof.db.velvet.IndexQueryFactory;
 import com.zakgof.db.velvet.Velvet;
 import com.zakgof.db.velvet.VelvetUtil;
 
 public class GenericKvsVelvet3Test {
+
+  private GenericKvsVelvet3 raw;
+  private ISortedIndexLink<Integer, String, Integer> indexLink;
 
   public static void main(String[] args) {
     new GenericKvsVelvet3Test().testMixedKvs();
@@ -45,37 +50,74 @@ public class GenericKvsVelvet3Test {
     raw.dumpIndex(VelvetUtil.keyClassOf(T1.class), "@n/t1");
   }
 
-  @Test
-  public void testArrayIndex() {
-
+  @Before
+  public void init() {
     String[] name = new String[] {"0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9"};    
     MemKvs kvs = new MemKvs();
-    GenericKvsVelvet3 raw = new GenericKvsVelvet3(kvs);
+    raw = new GenericKvsVelvet3(kvs);
     
-    ISortedIndexLink<Integer, String, Integer> indexLink = raw.<Integer, String, Integer>index("node1", "edge", String.class, "child", node -> (int)(node.charAt(node.length() - 1) - '0'));
+    indexLink = raw.<Integer, String, Integer>index("node1", "edge", String.class, "child", node -> (int)(node.charAt(node.length() - 1) - '0'));
     
     raw.put("main", "rootKey", "node1");
     for (int i=0; i<name.length; i++) {
       raw.put("child", i, name[i]);
       indexLink.connect(i);
     }
-        
-    
-//    check(raw, indexLink, IndexQuery.<String, Integer>greaterOrEq(5),     "a5", "b5", "c5", "a7", "b7", "a9", "b9");
-//    check(raw, indexLink, IndexQuery.<String, Integer>equalsTo(7),        "a7", "b7");
-//    check(raw, indexLink, IndexQuery.<String, Integer>equalsTo(8)          );
-//    check(raw, indexLink, IndexQuery.<String, Integer>greater(5),         "a7", "b7", "a9", "b9");
-    check(raw, indexLink, IndexQuery.<String, Integer>last(),             "b9");
-    check(raw, indexLink, IndexQuery.<String, Integer>less(5),            "0", "1");
-    check(raw, indexLink, IndexQuery.<String, Integer>lessOrEq(5),        "0", "1", "a5", "b5", "c5");
-    check(raw, indexLink, IndexQuery.<String, Integer>next("b5"),         "c5");
-    check(raw, indexLink, IndexQuery.<String, Integer>next("c5"),         "a7");
-    check(raw, indexLink, IndexQuery.<String, Integer>next("b9")           );
-    
-    
   }
   
-  private void check(IRawVelvet raw, ISortedIndexLink<Integer, String, Integer> indexLink, IndexQuery<String, Integer> query, String...v) {
+  @Test
+  public void testGreaterOrEq() {
+    check(raw, indexLink, IndexQueryFactory.greaterOrEq(5),     "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+  }
+  
+  @Test
+  public void testEqualsTo() {
+    check(raw, indexLink, IndexQueryFactory.equalsTo(7),        "a7", "b7");
+  }
+  
+  @Test
+  public void testEqualsToNonExisting() {
+    check(raw, indexLink, IndexQueryFactory.equalsTo(8)          );
+  }
+  
+  @Test
+  public void testGreater() {
+    check(raw, indexLink, IndexQueryFactory.greater(5),         "a7", "b7", "a9", "b9");
+  }
+  
+  @Test
+  public void testLast() {
+    check(raw, indexLink, IndexQueryFactory.last(),             "b9");
+  }
+  
+  @Test
+  public void testLess() {
+    check(raw, indexLink, IndexQueryFactory.less(5),            "0", "1");
+  }
+  
+  @Test
+  public void testLessOrEq() {
+    check(raw, indexLink, IndexQueryFactory.lessOrEq(5),        "0", "1", "a5", "b5", "c5");
+  }
+  
+  
+  @Test
+  public void testNext1() {
+    check(raw, indexLink, IndexQueryFactory.nextKey(3),         "c5"); // b5 -> c5
+  }
+  
+  
+  @Test
+  public void testNext2() {
+    check(raw, indexLink, IndexQueryFactory.nextKey(4),            "a7"); // c5 -> a7
+  }
+  
+  @Test
+  public void testNextEnd() {
+    check(raw, indexLink, IndexQueryFactory.nextKey(8)                 ); // b9 -> nil
+  }
+  
+  private void check(IRawVelvet raw, ISortedIndexLink<Integer, String, Integer> indexLink, IndexQuery<Integer, Integer> query, String...v) {
     String[] vals = indexLink.linkKeys(Integer.class, query).stream().map(key -> raw.get(String.class, "child", key)).collect(Collectors.toList()).toArray(new String[]{});
     Assert.assertArrayEquals(v, vals);
   }

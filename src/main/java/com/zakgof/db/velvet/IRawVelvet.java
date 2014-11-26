@@ -29,7 +29,7 @@ public interface IRawVelvet extends ITransactional, ILockable {
 
   public interface ISortedIndexLink<K, T, M extends Comparable<M> > extends ILink<K> {
     void update(K key2);
-    List<K> linkKeys(Class<K> clazz, IndexQuery<T, M> query);
+    List<K> linkKeys(Class<K> clazz, IndexQuery<K, M> query);
   }
 
   enum LinkType {
