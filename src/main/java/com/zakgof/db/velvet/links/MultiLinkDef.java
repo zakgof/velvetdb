@@ -2,6 +2,7 @@ package com.zakgof.db.velvet.links;
 
 import java.util.List;
 
+import com.zakgof.db.velvet.IRawVelvet.ILink;
 import com.zakgof.db.velvet.IRawVelvet.LinkType;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetUtil;
@@ -26,8 +27,8 @@ public class MultiLinkDef<A, B> extends ALinkDef<A, B> implements IMultiLinkDef<
   }
   
   @SuppressWarnings("unchecked")
-  public List<?> linkKeys(IVelvet velvet, Object key) {
-    return velvet.raw().index(key, edgeKind, LinkType.Multi).linkKeys((Class<Object>) VelvetUtil.keyClassOf(getChildClass()));
+  public <K> List<K> linkKeys(IVelvet velvet, Object key) {
+    return this.<K>index(velvet, key).linkKeys((Class<K>) VelvetUtil.keyClassOf(getChildClass()));
   }
 
   /*
@@ -57,12 +58,21 @@ public class MultiLinkDef<A, B> extends ALinkDef<A, B> implements IMultiLinkDef<
 
   @Override
   public void connectKeys(IVelvet velvet, Object akey, Object bkey) {
-    velvet.raw().index(akey, edgeKind, LinkType.Multi).connect(bkey); 
+    index(velvet, akey).connect(bkey); 
   }
 
   @Override
   public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
-    velvet.raw().index(akey, edgeKind, LinkType.Multi).connect(bkey);    
+    index(velvet, akey).connect(bkey);    
+  }
+  
+  @Override
+  public boolean isConnectedKeys(IVelvet velvet, Object akey, Object bkey) {
+    return index(velvet, akey).isConnected(bkey); 
+  }
+
+  private <K> ILink<K> index(IVelvet velvet, Object akey) {
+    return velvet.raw().index(akey, edgeKind, LinkType.Multi);
   }
   
 }

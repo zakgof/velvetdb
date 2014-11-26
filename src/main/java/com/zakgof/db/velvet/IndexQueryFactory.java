@@ -24,6 +24,10 @@ public class IndexQueryFactory {
     return IndexQuery.<B, M>builder().lessOrEq(p2).build();
   }
 
+  public static <B, M> IndexQuery<B, M> first() {
+    return IndexQuery.<B, M>builder().limit(1).build();
+  }
+
   public static <B, M> IndexQuery<B, M> last() {
     return IndexQuery.<B, M>builder().descending().limit(1).build();
   }
@@ -35,6 +39,10 @@ public class IndexQueryFactory {
   public static <T, K, M> IndexQuery<K, M> prev(T node) {
     @SuppressWarnings("unchecked")
     K key = (K) VelvetUtil.keyOf(node);
+    return prevKey(key);
+  }
+  
+  public static <T, K, M> IndexQuery<K, M> prevKey(K key) {
     return IndexQuery.<K, M>builder().lessO(key).descending().limit(1).build();
   }
   
@@ -47,6 +55,7 @@ public class IndexQueryFactory {
   public static <T, K, M> IndexQuery<K, M> nextKey(K key) {
     return IndexQuery.<K, M>builder().greaterO(key).limit(1).build();
   }
+
   
   
 }

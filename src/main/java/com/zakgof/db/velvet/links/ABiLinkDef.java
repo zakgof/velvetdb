@@ -38,12 +38,16 @@ class ABiLinkDef<A, B, OneWayLinkType extends ILinkDef<A, B>, BackLinkType exten
     oneWay.disconnectKeys(velvet, akey, bkey);
     backLink.oneWay.disconnectKeys(velvet, bkey, akey);
   }
-//
-//  @Override
-//  public void disconnectAllByKey(IVelvet velvet, Object akey) {
-//    // TODO !!!
-//    oneWay.disconnectKeys(velvet, akey, akey);    
-//  }
+  
+  @Override
+  public boolean isConnected(IVelvet velvet, A a, B b) {
+    return oneWay.isConnected(velvet, a, b);    
+  }
+  
+  @Override
+  public boolean isConnectedKeys(IVelvet velvet, Object akey, Object bkey) {
+    return oneWay.isConnectedKeys(velvet, akey, bkey);  
+  }
 
   @Override
   public String getKind() {

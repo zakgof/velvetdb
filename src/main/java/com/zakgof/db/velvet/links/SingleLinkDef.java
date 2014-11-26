@@ -2,6 +2,7 @@ package com.zakgof.db.velvet.links;
 
 import java.util.List;
 
+import com.zakgof.db.velvet.IRawVelvet.ILink;
 import com.zakgof.db.velvet.IRawVelvet.LinkType;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetUtil;
@@ -28,19 +29,29 @@ public class SingleLinkDef<A, B> extends ALinkDef<A, B> implements ISingleLinkDe
 
   private Object singleKey(IVelvet velvet, Object key) {    
     @SuppressWarnings("unchecked")
-    List<?> linkKeys = velvet.raw().index(key, edgeKind, LinkType.Single).linkKeys((Class<Object>) VelvetUtil.keyClassOf(getChildClass()));
+    List<?> linkKeys = index(velvet, key).linkKeys((Class<Object>) VelvetUtil.keyClassOf(getChildClass()));
     return linkKeys.isEmpty() ? null : linkKeys.get(0);    
   }
 
   @Override
   public void connectKeys(IVelvet velvet, Object akey, Object bkey) {
-    velvet.raw().index(akey, edgeKind, LinkType.Single).connect(bkey);
+    index(velvet, akey).connect(bkey);
+  }
+
+  private ILink<Object> index(IVelvet velvet, Object akey) {
+    return velvet.raw().index(akey, edgeKind, LinkType.Single);
   }
 
   @Override
   public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
-    velvet.raw().index(akey, edgeKind, LinkType.Single).disconnect(bkey);
+    index(velvet, akey).disconnect(bkey);
   }
+  
+  @Override
+  public boolean isConnectedKeys(IVelvet velvet, Object akey, Object bkey) {
+    return index(velvet, akey).isConnected(bkey);
+  }
+  
  
   
 }

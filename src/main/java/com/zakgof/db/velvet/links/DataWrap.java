@@ -59,7 +59,7 @@ public class DataWrap<T> {
   }
   
   @SuppressWarnings("unchecked")
-  public <L> List<DataWrap<L>> multi(IMultiLinkDef<T, L> link) {
+  public <L> List<DataWrap<L>> multiLink(IMultiLinkDef<T, L> link) {
     return (List<DataWrap<L>>)(List<?>)multis.get(link.getKind());
   }
   
@@ -68,7 +68,7 @@ public class DataWrap<T> {
   }
   
   @SuppressWarnings("unchecked")
-  public <L> DataWrap<L> single(ISingleLinkDef<T, L> link) {
+  public <L> DataWrap<L> singleLink(ISingleLinkDef<T, L> link) {
     return (DataWrap<L>) singles.get(link.getKind());
   }
   

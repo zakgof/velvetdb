@@ -23,6 +23,11 @@ abstract class ALinkDef<A, B> implements ILinkDef<A, B> {
   public void disconnect(IVelvet velvet, A a, B b) {
     disconnectKeys(velvet, VelvetUtil.keyOf(a), VelvetUtil.keyOf(b));
   }
+  
+  @Override
+  public boolean isConnected(IVelvet velvet, A a, B b) {
+    return isConnectedKeys(velvet, VelvetUtil.keyOf(a), VelvetUtil.keyOf(b));
+  }
 
   @Override
   public String getKind() {

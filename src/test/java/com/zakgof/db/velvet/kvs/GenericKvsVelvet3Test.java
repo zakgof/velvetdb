@@ -86,8 +86,23 @@ public class GenericKvsVelvet3Test {
   }
   
   @Test
+  public void testFirst() {
+    check(raw, indexLink, IndexQueryFactory.first(),            "0");
+  }
+  
+  @Test
   public void testLast() {
     check(raw, indexLink, IndexQueryFactory.last(),             "b9");
+  }
+  
+  @Test
+  public void testPrev() {
+    check(raw, indexLink, IndexQueryFactory.prevKey(8),         "a9"); // b9 -> a9
+  }
+  
+  @Test
+  public void testPrevNil() {
+    check(raw, indexLink, IndexQueryFactory.prevKey(0)          ); // 0 -> nil
   }
   
   @Test

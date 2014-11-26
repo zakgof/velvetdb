@@ -156,7 +156,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
       if (!removeFromIndex(linkOriginsKey(edgeKind), key1))
         removeFromIndex(EDGEKINDS_KEY, edgeKind);
     }
-
+    
   }
 
   private class MultiLink<K> extends BaseLink implements ILink<K> {
@@ -176,6 +176,11 @@ public class GenericKvsVelvet3 implements IRawVelvet {
       // TODO : locking ?
       if (!removeFromIndex(indexKey, key2))
         disconnect();
+    }
+    
+    @Override
+    public boolean isConnected(K bkey) {
+      return new MixedIndex<K>(kvs, indexKey, (Class<K>)bkey.getClass()).contains(bkey);
     }
 
     @Override
@@ -212,6 +217,11 @@ public class GenericKvsVelvet3 implements IRawVelvet {
     @Override
     public List<K> linkKeys(Class<K> clazz) {
       return Arrays.asList(kvs.get(clazz, indexKey));
+    }
+    
+    @Override
+    public boolean isConnected(K bkey) {      
+      return bkey.equals(kvs.get(bkey.getClass(), indexKey));
     }
 
   }
@@ -277,6 +287,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
 
     @Override
     public void disconnect(K key2) {
+      @SuppressWarnings("unchecked")
       Class<K> clazz = (Class<K>) key2.getClass();
       K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);
 
@@ -289,6 +300,14 @@ public class GenericKvsVelvet3 implements IRawVelvet {
         index = ArrayUtil.remove(index, pos);
         kvs.put(indexKey, index);
       }
+    }
+    
+    @Override
+    public boolean isConnected(K bkey) {
+      @SuppressWarnings("unchecked")
+      Class<K> clazz = (Class<K>) bkey.getClass();
+      K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);
+      return Functions.contains(index, bkey); // TODO : binary search with metric can make it faster...
     }
 
     @Override
@@ -379,11 +398,11 @@ public class GenericKvsVelvet3 implements IRawVelvet {
         return index.length - 1;
       M m2 = metricOf(level);
       boolean right = level.inclusive || level.key != null;
-      int i1 = searchForInsert(index, keyMetric, m2, right);
+      int i1 = searchForInsert(index, keyMetric, m2, right) - 1;
       if (level.key == null)
-        return i1 - 1;
+        return i1;
       for (int i=i1;; i--) {
-        if (i == index.length || keyMetric.apply(index[i]).compareTo(m2) < 0)
+        if (i < 0 || keyMetric.apply(index[i]).compareTo(m2) < 0)
           if (level.inclusive)
             throw new NoSuchElementException();
           else

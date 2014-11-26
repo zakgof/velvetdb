@@ -46,52 +46,21 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
   @Override
   public <K> List<B> links(IVelvet velvet, A node, IndexQuery<K, C> indexQuery) {
     @SuppressWarnings("unchecked")
-    List<K> keys = this.<K>index(velvet, (K)VelvetUtil.keyOf(node)).linkKeys((Class<K>)VelvetUtil.keyClassOf(getChildClass()), indexQuery);
+    List<K> keys = linkeKeys(velvet, (K)VelvetUtil.keyOf(node), indexQuery);
     return VelvetUtil.getAll(velvet, keys, getChildClass());
+  }
+
+  @SuppressWarnings("unchecked")
+  private <K> List<K> linkeKeys(IVelvet velvet, Object akey, IndexQuery<K, C> indexQuery) {
+    return this.<K>index(velvet, akey).linkKeys((Class<K>)VelvetUtil.keyClassOf(getChildClass()), indexQuery);
   }
   
   // TODO : use ALinkDef
-  public IMultiLinkDef<A, B> indexGetter(final IndexQuery<? extends Object, C> indexQuery) {
-    return new IMultiLinkDef<A, B>() {
-      @Override
-      public List<B> links(IVelvet velvet, A node) {
-        return IndexedMultiLinkDef.this.links(velvet, node, indexQuery);
-      }
-
-      @Override
-      public String getKind() {
-        return IndexedMultiLinkDef.this.getKind();
-      }
-
-      @Override
-      public Class<A> getHostClass() {
-        return IndexedMultiLinkDef.this.getHostClass();
-      }
-
-      @Override
-      public Class<B> getChildClass() {
-        return IndexedMultiLinkDef.this.getChildClass();
-      }
-
-      @Override
-      public void connect(IVelvet velvet, A a, B b) {
-        IndexedMultiLinkDef.this.connect(velvet, a, b);
-      }
-
-      @Override
-      public void connectKeys(IVelvet velvet, Object akey, Object bkey) {
-        IndexedMultiLinkDef.this.connectKeys(velvet, akey, bkey);
-      }
-
-      @Override
-      public void disconnect(IVelvet velvet, A a, B b) {
-        IndexedMultiLinkDef.this.disconnect(velvet, a, b);        
-      }
-
-      @Override
-      public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
-        IndexedMultiLinkDef.this.disconnectKeys(velvet, akey, bkey);
-      }
+  public <K> IMultiLinkDef<A, B> indexGetter(final IndexQuery<K, C> indexQuery) {
+    return new IndexedMultiLinkDef<A, B, C>(getHostClass(), bClazz, edgeKind, metric) {      
+      public List<?> linkKeys(IVelvet velvet, Object key) {
+        return IndexedMultiLinkDef.this.<K>linkeKeys(velvet, key, indexQuery);
+      }      
     };
   }
 }
