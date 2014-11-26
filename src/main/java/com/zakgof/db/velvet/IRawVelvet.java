@@ -25,6 +25,7 @@ public interface IRawVelvet extends ITransactional, ILockable {
     void connect(K key2);
     void disconnect(K key2);
     List<K> linkKeys(Class<K> clazz);
+    boolean isConnected(K bkey);
   }
 
   public interface ISortedIndexLink<K, T, M extends Comparable<M> > extends ILink<K> {

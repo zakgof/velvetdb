@@ -69,6 +69,16 @@ public class LinkUtil {
       public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
         multi.disconnectKeys(velvet, akey, bkey);
       }
+      
+      @Override
+      public boolean isConnected(IVelvet velvet, A a, B b) {
+        return multi.isConnected(velvet, a, b);
+      }
+      
+      @Override
+      public boolean isConnectedKeys(IVelvet velvet, Object akey, Object bkey) {
+        return multi.isConnectedKeys(velvet, akey, bkey);
+      }
 
       
     };
@@ -140,6 +150,16 @@ public class LinkUtil {
       @Override
       public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
         indexedGetter.disconnectKeys(velvet, akey, bkey);
+      }
+      
+      @Override
+      public boolean isConnected(IVelvet velvet, A a, B b) {
+        return indexedGetter.isConnected(velvet, a, b);
+      }
+      
+      @Override
+      public boolean isConnectedKeys(IVelvet velvet, Object akey, Object bkey) {
+        return indexedGetter.isConnectedKeys(velvet, akey, bkey);
       }
 
     };

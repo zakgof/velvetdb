@@ -17,5 +17,9 @@ public interface ILinkDef<A, B> {
   public void disconnect(IVelvet velvet, A a, B b);
 
   public void disconnectKeys(IVelvet velvet, Object akey, Object bkey);
+  
+  public boolean isConnected(IVelvet velvet, A a, B b);
+  
+  public boolean isConnectedKeys(IVelvet velvet, Object akey, Object bkey);
 
 }
