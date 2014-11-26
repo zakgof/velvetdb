@@ -15,9 +15,9 @@ public class AdminUtil {
       Class<?> entityClass = model.getEntity(entity);
       List<?> nodes = source.allOf(entityClass);
       System.err.print(entity + " " + nodes.size() + " nodes... ");
-      for (Object node : nodes) {
-        if (VelvetUtil.keyOf(node) != null)
-          dest.put(node);
+      for (Object key : nodes) {
+        if (VelvetUtil.keyOf(key) != null)
+          dest.put(key);
       }
       System.err.println(" done.");
     }

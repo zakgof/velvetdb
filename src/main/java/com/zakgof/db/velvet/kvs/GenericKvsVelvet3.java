@@ -16,7 +16,6 @@ import com.zakgof.db.kvs.ITransactionalKvs;
 import com.zakgof.db.velvet.IRawVelvet;
 import com.zakgof.db.velvet.IndexQuery;
 import com.zakgof.db.velvet.IndexQuery.Level;
-import com.zakgof.db.velvet.VelvetUtil;
 import com.zakgof.tools.generic.Functions;
 
 /**
@@ -306,12 +305,12 @@ public class GenericKvsVelvet3 implements IRawVelvet {
     }
 
     @Override
-    public List<K> linkKeys(Class<K> clazz, IndexQuery<T, M> query) {      
+    public List<K> linkKeys(Class<K> clazz, IndexQuery<K, M> query) {      
       K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);      
       return queryArray(index, query);
     }
 
-    List<K> queryArray(K[] array, IndexQuery<T, M> query) {
+    List<K> queryArray(K[] array, IndexQuery<K, M> query) {
       
       if (array == null)
         return new ArrayList<>();
@@ -329,7 +328,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
       } else {
         i1 += query.offset;
         if (query.limit > 0)
-          i2 = Math.max(i2, i1 + query.limit);
+          i2 = Math.min(i2, i1 + query.limit - 1);
         for (int i=i1; i<=i2; i++)
           list.add(array[i]);
       }
@@ -337,8 +336,8 @@ public class GenericKvsVelvet3 implements IRawVelvet {
     }
     
     /**
-     * node inclusive: left then scan
-     * node exclusive: left then scan
+     * key inclusive: left then scan
+     * key exclusive: left then scan
      * value inclusive: left
      * value exclusive: right
      * no value : zero
@@ -346,29 +345,28 @@ public class GenericKvsVelvet3 implements IRawVelvet {
      * @param level
      * @return
      */
-    private int getLeftIndex(K[] index, Level<T, M> level) {
+    private int getLeftIndex(K[] index, Level<K, M> level) {
       if (level == null)
         return 0;
       M m1 = metricOf(level);
-      boolean right = !level.inclusive && level.node == null;
+      boolean right = !level.inclusive && level.key == null;
       int i1 = searchForInsert(index, keyMetric, m1, right);
-      if (level.node == null)
+      if (level.key == null)
         return i1;
-      Object key = VelvetUtil.keyOf(level.node);
       for (int i=i1;; i++) {
         if (i == index.length || keyMetric.apply(index[i]).compareTo(m1) > 0)
           if (level.inclusive)
             throw new NoSuchElementException();
           else
             return i;
-        if (index[i].equals(key))
+        if (index[i].equals(level.key))
           return level.inclusive ? i : i + 1;        
       }
     }
     
     /**
-     * node inclusive: right then scan
-     * node exclusive: right then scan
+     * key inclusive: right then scan
+     * key exclusive: right then scan
      * value inclusive: right
      * value exclusive: left
      * no value : zero
@@ -376,28 +374,27 @@ public class GenericKvsVelvet3 implements IRawVelvet {
      * @param level
      * @return
      */
-    private int getRightIndex(K[] index, Level<T, M> level) {
+    private int getRightIndex(K[] index, Level<K, M> level) {
       if (level == null)
         return index.length - 1;
       M m2 = metricOf(level);
-      boolean right = level.inclusive || level.node != null;
+      boolean right = level.inclusive || level.key != null;
       int i1 = searchForInsert(index, keyMetric, m2, right);
-      if (level.node == null)
+      if (level.key == null)
         return i1 - 1;
-      Object key = VelvetUtil.keyOf(level.node);
       for (int i=i1;; i--) {
         if (i == index.length || keyMetric.apply(index[i]).compareTo(m2) < 0)
           if (level.inclusive)
             throw new NoSuchElementException();
           else
             return i;
-        if (index[i].equals(key))
+        if (index[i].equals(level.key))
           return level.inclusive ? i : i - 1;        
       }
     }
 
-    private M metricOf(Level<T, M> level) {
-      return (level.node == null) ? level.p : nodeMetric.apply(level.node);      
+    private M metricOf(Level<K, M> level) {
+      return (level.key == null) ? level.m : keyMetric.apply(level.key);      
     }
 
   }
@@ -433,7 +430,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
    * 
    * L0 - all nodes are of correct class
    * 
-   * L1 - all nodes are of correct kind - in-node key is same as node key
+   * L1 - all nodes are of correct kind - in-key key is same as key key
    */
 
   public <K> void dumpIndex(Class<K> clazz, Object key) {

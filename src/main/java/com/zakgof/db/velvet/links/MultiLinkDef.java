@@ -31,11 +31,11 @@ public class MultiLinkDef<A, B> extends ALinkDef<A, B> implements IMultiLinkDef<
   }
 
   /*
-  public void disconnectAll(IVelvet velvet, A node) {
+  public void disconnectAll(IVelvet velvet, A key) {
     // TODO : lock
-    List<B> links = links(velvet, node);
+    List<B> links = links(velvet, key);
     for (B b : links)
-      disconnect(velvet, node, b);
+      disconnect(velvet, key, b);
   }
   
   public void disconnectAllByKey(IVelvet velvet, Object akey) {

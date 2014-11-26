@@ -42,7 +42,7 @@ public class Velvet implements IVelvet {
     genZeroAutoKey(node, kind);
     Object key = keyOf(node);
     raw.put(kind, key, node);
-    // putLinks(node);
+    // putLinks(key);
   }
 
   @Override
@@ -77,10 +77,10 @@ public class Velvet implements IVelvet {
   /*
  
  
-  private <T> void getLinks(T node) {
-    if (node == null)
+  private <T> void getLinks(T key) {
+    if (key == null)
       return;
-    Class<?> clazz = node.getClass();
+    Class<?> clazz = key.getClass();
     try {
       for (Field field : clazz.getDeclaredFields()) {
         Link annotation = field.getAnnotation(Link.class);
@@ -88,8 +88,8 @@ public class Velvet implements IVelvet {
           if (annotation.get() == GetMode.FETCH) {
             field.setAccessible(true);
             String kind = annotation.edgeKind().isEmpty() ? kindOf(field.getType()) : annotation.edgeKind();
-            Object linked = singleLink(field.getType(), node, kind);
-            field.set(node, linked);
+            Object linked = singleLink(field.getType(), key, kind);
+            field.set(key, linked);
           }
         }
       }
@@ -98,8 +98,8 @@ public class Velvet implements IVelvet {
     }
   }
  
-  private void putLinks(Object node) {
-    Class<?> clazz = node.getClass();
+  private void putLinks(Object key) {
+    Class<?> clazz = key.getClass();
     try {
       for (Field field : clazz.getDeclaredFields()) {
         field.setAccessible(true);
@@ -107,10 +107,10 @@ public class Velvet implements IVelvet {
         if (annotation != null) {
           if (annotation.put() == PutMode.LINK) {
             field.setAccessible(true);
-            putLink(node, field.get(node), annotation.edgeKind());
+            putLink(key, field.get(key), annotation.edgeKind());
           } else if (annotation.put() == PutMode.BILINK) {
             field.setAccessible(true);
-            putBiLink(node, field.get(node), annotation.edgeKind(), annotation.backEdgeKind());
+            putBiLink(key, field.get(key), annotation.edgeKind(), annotation.backEdgeKind());
           }
         }
       }
@@ -119,16 +119,16 @@ public class Velvet implements IVelvet {
     }
   }
  
-  private void putLink(Object node, Object linked, String edgeKind) {
+  private void putLink(Object key, Object linked, String edgeKind) {
     String kind = edgeKind.isEmpty() ? kindOf(linked.getClass()) : edgeKind;
-    connect(node, linked, kind);
+    connect(key, linked, kind);
   }
 
-  private void putBiLink(Object node, Object linked, String edgeKind, String backEdgeKind) {
+  private void putBiLink(Object key, Object linked, String edgeKind, String backEdgeKind) {
     String kind = edgeKind.isEmpty() ? kindOf(linked.getClass()) : edgeKind;
-    connect(node, linked, kind);
-    String backkind = backEdgeKind.isEmpty() ? kindOf(node.getClass()) : backEdgeKind;
-    connect(linked, node, backkind);
+    connect(key, linked, kind);
+    String backkind = backEdgeKind.isEmpty() ? kindOf(key.getClass()) : backEdgeKind;
+    connect(linked, key, backkind);
   }
   
   */

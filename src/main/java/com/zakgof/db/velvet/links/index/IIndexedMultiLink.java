@@ -8,6 +8,6 @@ import com.zakgof.db.velvet.links.IMultiLinkDef;
 
 public interface IIndexedMultiLink<A, B, C extends Comparable<C>> extends IMultiLinkDef<A, B> {
   
-  public List<B> links(IVelvet velvet, A node, IndexQuery<B, C> indexQuery);
-
+  public <K> List<B> links(IVelvet velvet, A node, IndexQuery<K, C> indexQuery);
+  
 }

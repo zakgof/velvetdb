@@ -19,14 +19,14 @@ public class IndexedBiMultiLinkDef<A, B, C extends Comparable<C>> extends BiMult
   public static <A, B, C extends Comparable<C>> IndexedBiMultiLinkDef<A, B, C> of(Class<A> aClazz, Class<B> bClazz, Function<B, C> metrics) {
     return new IndexedBiMultiLinkDef<A, B, C>(aClazz, bClazz, metrics);
   }
-
+  
   @Override
-  public List<B> links(IVelvet velvet, A node, IndexQuery<B, C> indexQuery) {
+  public <K> List<B> links(IVelvet velvet, A node, IndexQuery<K, C> indexQuery) {
     // TODO avoid cast by subclassing one more level: ABiMultiLinkDef
     return ((IndexedMultiLinkDef<A, B, C>)oneWay).links(velvet, node, indexQuery);
   }
   
-  public IMultiLinkDef<A, B> indexGetter(final IndexQuery<B, C> indexQuery) {
+  public IMultiLinkDef<A, B> indexGetter(final IndexQuery<? extends Object, C> indexQuery) {
     return ((IndexedMultiLinkDef<A, B, C>)oneWay).indexGetter(indexQuery);
   }
 
