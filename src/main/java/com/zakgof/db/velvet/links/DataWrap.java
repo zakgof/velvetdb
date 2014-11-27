@@ -18,14 +18,21 @@ public class DataWrap<T> {
     public Builder(T node) {
       this.node = node;
     }
-
-    public void addList(String name, List<DataWrap<?>> wrapperLinks) {
-      multis.put(name, wrapperLinks);
+    
+    public Builder(DataWrap<T> wrap) {
+      this.node = wrap.node;
+      this.multis.putAll(wrap.multis);
+      this.singles.putAll(wrap.singles);
     }
 
-    public void add(String name, DataWrap<?> childWrap) {
-      singles.put(name, childWrap);
+    public Builder<T> addList(String name, List<DataWrap<?>> wrapperLinks) {
+      multis.put(name, wrapperLinks);
+      return this;
+    }
 
+    public Builder<T> add(String name, DataWrap<?> childWrap) {
+      singles.put(name, childWrap);
+      return this;
     }
 
     public DataWrap<T> build() {
@@ -82,6 +89,10 @@ public class DataWrap<T> {
     return " " + node + 
         singles.entrySet().stream().reduce("", (s, e) -> s + e.getKey() + " [" + VelvetUtil.keyOf(e.getValue().getNode()) + " ]" , (s1, s2) -> s1 + s2) +
         multis.entrySet().stream().reduce("", (s, e) -> s + e.getKey() + " [" + e.getValue().size() + " ]" , (s1, s2) -> s1 + s2);
+  }
+  
+  public <V> DataWrap<T> attach(String name, V value) {
+    return new Builder<>(this).add(name, new DataWrap<V>(value)).build();
   }
 
 }
