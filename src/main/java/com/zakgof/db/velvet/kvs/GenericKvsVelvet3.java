@@ -746,7 +746,19 @@ public class GenericKvsVelvet3 implements IRawVelvet {
 
     @Override
     public boolean contains(K indexentry) {
-      // TODO Auto-generated method stub
+      MixedInfo info = kvss.get(MixedInfo.class, key);
+      if (info == null)
+        return false;
+      int bucketIndex = getBucketIndex(indexentry);
+      Object bucketKey = bucketKey(origKey == null ? key : origKey, bucketIndex);
+
+      if (info.isArray(bucketIndex)) {
+        K[] entries = kvss.get(GenericKvsVelvet3.<K> getArrayClass(clazz), bucketKey);
+        return Functions.contains(entries, indexentry);
+      } else if (info.isHash(bucketIndex)) {
+        MixedIndex<K> bucketMixedIndexer = childIndexer(bucketKey, key, bucketIndex);
+        return bucketMixedIndexer.contains(indexentry);         
+      }
       return false;
     }
 

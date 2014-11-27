@@ -63,7 +63,7 @@ public class MultiLinkDef<A, B> extends ALinkDef<A, B> implements IMultiLinkDef<
 
   @Override
   public void disconnectKeys(IVelvet velvet, Object akey, Object bkey) {
-    index(velvet, akey).connect(bkey);    
+    index(velvet, akey).disconnect(bkey);    
   }
   
   @Override
