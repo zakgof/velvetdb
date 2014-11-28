@@ -134,9 +134,11 @@ public class IslandModel {
         }
       }
       for (Entry<String, IContextSingleGetter<?>> entry : entity.singleContexts.entrySet()) {
-        Object link = entry.getValue().single(velvet, context);        
-        DataWrap<?> childWrap = createWrap(velvet, link, context);
-        wrapBuilder.add(entry.getKey(), childWrap);
+        Object link = entry.getValue().single(velvet, context);
+        if (link != null) {
+          DataWrap<?> childWrap = createWrap(velvet, link, context);
+          wrapBuilder.add(entry.getKey(), childWrap);
+        }
       }
     }
     return wrapBuilder.build();
