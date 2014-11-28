@@ -86,7 +86,7 @@ public class DataWrap<T> {
   
   @Override
   public String toString() {
-    return " " + node + 
+    return " " + node + " " +
         singles.entrySet().stream().reduce("", (s, e) -> s + e.getKey() + " [" + VelvetUtil.keyOf(e.getValue().getNode()) + " ]" , (s1, s2) -> s1 + s2) +
         multis.entrySet().stream().reduce("", (s, e) -> s + e.getKey() + " [" + e.getValue().size() + " ]" , (s1, s2) -> s1 + s2);
   }
