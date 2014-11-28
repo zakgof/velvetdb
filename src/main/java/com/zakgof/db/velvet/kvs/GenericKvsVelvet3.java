@@ -228,12 +228,10 @@ public class GenericKvsVelvet3 implements IRawVelvet {
 
   private class SortedLink<K, T, M extends Comparable<M>> extends BaseLink implements ISortedIndexLink<K, T, M> {
 
-    private final Function<T, M> nodeMetric;
     private final Function<K, M> keyMetric;
 
     SortedLink(Object key1, String edgeKind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric) {
       super(key1, edgeKind);
-      this.nodeMetric = nodeMetric;
       this.keyMetric = key -> nodeMetric.apply(GenericKvsVelvet3.this.get(nodeClazz, nodekind, key));
     }
 
