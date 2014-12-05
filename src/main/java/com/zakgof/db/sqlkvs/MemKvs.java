@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.zakgof.db.kvs.ITransactionalKvs;
 import com.zakgof.serialize.ZeSerializer;
@@ -89,6 +90,10 @@ public class MemKvs implements ITransactionalKvs {
   public void dump() {
     System.err.println("reads  " + reads + "\t" + readBytes);
     System.err.println("writes " + writes + "\t" + writeBytes);        
+  }
+
+  public Set<Entry<Buffer, Buffer>> entries() {
+    return values.entrySet();
   }
 
 }
