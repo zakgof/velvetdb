@@ -9,11 +9,13 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map.Entry;
 
 import com.zakgof.db.ILockable;
 import com.zakgof.db.kvs.ITransactionalKvs;
 import com.zakgof.serialize.ISerializer;
 import com.zakgof.serialize.ZeSerializer;
+import com.zakgof.tools.Buffer;
 
 public class SqlKvs implements ITransactionalKvs, ILockable {
 
@@ -199,5 +201,12 @@ public class SqlKvs implements ITransactionalKvs, ILockable {
       throw new RuntimeException(e);
     }
   }
- 
+
+  public void putRaw(Entry<Buffer, Buffer> entry) {
+    byte[] valueBytes = entry.getValue().bytes();
+    byte[] keyBytes = entry.getKey().bytes();    
+    if (!putByUpdate(valueBytes, keyBytes))
+      putByInsert(valueBytes, keyBytes);    
+  }
+   
 }

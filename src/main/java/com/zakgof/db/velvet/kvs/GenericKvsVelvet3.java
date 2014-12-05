@@ -415,6 +415,66 @@ public class GenericKvsVelvet3 implements IRawVelvet {
     }
 
   }
+  
+  /**
+   * 
+   * Leaf = 
+   *  - keyarray
+   *  - next 
+   *  - prev
+   *  
+   * Node = 
+   * 
+   *  - separator values
+   *  - list of children (k+1)
+   *    
+   * 
+   * 
+   */
+  private class SortedBTreeLink<K, T, M extends Comparable<M>> extends BaseLink implements ISortedIndexLink<K, T, M> {
+    
+
+    protected SortedBTreeLink(Object key1, String edgeKind) {
+      super(key1, edgeKind);
+    }
+
+    @Override
+    public void connect(K key2) {
+      // TODO Auto-generated method stub
+      
+    }
+
+    @Override
+    public void disconnect(K key2) {
+      // TODO Auto-generated method stub
+      
+    }
+
+    @Override
+    public List<K> linkKeys(Class<K> clazz) {
+      // TODO Auto-generated method stub
+      return null;
+    }
+
+    @Override
+    public boolean isConnected(K bkey) {
+      // TODO Auto-generated method stub
+      return false;
+    }
+
+    @Override
+    public void update(K key2) {
+      // TODO Auto-generated method stub
+      
+    }
+
+    @Override
+    public List<K> linkKeys(Class<K> clazz, IndexQuery<K, M> query) {
+      // TODO Auto-generated method stub
+      return null;
+    }
+    
+  }
 
   @Override
   public void lock(String lockName, long timeout) {
