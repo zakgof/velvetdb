@@ -90,7 +90,7 @@ public class BerkeleyKvs implements ITransactionalKvs {
       throw new RuntimeException(e);
     }
   }
-
+  
   public void putRaw(Entry<Buffer, Buffer> entry) {
     byte[] keyBytes = entry.getKey().bytes();
     DatabaseEntry keyEntry = new DatabaseEntry(keyBytes);
@@ -98,6 +98,8 @@ public class BerkeleyKvs implements ITransactionalKvs {
     DatabaseEntry valueEntry = new DatabaseEntry(valueBytes);
     try {
       berkeley.put(txn, keyEntry, valueEntry);
+      writes++;
+      writeBytes += keyBytes.length + valueBytes.length;
     } catch (DatabaseException e) {
       throw new RuntimeException(e);
     }
