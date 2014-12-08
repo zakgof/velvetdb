@@ -24,9 +24,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>berkeleydb</groupId>
-			<artifactId>berkeleydb</artifactId>
-			<version>1.5.1</version>
+			<groupId>com.sleepycat</groupId>
+			<artifactId>je</artifactId>
+			<version>5.0.73</version>
 		</dependency>
 	</dependencies>
 </project>
