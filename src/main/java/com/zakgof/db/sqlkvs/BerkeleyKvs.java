@@ -48,7 +48,7 @@ public class BerkeleyKvs implements ITransactionalKvs {
     ZeSerializer serializer = new ZeSerializer();
     byte[] keyBytes = serializer.serialize(key);
     DatabaseEntry keyEntry = new DatabaseEntry(keyBytes);
-    byte[] valueBytes = serializer.serialize(key);
+    byte[] valueBytes = serializer.serialize(value);
     DatabaseEntry valueEntry = new DatabaseEntry(valueBytes);    
     try {
       berkeley.put(txn, keyEntry, valueEntry);
