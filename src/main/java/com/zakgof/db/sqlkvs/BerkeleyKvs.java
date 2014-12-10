@@ -115,8 +115,8 @@ public class BerkeleyKvs implements ITransactionalKvs {
 
   }
 
-  public void dumpStats() {
-    System.err.println("Berkeley KVS stats: reads  " + reads + "\t" + readBytes + "\twrites " + writes + "\t" + writeBytes);
+  public String dumpStats() {
+    return "Berkeley KVS stats: reads  " + reads + "\t" + readBytes + "\twrites " + writes + "\t" + writeBytes;
   }
 
 }
