@@ -6,9 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetUtil;
+import com.zakgof.tools.generic.Functions;
+import com.zakgof.tools.generic.IFunction;
 
 public class IslandModel {
 
@@ -34,6 +37,7 @@ public class IslandModel {
 
       private final Class<T> clazz;
       private final Map<String, IMultiLinkDef<T, ?>> multis = new HashMap<>();
+      private final Map<Class<?>, IFunction<?, ? extends Comparable<?>>> sorts = new HashMap<>();
       private final Map<String, ISingleLinkDef<T, ?>> singles = new HashMap<>();
       private final Map<String, IContextSingleGetter<?>> singleContexts = new HashMap<>();
       private final List<IBiLinkDef<T, ?>> detaches = new ArrayList<>();
@@ -52,8 +56,14 @@ public class IslandModel {
 //        return this;
 //      }
 
-      public <L> FetcherEntityBuilder<T> include(IMultiLinkDef<T, L> linkDef) {
+      public <L, C extends Comparable<C>> FetcherEntityBuilder<T> include(IMultiLinkDef<T, L> linkDef, IFunction<L, C> sortBy) {
         multis.put(linkDef.getKind(), linkDef);
+        sorts.put(linkDef.getChildClass(), sortBy);
+        return this;
+      }
+      
+      public <L> FetcherEntityBuilder<T> include(IMultiLinkDef<T, L> linkDef) {
+        multis.put(linkDef.getKind(), linkDef);        
         return this;
       }
 
@@ -73,7 +83,7 @@ public class IslandModel {
       }
 
       public Builder done() {
-        Builder.this.addEntity(new FetcherEntity<T>(clazz, multis, singles, singleContexts, detaches));
+        Builder.this.addEntity(new FetcherEntity<T>(clazz, multis, singles, singleContexts, detaches, sorts));
         return Builder.this;
       }
 
@@ -96,13 +106,15 @@ public class IslandModel {
     private Map<String, ISingleLinkDef<T, ?>> singles;
     private Map<String, IContextSingleGetter<?>> singleContexts;
     private final List<? extends IBiLinkDef<T, ?>> detaches;
+    private Map<Class<?>, IFunction<?, ? extends Comparable<?>>> sorts;
 
-    private FetcherEntity(Class<T> clazz, Map<String, IMultiLinkDef<T, ?>> multis, Map<String, ISingleLinkDef<T, ?>> singles, Map<String, IContextSingleGetter<?>> singleContexts, List<? extends IBiLinkDef<T, ?>> detaches) {
+    private FetcherEntity(Class<T> clazz, Map<String, IMultiLinkDef<T, ?>> multis, Map<String, ISingleLinkDef<T, ?>> singles, Map<String, IContextSingleGetter<?>> singleContexts, List<? extends IBiLinkDef<T, ?>> detaches, Map<Class<?>, IFunction<?, ? extends Comparable<?>>> sorts) {
       this.clazz = clazz;
       this.multis = multis;
       this.singles = singles;
       this.singleContexts = singleContexts;
       this.detaches = detaches;
+      this.sorts = sorts;
     }
 
   }
@@ -122,8 +134,9 @@ public class IslandModel {
     @SuppressWarnings("unchecked")
     FetcherEntity<T> entity = (FetcherEntity<T>) entities.get(VelvetUtil.kindOf(node.getClass()));
     if (entity != null) {
-      for (Entry<String, ? extends IMultiLinkDef<T, ?>> entry : entity.multis.entrySet()) {        
-        List<DataWrap<?>> wrappedLinks = entry.getValue().links(velvet, node).stream().map(o -> createWrap(velvet, o, context)).collect(Collectors.toList());        
+      for (Entry<String, ? extends IMultiLinkDef<T, ?>> entry : entity.multis.entrySet()) {
+        Stream<?> stream = entry.getValue().links(velvet, node).stream();        
+        List<DataWrap<?>> wrappedLinks = decorateBySort(entity, stream, entry.getValue().getChildClass()).map(o -> createWrap(velvet, o, context)).collect(Collectors.toList());        
         wrapBuilder.addList(entry.getKey(), wrappedLinks);
       }
       for (Entry<String, ? extends ISingleLinkDef<T, ?>> entry : entity.singles.entrySet()) {
@@ -142,6 +155,12 @@ public class IslandModel {
       }
     }
     return wrapBuilder.build();
+  }
+
+  @SuppressWarnings("unchecked")  
+  private <T> Stream<?> decorateBySort(FetcherEntity<T> entity, Stream<?> stream, Class<?> childClass) {
+    IFunction<?, ? extends Comparable<?>> sorter = entity.sorts.get(childClass);
+    return (sorter != null) ? stream.sorted(Functions.comparator((IFunction) sorter)) : stream;
   }
 
   // TODO: reimplement
