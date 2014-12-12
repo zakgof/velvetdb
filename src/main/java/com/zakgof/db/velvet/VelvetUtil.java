@@ -136,4 +136,13 @@ public class VelvetUtil {
     return false;
   }
 
+  public static boolean isEntity(Object node) {
+    try {
+      keyOf(node);
+    } catch (Throwable e) {
+      return false;
+    }
+    return true;
+  }
+
 }
