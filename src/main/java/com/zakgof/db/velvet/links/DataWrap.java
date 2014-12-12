@@ -87,10 +87,16 @@ public class DataWrap<T> {
   @Override
   public String toString() {
     return " " + node + " " +
-        singles.entrySet().stream().reduce("", (s, e) -> s + e.getKey() + " [" + VelvetUtil.keyOf(e.getValue().getNode()) + " ]" , (s1, s2) -> s1 + s2) +
+        singles.entrySet().stream().reduce("", (s, e) -> s + e.getKey() + " [" + valueString(e.getValue()) + " ]" , (s1, s2) -> s1 + s2) +
         multis.entrySet().stream().reduce("", (s, e) -> s + e.getKey() + " [" + e.getValue().size() + " ]" , (s1, s2) -> s1 + s2);
   }
   
+  private String valueString(DataWrap<?> wrap) {
+    if (VelvetUtil.isEntity(wrap.getNode()))
+        return "" + VelvetUtil.keyOf(wrap.getNode());
+    return wrap.getNode().toString();
+  }
+
   public <V> DataWrap<T> attach(String name, V value) {
     return new Builder<>(this).add(name, new DataWrap<V>(value)).build();
   }
