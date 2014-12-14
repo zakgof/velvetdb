@@ -275,7 +275,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
     private int exactSearch(K[] array, K value, Function<K, M> metric) {
       M valueMetric = metric.apply(value);
       int i = searchForInsert(array, metric, valueMetric, true) - 1;
-      for(;;) {
+      for(;;i--) {
         if (i < 0 || valueMetric.compareTo(metric.apply(array[i])) < 0)
           return -1;
         if (array[i].equals(value))

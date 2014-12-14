@@ -34,15 +34,15 @@ public class CachedKvs implements ITransactionalKvs {
   }
 
   @Override
-  public <T> void put(Object key, T value) {
-    cache.put(convert(key), value);
+  public <T> void put(Object key, T value) {    
     kvs.put(key, value);
+    cache.put(convert(key), value);
   }
 
   @Override
-  public void delete(Object key) {
-    cache.remove(convert(key));
+  public void delete(Object key) {    
     kvs.delete(key);
+    cache.remove(convert(key));
   }
 
   @Override

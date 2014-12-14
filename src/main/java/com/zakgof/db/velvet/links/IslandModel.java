@@ -102,11 +102,11 @@ public class IslandModel {
   private static class FetcherEntity<T> {
 
     private final Class<T> clazz;
-    private Map<String, IMultiLinkDef<T, ?>> multis;
-    private Map<String, ISingleLinkDef<T, ?>> singles;
-    private Map<String, IContextSingleGetter<?>> singleContexts;
+    private final Map<String, IMultiLinkDef<T, ?>> multis;
+    private final Map<String, ISingleLinkDef<T, ?>> singles;
+    private final Map<String, IContextSingleGetter<?>> singleContexts;
     private final List<? extends IBiLinkDef<T, ?>> detaches;
-    private Map<Class<?>, IFunction<?, ? extends Comparable<?>>> sorts;
+    private final Map<Class<?>, IFunction<?, ? extends Comparable<?>>> sorts;
 
     private FetcherEntity(Class<T> clazz, Map<String, IMultiLinkDef<T, ?>> multis, Map<String, ISingleLinkDef<T, ?>> singles, Map<String, IContextSingleGetter<?>> singleContexts, List<? extends IBiLinkDef<T, ?>> detaches, Map<Class<?>, IFunction<?, ? extends Comparable<?>>> sorts) {
       this.clazz = clazz;
@@ -135,7 +135,7 @@ public class IslandModel {
     FetcherEntity<T> entity = (FetcherEntity<T>) entities.get(VelvetUtil.kindOf(node.getClass()));
     if (entity != null) {
       for (Entry<String, ? extends IMultiLinkDef<T, ?>> entry : entity.multis.entrySet()) {
-        Stream<?> stream = entry.getValue().links(velvet, node).stream();        
+        Stream<?> stream = entry.getValue().links(velvet, node).stream().filter(l -> l != null);// TODO : check for error        
         List<DataWrap<?>> wrappedLinks = decorateBySort(entity, stream, entry.getValue().getChildClass()).map(o -> createWrap(velvet, o, context)).collect(Collectors.toList());        
         wrapBuilder.addList(entry.getKey(), wrappedLinks);
       }
@@ -224,7 +224,7 @@ public class IslandModel {
   
   private class Context implements IIslandContext {
 
-    private Map<Class<?>, Object> map = new HashMap<>();
+    private final Map<Class<?>, Object> map = new HashMap<>();
 
     public void add(Object node) {
       map.put(node.getClass(), node);
