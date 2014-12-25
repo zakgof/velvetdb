@@ -40,6 +40,7 @@ public class IslandModel {
       private final Map<Class<?>, IFunction<?, ? extends Comparable<?>>> sorts = new HashMap<>();
       private final Map<String, ISingleLinkDef<T, ?>> singles = new HashMap<>();
       private final Map<String, IContextSingleGetter<?>> singleContexts = new HashMap<>();
+      private final Map<String, IContextMultiGetter<?>> multiContexts = new HashMap<>();
       private final List<IBiLinkDef<T, ?>> detaches = new ArrayList<>();
 
       public FetcherEntityBuilder(Class<T> clazz) {
@@ -81,9 +82,14 @@ public class IslandModel {
         singleContexts.put(name, contextSingleGetter);
         return this;
       }
+      
+      public <L> FetcherEntityBuilder<T> include(String name, IContextMultiGetter<L> contextMultiGetter) {
+        multiContexts.put(name, contextMultiGetter);
+        return this;
+      }
 
       public Builder done() {
-        Builder.this.addEntity(new FetcherEntity<T>(clazz, multis, singles, singleContexts, detaches, sorts));
+        Builder.this.addEntity(new FetcherEntity<T>(clazz, multis, singles, singleContexts, multiContexts, detaches, sorts));
         return Builder.this;
       }
 
@@ -105,14 +111,17 @@ public class IslandModel {
     private final Map<String, IMultiLinkDef<T, ?>> multis;
     private final Map<String, ISingleLinkDef<T, ?>> singles;
     private final Map<String, IContextSingleGetter<?>> singleContexts;
+    private final Map<String, IContextMultiGetter<?>> multiContexts;
     private final List<? extends IBiLinkDef<T, ?>> detaches;
     private final Map<Class<?>, IFunction<?, ? extends Comparable<?>>> sorts;
+    
 
-    private FetcherEntity(Class<T> clazz, Map<String, IMultiLinkDef<T, ?>> multis, Map<String, ISingleLinkDef<T, ?>> singles, Map<String, IContextSingleGetter<?>> singleContexts, List<? extends IBiLinkDef<T, ?>> detaches, Map<Class<?>, IFunction<?, ? extends Comparable<?>>> sorts) {
+    private FetcherEntity(Class<T> clazz, Map<String, IMultiLinkDef<T, ?>> multis, Map<String, ISingleLinkDef<T, ?>> singles, Map<String, IContextSingleGetter<?>> singleContexts, Map<String, IContextMultiGetter<?>> multiContexts, List<? extends IBiLinkDef<T, ?>> detaches, Map<Class<?>, IFunction<?, ? extends Comparable<?>>> sorts) {
       this.clazz = clazz;
       this.multis = multis;
       this.singles = singles;
       this.singleContexts = singleContexts;
+      this.multiContexts = multiContexts;
       this.detaches = detaches;
       this.sorts = sorts;
     }
@@ -137,6 +146,11 @@ public class IslandModel {
       for (Entry<String, ? extends IMultiLinkDef<T, ?>> entry : entity.multis.entrySet()) {
         Stream<?> stream = entry.getValue().links(velvet, node).stream().filter(l -> l != null);// TODO : check for error        
         List<DataWrap<?>> wrappedLinks = decorateBySort(entity, stream, entry.getValue().getChildClass()).map(o -> createWrap(velvet, o, context)).collect(Collectors.toList());        
+        wrapBuilder.addList(entry.getKey(), wrappedLinks);
+      }
+      for (Entry<String, IContextMultiGetter<?>> entry : entity.multiContexts.entrySet()) {
+        Stream<?> stream = entry.getValue().get(velvet, context);        
+        List<DataWrap<?>> wrappedLinks = stream.map(o -> createWrap(velvet, o, context)).collect(Collectors.toList());        
         wrapBuilder.addList(entry.getKey(), wrappedLinks);
       }
       for (Entry<String, ? extends ISingleLinkDef<T, ?>> entry : entity.singles.entrySet()) {
