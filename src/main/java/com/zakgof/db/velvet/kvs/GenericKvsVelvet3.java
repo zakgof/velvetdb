@@ -14,8 +14,11 @@ import java.util.function.Function;
 import com.zakgof.db.kvs.IKvs;
 import com.zakgof.db.kvs.ITransactionalKvs;
 import com.zakgof.db.velvet.IRawVelvet;
-import com.zakgof.db.velvet.IndexQuery;
-import com.zakgof.db.velvet.IndexQuery.Level;
+import com.zakgof.db.velvet.query.IIndexQuery;
+import com.zakgof.db.velvet.query.IKeyAnchor;
+import com.zakgof.db.velvet.query.IPositionAnchor;
+import com.zakgof.db.velvet.query.IQueryAnchor;
+import com.zakgof.db.velvet.query.ISecondaryIndexAnchor;
 import com.zakgof.tools.generic.Functions;
 
 /**
@@ -121,9 +124,15 @@ public class GenericKvsVelvet3 implements IRawVelvet {
   }
 
   @Override
-  public <K, T, M extends Comparable<M>> ISortedIndexLink<K, T, M> index(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric) {
+  public <K, T, M extends Comparable<M>> IKeyIndexLink<K> index(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric) {
     return new SortedLink<K, T, M>(key1, edgekind, nodeClazz, nodekind, nodeMetric);
   }
+  
+  @Override
+  public <K extends Comparable<K>, T> IKeyIndexLink<K> index(Object key1, String edgekind) {
+    return new SortedLink<K, T, K>(key1, edgekind, null, null, null);
+  }
+  
 
   @Override
   public <K> ILink<K> index(Object key1, String edgekind, LinkType type) {
@@ -226,13 +235,13 @@ public class GenericKvsVelvet3 implements IRawVelvet {
 
   }
 
-  private class SortedLink<K, T, M extends Comparable<M>> extends BaseLink implements ISortedIndexLink<K, T, M> {
+  private class SortedLink<K, T, M extends Comparable<M>> extends BaseLink implements IKeyIndexLink<K> {
 
     private final Function<K, M> keyMetric;
 
     SortedLink(Object key1, String edgeKind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric) {
       super(key1, edgeKind);
-      this.keyMetric = key -> nodeMetric.apply(GenericKvsVelvet3.this.get(nodeClazz, nodekind, key));
+      this.keyMetric = nodeMetric == null ? key -> (M)key : key -> nodeMetric.apply(GenericKvsVelvet3.this.get(nodeClazz, nodekind, key));
     }
 
     @Override
@@ -243,38 +252,38 @@ public class GenericKvsVelvet3 implements IRawVelvet {
       K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);
       if (index == null)
         index = Functions.newArray(clazz, 0);      
-      int insertIndex = searchForInsert(index, keyMetric, keyMetric.apply(key2), true);
+      int insertIndex = searchForInsert(index, keyMetric.apply(key2), true);
       index = ArrayUtil.insert(index, key2, insertIndex); // TODO : duplicates ?
       kvs.put(indexKey, index);
     }
     
-    private int searchForInsert(K[] array, Function<K, M> metric, M value, boolean last) {
+    private int searchForInsert(K[] array, M value, boolean last) {
       int i0 = 0;
       int i1 = array.length - 1;
       if (i1 == -1)
         return 0;
-      M m0 = metric.apply(array[i0]);
-      M m1 = metric.apply(array[i1]);
+      M m0 = keyMetric.apply(array[i0]);
+      M m1 = keyMetric.apply(array[i1]);
       if (value.compareTo(m0) < 0 || value.compareTo(m0) == 0 && !last)
         return 0;
       if (value.compareTo(m1) > 0 || value.compareTo(m1) == 0 && last)
         return i1 + 1;
-      return searchForInsert(array, metric, value, i0, i1, m0, m1, last);
+      return searchForInsert(array, value, i0, i1, m0, m1, last);
     }
     
-    private int searchForInsert(K[] array, Function<K, M> metric, M value, int i0, int i1, M m0, M m1, boolean last) {
+    private int searchForInsert(K[] array, M value, int i0, int i1, M m0, M m1, boolean last) {
       int i = (i0 + i1) / 2;
-      M m = metric.apply(array[i]);
+      M m = keyMetric.apply(array[i]);
       if (i1 - i0 == 1)
         return i1;
       if (value.compareTo(m) > 0 || value.compareTo(m) == 0 && last)
-        return searchForInsert(array, metric, value, i, i1, m, m1, last);
-      return searchForInsert(array, metric, value, i0, i, m0, m, last);
+        return searchForInsert(array, value, i, i1, m, m1, last);
+      return searchForInsert(array, value, i0, i, m0, m, last);
     }
     
     private int exactSearch(K[] array, K value, Function<K, M> metric) {
       M valueMetric = metric.apply(value);
-      int i = searchForInsert(array, metric, valueMetric, true) - 1;
+      int i = searchForInsert(array, valueMetric, true) - 1;
       for(;;i--) {
         if (i < 0 || valueMetric.compareTo(metric.apply(array[i])) < 0)
           return -1;
@@ -322,30 +331,30 @@ public class GenericKvsVelvet3 implements IRawVelvet {
     }
 
     @Override
-    public List<K> linkKeys(Class<K> clazz, IndexQuery<K, M> query) {      
+    public List<K> linkKeys(Class<K> clazz, IIndexQuery<K> query) {      
       K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);      
       return queryArray(index, query);
     }
 
-    List<K> queryArray(K[] array, IndexQuery<K, M> query) {
+    List<K> queryArray(K[] array, IIndexQuery<K> query) {
       
       if (array == null)
         return new ArrayList<>();
       
-      int i1 = getLeftIndex(array, query.l1);
-      int i2 = getRightIndex(array, query.l2);
+      int i1 = getLeftIndex(array, query.getLowAnchor());
+      int i2 = getRightIndex(array, query.getHighAnchor());
       
       List<K> list = new ArrayList<>();
-      if (query.descending) {
-        i2 -= query.offset;
-        if (query.limit > 0)
-          i1 = Math.max(i1, i2 - query.limit + 1);
+      if (!query.isAscending()) {
+        i2 -= query.getOffset();
+        if (query.getLimit() > 0)
+          i1 = Math.max(i1, i2 - query.getLimit() + 1);
         for (int i=i2; i>=i1; i--)
           list.add(array[i]);
       } else {
-        i1 += query.offset;
-        if (query.limit > 0)
-          i2 = Math.min(i2, i1 + query.limit - 1);
+        i1 += query.getOffset();
+        if (query.getLimit() > 0)
+          i2 = Math.min(i2, i1 + query.getLimit() - 1);
         for (int i=i1; i<=i2; i++)
           list.add(array[i]);
       }
@@ -359,25 +368,38 @@ public class GenericKvsVelvet3 implements IRawVelvet {
      * value exclusive: right
      * no value : zero
      * @param index
-     * @param level
+     * @param anchor
      * @return
      */
-    private int getLeftIndex(K[] index, Level<K, M> level) {
-      if (level == null)
+    private int getLeftIndex(K[] index, IQueryAnchor anchor) {
+      if (anchor == null)
         return 0;
-      M m1 = metricOf(level);
-      boolean right = !level.inclusive && level.key == null;
-      int i1 = searchForInsert(index, keyMetric, m1, right);
-      if (level.key == null)
+      
+      K key = null;
+      int position = -1;
+      M m1 = null;
+      if (anchor instanceof IKeyAnchor) {
+        key = ((IKeyAnchor<K>)anchor).getKey();
+        m1 = (M)key;
+      } else if (anchor instanceof IPositionAnchor) {
+        position = ((IPositionAnchor)anchor).getPosition();
+        return anchor.isIncluding() ? position : position + 1;
+      } else if (anchor instanceof ISecondaryIndexAnchor) {
+        m1 = ((ISecondaryIndexAnchor<M>)anchor).getValue();
+      }
+      boolean right = !anchor.isIncluding() && key == null;
+      int i1 = searchForInsert(index, m1, right);
+      if (key == null)
         return i1;
+      
       for (int i=i1;; i++) {
         if (i == index.length || keyMetric.apply(index[i]).compareTo(m1) > 0)
-          if (level.inclusive)
+          if (anchor.isIncluding())
             throw new NoSuchElementException();
           else
             return i;
-        if (index[i].equals(level.key))
-          return level.inclusive ? i : i + 1;        
+        if (index[i].equals(key))
+          return anchor.isIncluding() ? i : i + 1;        
       }
     }
     
@@ -388,30 +410,39 @@ public class GenericKvsVelvet3 implements IRawVelvet {
      * value exclusive: left
      * no value : zero
      * @param index
-     * @param level
+     * @param anchor
      * @return
      */
-    private int getRightIndex(K[] index, Level<K, M> level) {
-      if (level == null)
+    private int getRightIndex(K[] index, IQueryAnchor anchor) {
+      if (anchor == null)
         return index.length - 1;
-      M m2 = metricOf(level);
-      boolean right = level.inclusive || level.key != null;
-      int i1 = searchForInsert(index, keyMetric, m2, right) - 1;
-      if (level.key == null)
+      
+      
+      K key = null;
+      int position = -1;
+      M m2 = null;
+      if (anchor instanceof IKeyAnchor) {
+        key = ((IKeyAnchor<K>)anchor).getKey();
+        m2 = (M) key;
+      } else if (anchor instanceof IPositionAnchor) {
+        position = ((IPositionAnchor)anchor).getPosition();
+        return anchor.isIncluding() ? position : position - 1;
+      } else if (anchor instanceof ISecondaryIndexAnchor) {
+        m2 = ((ISecondaryIndexAnchor<M>)anchor).getValue();
+      }
+      boolean right = anchor.isIncluding() || key != null;
+      int i1 = searchForInsert(index, m2, right) - 1;
+      if (key == null)
         return i1;
       for (int i=i1;; i--) {
         if (i < 0 || keyMetric.apply(index[i]).compareTo(m2) < 0)
-          if (level.inclusive)
+          if (anchor.isIncluding())
             throw new NoSuchElementException();
           else
             return i;
-        if (index[i].equals(level.key))
-          return level.inclusive ? i : i - 1;        
+        if (index[i].equals(key))
+          return anchor.isIncluding() ? i : i - 1;        
       }
-    }
-
-    private M metricOf(Level<K, M> level) {
-      return (level.key == null) ? level.m : keyMetric.apply(level.key);      
     }
 
   }
@@ -431,50 +462,8 @@ public class GenericKvsVelvet3 implements IRawVelvet {
    * 
    * 
    */
-  private class SortedBTreeLink<K, T, M extends Comparable<M>> extends BaseLink implements ISortedIndexLink<K, T, M> {
-    
+//  private class SortedBTreeLink<K, T, M extends Comparable<M>> extends BaseLink implements ISortedIndexLink<K, T, M> {
 
-    protected SortedBTreeLink(Object key1, String edgeKind) {
-      super(key1, edgeKind);
-    }
-
-    @Override
-    public void connect(K key2) {
-      // TODO Auto-generated method stub
-      
-    }
-
-    @Override
-    public void disconnect(K key2) {
-      // TODO Auto-generated method stub
-      
-    }
-
-    @Override
-    public List<K> linkKeys(Class<K> clazz) {
-      // TODO Auto-generated method stub
-      return null;
-    }
-
-    @Override
-    public boolean isConnected(K bkey) {
-      // TODO Auto-generated method stub
-      return false;
-    }
-
-    @Override
-    public void update(K key2) {
-      // TODO Auto-generated method stub
-      
-    }
-
-    @Override
-    public List<K> linkKeys(Class<K> clazz, IndexQuery<K, M> query) {
-      // TODO Auto-generated method stub
-      return null;
-    }
-    
-  }
 
   @Override
   public void lock(String lockName, long timeout) {

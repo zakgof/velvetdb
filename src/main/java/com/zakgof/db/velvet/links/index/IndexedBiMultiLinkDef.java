@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.IndexQuery;
 import com.zakgof.db.velvet.links.BiMultiLinkDef;
 import com.zakgof.db.velvet.links.IMultiLinkDef;
+import com.zakgof.db.velvet.query.IIndexQuery;
 
 public class IndexedBiMultiLinkDef<A, B, C extends Comparable<C>> extends BiMultiLinkDef<A, B> implements IIndexedMultiLink<A, B, C> {
 
@@ -21,12 +21,12 @@ public class IndexedBiMultiLinkDef<A, B, C extends Comparable<C>> extends BiMult
   }
   
   @Override
-  public <K> List<B> links(IVelvet velvet, A node, IndexQuery<K, C> indexQuery) {
+  public <K> List<B> links(IVelvet velvet, A node, IIndexQuery<K> indexQuery) {
     // TODO avoid cast by subclassing one more level: ABiMultiLinkDef
     return ((IndexedMultiLinkDef<A, B, C>)oneWay).links(velvet, node, indexQuery);
   }
   
-  public IMultiLinkDef<A, B> indexGetter(final IndexQuery<? extends Object, C> indexQuery) {
+  public IMultiLinkDef<A, B> indexGetter(final IIndexQuery<?> indexQuery) {
     return ((IndexedMultiLinkDef<A, B, C>)oneWay).indexGetter(indexQuery);
   }
 
