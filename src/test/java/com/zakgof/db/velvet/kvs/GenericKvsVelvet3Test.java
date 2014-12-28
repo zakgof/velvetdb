@@ -10,17 +10,17 @@ import org.junit.Test;
 import com.zakgof.db.sqlkvs.MemKvs;
 import com.zakgof.db.velvet.AutoKeyed;
 import com.zakgof.db.velvet.IRawVelvet;
-import com.zakgof.db.velvet.IRawVelvet.ISortedIndexLink;
+import com.zakgof.db.velvet.IRawVelvet.IKeyIndexLink;
 import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.IndexQuery;
-import com.zakgof.db.velvet.IndexQueryFactory;
 import com.zakgof.db.velvet.Velvet;
 import com.zakgof.db.velvet.VelvetUtil;
+import com.zakgof.db.velvet.query.IIndexQuery;
+import com.zakgof.db.velvet.query.IndexQueryFactory;
 
 public class GenericKvsVelvet3Test {
 
   private GenericKvsVelvet3 raw;
-  private ISortedIndexLink<Integer, String, Integer> indexLink;
+  private IKeyIndexLink<Integer> indexLink;
 
   public static void main(String[] args) {
     new GenericKvsVelvet3Test().testMixedKvs();
@@ -132,7 +132,7 @@ public class GenericKvsVelvet3Test {
     check(raw, indexLink, IndexQueryFactory.nextKey(8)                 ); // b9 -> nil
   }
   
-  private void check(IRawVelvet raw, ISortedIndexLink<Integer, String, Integer> indexLink, IndexQuery<Integer, Integer> query, String...v) {
+  private void check(IRawVelvet raw, IKeyIndexLink<Integer> indexLink, IIndexQuery<Integer> query, String...v) {
     String[] vals = indexLink.linkKeys(Integer.class, query).stream().map(key -> raw.get(String.class, "child", key)).collect(Collectors.toList()).toArray(new String[]{});
     Assert.assertArrayEquals(v, vals);
   }

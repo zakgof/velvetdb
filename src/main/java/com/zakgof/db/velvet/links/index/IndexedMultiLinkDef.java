@@ -3,12 +3,12 @@ package com.zakgof.db.velvet.links.index;
 import java.util.List;
 import java.util.function.Function;
 
-import com.zakgof.db.velvet.IRawVelvet.ISortedIndexLink;
+import com.zakgof.db.velvet.IRawVelvet.IKeyIndexLink;
 import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.IndexQuery;
 import com.zakgof.db.velvet.VelvetUtil;
 import com.zakgof.db.velvet.links.IMultiLinkDef;
 import com.zakgof.db.velvet.links.MultiLinkDef;
+import com.zakgof.db.velvet.query.IIndexQuery;
 
 public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLinkDef<A, B> implements IIndexedMultiLink<A, B, C> {
 
@@ -23,7 +23,7 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
     return new IndexedMultiLinkDef<A, B, C>(aClazz, bClazz, VelvetUtil.kindOf(aClazz) + "_" + VelvetUtil.kindOf(bClazz), metrics);
   }
   
-  private <K> ISortedIndexLink<K, B, C> index(IVelvet velvet, Object akey) {
+  private <K> IKeyIndexLink<K> index(IVelvet velvet, Object akey) {
     return velvet.raw().<K, B, C>index(akey, edgeKind, getChildClass(), VelvetUtil.kindOf(getChildClass()), metric);
   }
   
@@ -44,20 +44,21 @@ public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLin
   }
 
   @Override
-  public <K> List<B> links(IVelvet velvet, A node, IndexQuery<K, C> indexQuery) {
+  public <K> List<B> links(IVelvet velvet, A node, IIndexQuery<K> indexQuery) {
     @SuppressWarnings("unchecked")
-    List<K> keys = linkeKeys(velvet, (K)VelvetUtil.keyOf(node), indexQuery);
+    List<K> keys = linkeKeys(velvet, VelvetUtil.keyOf(node), indexQuery);
     return VelvetUtil.getAll(velvet, keys, getChildClass());
   }
 
   @SuppressWarnings("unchecked")
-  private <K> List<K> linkeKeys(IVelvet velvet, Object akey, IndexQuery<K, C> indexQuery) {
+  private <K> List<K> linkeKeys(IVelvet velvet, Object akey, IIndexQuery<K> indexQuery) {
     return this.<K>index(velvet, akey).linkKeys((Class<K>)VelvetUtil.keyClassOf(getChildClass()), indexQuery);
   }
   
   // TODO : use ALinkDef
-  public <K> IMultiLinkDef<A, B> indexGetter(final IndexQuery<K, C> indexQuery) {
+  public <K> IMultiLinkDef<A, B> indexGetter(final IIndexQuery<K> indexQuery) {
     return new IndexedMultiLinkDef<A, B, C>(getHostClass(), bClazz, edgeKind, metric) {      
+      @Override
       public List<?> linkKeys(IVelvet velvet, Object key) {
         return IndexedMultiLinkDef.this.<K>linkeKeys(velvet, key, indexQuery);
       }      

@@ -5,8 +5,8 @@ import java.util.Collections;
 import java.util.List;
 
 import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.IndexQuery;
 import com.zakgof.db.velvet.links.index.IIndexedMultiLink;
+import com.zakgof.db.velvet.query.IIndexQuery;
 
 public class LinkUtil {
 
@@ -108,7 +108,7 @@ public class LinkUtil {
 
   }
   
-  public static <A, B, C extends Comparable<C>> IMultiLinkDef<A, B> toMultiGetter(final IIndexedMultiLink<A, B, C> indexedGetter, final IndexQuery<B, C> indexQuery) {
+  public static <A, B, C extends Comparable<C>> IMultiLinkDef<A, B> toMultiGetter(final IIndexedMultiLink<A, B, C> indexedGetter, final IIndexQuery<B> indexQuery) {
     
     return new IMultiLinkDef<A, B>() {
 
@@ -165,7 +165,7 @@ public class LinkUtil {
     };
   }
   
-  public static <A, B, C extends Comparable<C>> ISingleLinkDef<A, B> toSingleGetter(final IIndexedMultiLink<A, B, C> indexedGetter, final IndexQuery<B, C> indexQuery) {
+  public static <A, B, C extends Comparable<C>> ISingleLinkDef<A, B> toSingleGetter(final IIndexedMultiLink<A, B, C> indexedGetter, final IIndexQuery<B> indexQuery) {
     return toSingleGetter(toMultiGetter(indexedGetter, indexQuery));
   }
      
