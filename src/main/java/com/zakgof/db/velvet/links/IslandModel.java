@@ -1,6 +1,7 @@
 package com.zakgof.db.velvet.links;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -183,6 +184,12 @@ public class IslandModel {
     deleteNode(velvet, node);
   }
   
+  public <T> void deleteAll(IVelvet velvet, Class<T> clazz) {
+    List<T> nodes = velvet.allOf(clazz);
+    for (T node : nodes)
+      deleteNode(velvet, node);
+  }
+  
   public <T> void deleteNode(IVelvet velvet, T node) {
     String kind = VelvetUtil.kindOf(node.getClass());
     @SuppressWarnings("unchecked")
@@ -192,8 +199,6 @@ public class IslandModel {
         dropChildren(velvet, node, multi);
       for (ISingleLinkDef<T, ?> single : entity.singles.values())
         dropChild(velvet, node, single);
-      for (IBiLinkDef<T, ?> detach : entity.detaches)
-        detach(velvet, node, detach);
     }
     velvet.delete(node);
   }
@@ -230,6 +235,39 @@ public class IslandModel {
     if (node == null)
       return null;
     return createWrap(velvet, node, new Context());
+  }
+  
+  public <T> void save(IVelvet velvet, Collection<DataWrap<T>> data) {
+    for (DataWrap<T> wrap : data)
+      save(velvet, wrap);
+  }
+  
+  public <T> void save(IVelvet velvet, DataWrap<T> data) {
+    T node = data.getNode();   
+    velvet.put(node);
+    String kind = VelvetUtil.kindOf(node.getClass());
+    @SuppressWarnings("unchecked")
+    FetcherEntity<T> entity = (FetcherEntity<T>) entities.get(kind);    
+    if (entity != null) {
+      for (ISingleLinkDef<T, ?> single : entity.singles.values())
+        saveChild(velvet, data, single);
+      for (IMultiLinkDef<T, ?> multi : entity.multis.values())
+        saveChildren(velvet, data, multi);                   
+    }
+  }
+  
+  private <T, B> void saveChild(IVelvet velvet, DataWrap<T> parentWrap, ISingleLinkDef<T, B> singleLink) {
+    DataWrap<B> childWrap = parentWrap.singleLink(singleLink);
+    singleLink.connect(velvet, parentWrap.getNode(), childWrap.getNode());
+    save(velvet, childWrap);
+  }
+
+  private <T, B> void saveChildren(IVelvet velvet, DataWrap<T> parentWrap, IMultiLinkDef<T, B> multiLink) {
+    List<DataWrap<B>> childrenWraps = parentWrap.multiLink(multiLink);    
+    for (DataWrap<B> childWrap : childrenWraps)  {
+      multiLink.connect(velvet, parentWrap.getNode(), childWrap.getNode());
+      save(velvet, childWrap);    
+    }
   }
     
   public interface IIslandContext {

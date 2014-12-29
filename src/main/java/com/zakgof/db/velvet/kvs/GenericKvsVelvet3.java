@@ -380,7 +380,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
       M m1 = null;
       if (anchor instanceof IKeyAnchor) {
         key = ((IKeyAnchor<K>)anchor).getKey();
-        m1 = (M)key;
+        m1 = keyMetric.apply(key);
       } else if (anchor instanceof IPositionAnchor) {
         position = ((IPositionAnchor)anchor).getPosition();
         return anchor.isIncluding() ? position : position + 1;
@@ -423,7 +423,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
       M m2 = null;
       if (anchor instanceof IKeyAnchor) {
         key = ((IKeyAnchor<K>)anchor).getKey();
-        m2 = (M) key;
+        m2 = keyMetric.apply(key);
       } else if (anchor instanceof IPositionAnchor) {
         position = ((IPositionAnchor)anchor).getPosition();
         return anchor.isIncluding() ? position : position - 1;
