@@ -32,7 +32,17 @@ public class LinkUtil {
           return null;
         if (links.size() == 1)
           return links.get(0);
-        throw new RuntimeException("Multigetter return more than 1 entry and cannot be adapted to singlegetter " + links);
+        throw new RuntimeException("Multigetter returns more than 1 entry and cannot be adapted to singlegetter " + links);
+      }
+
+      @Override
+      public Object singleKey(IVelvet velvet, Object key) {
+        List<Object> linkKeys = multi.linkKeys(velvet, key);
+        if (linkKeys.isEmpty())
+          return null;
+        if (linkKeys.size() == 1)
+          return linkKeys.get(0);
+        throw new RuntimeException("Multigetter returns more than 1 key and cannot be adapted to singlegetter " + linkKeys);
       }
 
       @Override
@@ -97,14 +107,12 @@ public class LinkUtil {
       B child = single.single(velvet, node);
       return child == null ? Collections.emptyList() : Arrays.asList(child);
     }
-
-    /*
+    
     @Override
     public List<Object> linkKeys(IVelvet velvet, Object key) {
       Object childKey = single.singleKey(velvet, key);
       return childKey == null ? Collections.emptyList() : Arrays.asList(childKey);
     }
-    */
 
   }
   
@@ -115,6 +123,11 @@ public class LinkUtil {
       @Override
       public List<B> links(IVelvet velvet, A node) {
         return indexedGetter.links(velvet, node, indexQuery);
+      }
+      
+      @Override
+      public <K> List<K> linkKeys(IVelvet velvet, Object node) {
+        return indexedGetter.linkKeys(velvet, node);
       }
 
       @Override

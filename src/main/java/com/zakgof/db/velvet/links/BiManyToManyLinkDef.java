@@ -28,12 +28,10 @@ public class BiManyToManyLinkDef<A, B> extends ABiLinkDef<A, B, MultiLinkDef<A, 
   public List<B> links(IVelvet velvet, A node) {
     return oneWay.links(velvet, node);
   }
-
-  /*
+  
   @Override
   public List<Object> linkKeys(IVelvet velvet, Object key) {
     return oneWay.linkKeys(velvet, key);
   }
-  */
 
 }

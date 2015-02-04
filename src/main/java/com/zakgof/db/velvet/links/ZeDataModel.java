@@ -103,6 +103,10 @@ public class ZeDataModel {
   public Collection<String> entityNames() {
     return entities.keySet();
   }
+  
+  public Collection<Class<?>> entities() {
+    return entities.values();
+  }
 
   public <A> ILinkProvider<A> getLinks(Class<A> clazz) {
     return new ILinkProvider<A>() {

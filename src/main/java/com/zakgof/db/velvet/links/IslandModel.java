@@ -199,6 +199,8 @@ public class IslandModel {
         dropChildren(velvet, node, multi);
       for (ISingleLinkDef<T, ?> single : entity.singles.values())
         dropChild(velvet, node, single);
+      for (IBiLinkDef<T, ?> detach : entity.detaches)
+        detach(velvet, node, detach);
     }
     velvet.delete(node);
   }
