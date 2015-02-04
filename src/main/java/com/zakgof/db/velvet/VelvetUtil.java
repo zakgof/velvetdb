@@ -69,7 +69,7 @@ public class VelvetUtil {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-    throw new RuntimeException("Not key field found for " + clazz);
+    throw new RuntimeException("No key field found for " + clazz);
   }
 
   public static List<Field> getAllFields(Class<?> type) {

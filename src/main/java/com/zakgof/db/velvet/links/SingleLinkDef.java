@@ -27,7 +27,8 @@ public class SingleLinkDef<A, B> extends ALinkDef<A, B> implements ISingleLinkDe
     return bkey == null ? null : velvet.get(bClazz, bkey);
   }
 
-  private Object singleKey(IVelvet velvet, Object key) {    
+  @Override
+  public Object singleKey(IVelvet velvet, Object key) {    
     @SuppressWarnings("unchecked")
     List<?> linkKeys = index(velvet, key).linkKeys((Class<Object>) VelvetUtil.keyClassOf(getChildClass()));
     return linkKeys.isEmpty() ? null : linkKeys.get(0);    

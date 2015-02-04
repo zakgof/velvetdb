@@ -216,9 +216,10 @@ public class GenericKvsVelvet3 implements IRawVelvet {
     public void disconnect(K key2) {
       // TODO : locking ?
       // TODO : optional check
-      Object key2ref = kvs.get(key2.getClass(), indexKey);
-      if (!key2.equals(key2ref))
-        throw new NoSuchElementException();
+      // Object key2ref = kvs.get(key2.getClass(), indexKey);
+      // if (!key2.equals(key2ref))
+      //   throw new NoSuchElementException();
+      // kvs.delete(indexKey);
 
       disconnect();
     }
@@ -241,7 +242,14 @@ public class GenericKvsVelvet3 implements IRawVelvet {
 
     SortedLink(Object key1, String edgeKind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric) {
       super(key1, edgeKind);
-      this.keyMetric = nodeMetric == null ? key -> (M)key : key -> nodeMetric.apply(GenericKvsVelvet3.this.get(nodeClazz, nodekind, key));
+      this.keyMetric = nodeMetric == null ? key -> (M)key : key -> nodeMetric.apply(getValue(nodeClazz, nodekind, key));
+    }
+
+    private T getValue(Class<T> nodeClazz, String nodekind, K key) {
+      T val = GenericKvsVelvet3.this.get(nodeClazz, nodekind, key);
+      if (val == null)
+        System.err.println("Fatal : metric value not found : " + nodeClazz + "," + nodekind + "," + key);
+      return val;
     }
 
     @Override
@@ -282,6 +290,11 @@ public class GenericKvsVelvet3 implements IRawVelvet {
     }
     
     private int exactSearch(K[] array, K value, Function<K, M> metric) {
+      for (int i=0; i<array.length; i++)
+        if (array[i].equals(value))
+          return i;
+      return -1;
+      /*
       M valueMetric = metric.apply(value);
       int i = searchForInsert(array, valueMetric, true) - 1;
       for(;;i--) {
@@ -289,7 +302,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
           return -1;
         if (array[i].equals(value))
           return i;
-      }
+      }*/
     }
 
     @Override
@@ -708,8 +721,13 @@ public class GenericKvsVelvet3 implements IRawVelvet {
         K[] entries = kvss.get(GenericKvsVelvet3.<K> getArrayClass(clazz), bucketKey);
         if (entries == null)
           throw new NoSuchElementException();
+        
+        // DEBUG. reduce should be 1
+        long reduce = Arrays.stream(entries).filter(e -> e.equals(indexentry)).count();
+        if (reduce != 1)
+          System.err.println("Warning : remove entry reduce " + key + " " + this.origKey + " " + reduce);
 
-        K[] newEntries = Functions.newArray(clazz, entries.length - 1);
+        K[] newEntries = Functions.newArray(clazz, entries.length - (int)reduce);
         int j = 0;
         for (int i = 0; i < entries.length; i++) {
           if (!entries[i].equals(indexentry)) {
