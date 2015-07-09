@@ -1,5 +1,8 @@
 package com.zakgof.db.velvet.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetUtil;
 
@@ -7,6 +10,7 @@ public class Entity<K, V> implements IEntityDef<K, V> {
 
   private Class<V> valueClass;
   private Class<K> keyClass;
+  private String kind;
 
   public static <K, V> Entity<K, V> of(Class<V> valueClass) {
     return new Entity<>(valueClass);
@@ -16,6 +20,7 @@ public class Entity<K, V> implements IEntityDef<K, V> {
   public Entity(Class<V> valueClass) {
     this.valueClass = valueClass;
     this.keyClass = (Class<K>) VelvetUtil.keyClassOf(valueClass);
+    this.kind = VelvetUtil.kindOf(valueClass);
   }
 
   @Override
@@ -41,6 +46,21 @@ public class Entity<K, V> implements IEntityDef<K, V> {
   @Override
   public void put(IVelvet velvet, V value) {
     velvet.put(value);
+  }
+
+  @Override
+  public List<V> getAll(IVelvet velvet, List<K> keys) {
+    List<V> nodes = new ArrayList<V>(keys.size());
+    for (K key : keys) {
+      V node = get(velvet, key);
+      nodes.add(node);
+    }
+    return nodes;
+  }
+
+  @Override
+  public String getKind() {
+    return kind;
   }
 
 }
