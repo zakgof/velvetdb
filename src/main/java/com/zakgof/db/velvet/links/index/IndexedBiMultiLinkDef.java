@@ -8,7 +8,7 @@ import java.util.function.Function;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.links.BiMultiLinkDef;
 import com.zakgof.db.velvet.links.IMultiLinkDef;
-import com.zakgof.db.velvet.query.IIndexQuery;
+import com.zakgof.db.velvet.api.query.IIndexQuery;
 
 public class IndexedBiMultiLinkDef<A, B, C extends Comparable<C>> extends BiMultiLinkDef<A, B> implements IIndexedMultiLink<A, B, C> {
 

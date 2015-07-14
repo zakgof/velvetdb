@@ -14,11 +14,11 @@ import java.util.function.Function;
 import com.zakgof.db.kvs.IKvs;
 import com.zakgof.db.kvs.ITransactionalKvs;
 import com.zakgof.db.velvet.IRawVelvet;
-import com.zakgof.db.velvet.query.IIndexQuery;
-import com.zakgof.db.velvet.query.IKeyAnchor;
-import com.zakgof.db.velvet.query.IPositionAnchor;
-import com.zakgof.db.velvet.query.IQueryAnchor;
-import com.zakgof.db.velvet.query.ISecondaryIndexAnchor;
+import com.zakgof.db.velvet.api.query.IIndexQuery;
+import com.zakgof.db.velvet.api.query.IKeyAnchor;
+import com.zakgof.db.velvet.api.query.IPositionAnchor;
+import com.zakgof.db.velvet.api.query.IQueryAnchor;
+import com.zakgof.db.velvet.api.query.ISecondaryIndexAnchor;
 import com.zakgof.tools.generic.Functions;
 
 /**

@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.links.IMultiLinkDef;
-import com.zakgof.db.velvet.query.IIndexQuery;
+import com.zakgof.db.velvet.api.query.IIndexQuery;
 
 public interface IIndexedMultiLink<A, B, C extends Comparable<C>> extends IMultiLinkDef<A, B> {
   

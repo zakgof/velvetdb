@@ -6,7 +6,7 @@ import java.util.function.Function;
 
 import com.zakgof.db.ILockable;
 import com.zakgof.db.ITransactional;
-import com.zakgof.db.velvet.query.IIndexQuery;
+import com.zakgof.db.velvet.api.query.IIndexQuery;
 
 public interface IRawVelvet extends ITransactional, ILockable {
 

@@ -14,8 +14,8 @@ import com.zakgof.db.velvet.IRawVelvet.IKeyIndexLink;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.Velvet;
 import com.zakgof.db.velvet.VelvetUtil;
-import com.zakgof.db.velvet.query.IIndexQuery;
-import com.zakgof.db.velvet.query.IndexQueryFactory;
+import com.zakgof.db.velvet.api.query.IIndexQuery;
+import com.zakgof.db.velvet.api.query.IndexQueryFactory;
 
 public class GenericKvsVelvet3Test {
 

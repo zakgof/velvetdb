@@ -8,7 +8,7 @@ import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetUtil;
 import com.zakgof.db.velvet.links.IMultiLinkDef;
 import com.zakgof.db.velvet.links.MultiLinkDef;
-import com.zakgof.db.velvet.query.IIndexQuery;
+import com.zakgof.db.velvet.api.query.IIndexQuery;
 
 public class IndexedMultiLinkDef<A, B, C extends Comparable<C>> extends MultiLinkDef<A, B> implements IIndexedMultiLink<A, B, C> {
 
