@@ -8,9 +8,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.zakgof.db.sqlkvs.MemKvs;
-import com.zakgof.db.velvet.AutoKeyed;
 import com.zakgof.db.velvet.IRawVelvet;
 import com.zakgof.db.velvet.IRawVelvet.IKeyIndexLink;
+import com.zakgof.db.velvet.annotation.AutoKeyed;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.Velvet;
 import com.zakgof.db.velvet.VelvetUtil;

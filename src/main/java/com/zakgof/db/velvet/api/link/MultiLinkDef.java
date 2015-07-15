@@ -4,10 +4,10 @@ import java.util.List;
 
 import com.zakgof.db.velvet.IRawVelvet.ILink;
 import com.zakgof.db.velvet.IRawVelvet.LinkType;
-import com.zakgof.db.velvet.api.entity.IEntityDef;
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.api.entity.IEntityDef;
 
-public class MultiLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV>implements IMultiLinkDef<HK, HV, CK, CV> {
+class MultiLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV> implements IMultiLinkDef<HK, HV, CK, CV> {
 
   public MultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind) {
     super(hostEntity, childEntity, edgeKind);

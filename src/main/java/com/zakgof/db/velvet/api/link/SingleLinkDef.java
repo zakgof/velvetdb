@@ -4,25 +4,17 @@ import java.util.List;
 
 import com.zakgof.db.velvet.IRawVelvet.ILink;
 import com.zakgof.db.velvet.IRawVelvet.LinkType;
-import com.zakgof.db.velvet.api.entity.IEntityDef;
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.api.entity.IEntityDef;
 
-public class SingleLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV>implements ISingleLinkDef<HK, HV, CK, CV> {
+class SingleLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV>implements ISingleLinkDef<HK, HV, CK, CV> {
 
-  public SingleLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind) {
+  SingleLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind) {
     super(hostEntity, childEntity, edgeKind);
   }
 
-  public SingleLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
+  SingleLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
     super(hostEntity, childEntity);
-  }
-
-  public static <HK, HV, CK, CV> SingleLinkDef<HK, HV, CK, CV> of(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
-    return new SingleLinkDef<>(hostEntity, childEntity);
-  }
-
-  public static <HK, HV, CK, CV> SingleLinkDef<HK, HV, CK, CV> of(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind) {
-    return new SingleLinkDef<>(hostEntity, childEntity, edgeKind);
   }
 
   @Override

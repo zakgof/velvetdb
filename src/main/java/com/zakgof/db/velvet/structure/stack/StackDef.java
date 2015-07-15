@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetUtil;
-import com.zakgof.db.velvet.links.SingleLinkDef;
+import com.zakgof.db.velvet.old.SingleLinkDef;
 import com.zakgof.tools.generic.IProvider;
 
 class StackElement<T> {
