@@ -1,7 +1,6 @@
 package com.zakgof.db.velvet.api.link;
 
 import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.VelvetUtil;
 import com.zakgof.db.velvet.api.entity.Entity;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
 
@@ -18,7 +17,7 @@ abstract class ALinkDef<HK, HV, CK, CV> implements ILinkDef<HK, HV, CK, CV> {
   }
 
   ALinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
-    this(hostEntity, childEntity, VelvetUtil.kindOf(hostEntity.getValueClass()) + "-" + VelvetUtil.kindOf(childEntity.getValueClass()));
+    this(hostEntity, childEntity, hostEntity.getKind() + "-" + childEntity.getKind());
   }
 
   ALinkDef(Class<HV> hostClass, Class<CV> childClass) {

@@ -3,8 +3,8 @@ package com.zakgof.db.velvet.api.link;
 import java.util.List;
 import java.util.function.Function;
 
-import com.zakgof.db.velvet.IRawVelvet.IKeyIndexLink;
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.IVelvet.IKeyIndexLink;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 
@@ -19,7 +19,7 @@ public class IndexedMultiLinkDef<HK, HV, CK, CV, C extends Comparable<C>> extend
   }
 
   protected IKeyIndexLink<CK> index(IVelvet velvet, HK akey) {
-    return velvet.raw().<CK, CV, C> index(akey, getKind(), getChildEntity().getValueClass(), getChildEntity().getKind(), metric);
+    return velvet.<CK, CV, C> index(akey, getKind(), getChildEntity().getValueClass(), getChildEntity().getKind(), metric);
   }
 
   @Override

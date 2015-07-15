@@ -1,7 +1,5 @@
 package com.zakgof.db.velvet.api.query;
 
-import com.zakgof.db.velvet.VelvetUtil;
-
 public class IndexQueryFactory {
 
   public static <K> Builder<K> builder() {
@@ -48,21 +46,21 @@ public class IndexQueryFactory {
     return IndexQueryFactory.<B> builder().greaterOrEqS(p).lessOrEqS(p).build();
   }
 
-  public static <T, K> IIndexQuery<K> prev(T node) {
-    @SuppressWarnings("unchecked")
-    K key = (K) VelvetUtil.keyOf(node);
-    return prevKey(key);
-  }
+//  public static <T, K> IIndexQuery<K> prev(T node) {
+//    @SuppressWarnings("unchecked")
+//    K key = (K) VelvetUtil.keyOfValue(node);
+//    return prevKey(key);
+//  }
 
   public static <T, K> IIndexQuery<K> prevKey(K key) {
     return IndexQueryFactory.<K> builder().lessK(key).descending().limit(1).build();
   }
 
-  public static <T, K> IIndexQuery<K> next(T node) {
-    @SuppressWarnings("unchecked")
-    K key = (K) VelvetUtil.keyOf(node);
-    return nextKey(key);
-  }
+//  public static <T, K> IIndexQuery<K> next(T node) {
+//    @SuppressWarnings("unchecked")
+//    K key = (K) VelvetUtil.keyOfValue(node);
+//    return nextKey(key);
+//  }
 
   public static <T, K> IIndexQuery<K> nextKey(K key) {
     return IndexQueryFactory.<K> builder().greaterK(key).limit(1).build();

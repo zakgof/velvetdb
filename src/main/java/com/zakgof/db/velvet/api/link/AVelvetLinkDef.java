@@ -1,8 +1,8 @@
 package com.zakgof.db.velvet.api.link;
 
-import com.zakgof.db.velvet.IRawVelvet.ILink;
-import com.zakgof.db.velvet.api.entity.IEntityDef;
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.IVelvet.ILink;
+import com.zakgof.db.velvet.api.entity.IEntityDef;
 
 abstract class AVelvetLinkDef<HK, HV, CK, CV> extends ALinkDef<HK, HV, CK, CV> {
 

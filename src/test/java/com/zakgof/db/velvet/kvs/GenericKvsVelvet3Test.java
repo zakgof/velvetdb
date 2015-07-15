@@ -47,7 +47,7 @@ public class GenericKvsVelvet3Test {
     T1 t5_r = velvet.get(T1.class, "final");
     
     kvs.dump();
-    raw.dumpIndex(VelvetUtil.keyClassOf(T1.class), "@n/t1");
+    raw.dumpIndex(VelvetUtil.keyOfValue(T1.class), "@n/t1");
   }
 
   @Before
