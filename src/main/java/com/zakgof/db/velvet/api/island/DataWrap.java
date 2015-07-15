@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.zakgof.db.velvet.VelvetUtil;
 import com.zakgof.db.velvet.api.link.IMultiLinkDef;
 import com.zakgof.db.velvet.api.link.ISingleLinkDef;
 
@@ -94,8 +93,6 @@ public class DataWrap<T> {
   }
   
   private String valueString(DataWrap<?> wrap) {
-    if (VelvetUtil.isEntity(wrap.getNode()))
-        return "" + VelvetUtil.keyOf(wrap.getNode());
     return wrap.getNode().toString();
   }
 

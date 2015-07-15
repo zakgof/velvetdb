@@ -41,7 +41,7 @@ public class Links {
   }
 
   public static <HK, HV, CK, CV> void createChild(ILinkDef<HK, HV, CK, CV> linkDef, IVelvet velvet, HV a, CV b) {
-    velvet.put(b);
+    linkDef.getChildEntity().put(velvet, b);
     linkDef.connect(velvet, a, b);
   }
 

@@ -2,9 +2,9 @@ package com.zakgof.db.velvet.api.link;
 
 import java.util.List;
 
-import com.zakgof.db.velvet.IRawVelvet.ILink;
-import com.zakgof.db.velvet.IRawVelvet.LinkType;
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.IVelvet.ILink;
+import com.zakgof.db.velvet.IVelvet.LinkType;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
 
 class MultiLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV> implements IMultiLinkDef<HK, HV, CK, CV> {
@@ -36,7 +36,7 @@ class MultiLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV> implem
   }
 
   protected ILink<CK> index(IVelvet velvet, HK hkey) {
-    return velvet.raw().index(hkey, getKind(), LinkType.Multi);
+    return velvet.index(hkey, getKind(), LinkType.Multi);
   }
 
   @Override

@@ -2,9 +2,9 @@ package com.zakgof.db.velvet.api.link;
 
 import java.util.List;
 
-import com.zakgof.db.velvet.IRawVelvet.ILink;
-import com.zakgof.db.velvet.IRawVelvet.LinkType;
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.IVelvet.ILink;
+import com.zakgof.db.velvet.IVelvet.LinkType;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
 
 class SingleLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV>implements ISingleLinkDef<HK, HV, CK, CV> {
@@ -30,7 +30,7 @@ class SingleLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV>implem
   }
  
   ILink<CK> index(IVelvet velvet, HK akey) {
-    return velvet.raw().index(akey, getKind(), LinkType.Single);
+    return velvet.index(akey, getKind(), LinkType.Single);
   }
 
   @Override
