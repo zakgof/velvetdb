@@ -43,10 +43,4 @@ public interface IRawVelvet extends ITransactional, ILockable {
     PriBTree,
     SecBTree,
   }
-
-  /**
-   * 
-   * VELVET RAW VELVET INDEXER KVS DB
-   * */
-
 }

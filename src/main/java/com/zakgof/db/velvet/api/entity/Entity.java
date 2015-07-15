@@ -1,9 +1,5 @@
 package com.zakgof.db.velvet.api.entity;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetUtil;
 
 public class Entity<K, V> implements IEntityDef<K, V> {
@@ -36,26 +32,6 @@ public class Entity<K, V> implements IEntityDef<K, V> {
   @Override
   public K keyOf(V value) {
     return keyClass.cast(VelvetUtil.keyOf(value));
-  }
-
-  @Override
-  public V get(IVelvet velvet, K key) {
-    return velvet.get(valueClass, key);
-  }
-
-  @Override
-  public void put(IVelvet velvet, V value) {
-    velvet.put(value);
-  }
-
-  @Override
-  public List<V> getAll(IVelvet velvet, List<K> keys) {
-    List<V> nodes = new ArrayList<V>(keys.size());
-    for (K key : keys) {
-      V node = get(velvet, key);
-      nodes.add(node);
-    }
-    return nodes;
   }
 
   @Override
