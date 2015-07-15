@@ -5,17 +5,17 @@ import java.util.List;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
 
-public class BiManyToManyLinkDef<HK, HV, CK, CV> extends ABiLinkDef<HK, HV, CK, CV, MultiLinkDef<HK, HV, CK, CV>, BiManyToManyLinkDef<CK, CV, HK, HV>>implements IMultiLinkDef<HK, HV, CK, CV> {
+class BiManyToManyLinkDef<HK, HV, CK, CV> extends ABiLinkDef<HK, HV, CK, CV, MultiLinkDef<HK, HV, CK, CV>, IBiManyToManyLinkDef<CK, CV, HK, HV>>implements IBiManyToManyLinkDef<HK, HV, CK, CV> {
 
   private BiManyToManyLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
     super(new MultiLinkDef<HK, HV, CK, CV>(hostEntity, childEntity));
   }
-  
+
   private BiManyToManyLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String backEdgeKind) {
     super(new MultiLinkDef<HK, HV, CK, CV>(hostEntity, childEntity, backEdgeKind));
   }
 
-  public static <HK, HV, CK, CV> BiManyToManyLinkDef<HK, HV, CK, CV> of(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
+  static <HK, HV, CK, CV> BiManyToManyLinkDef<HK, HV, CK, CV> create(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
     BiManyToManyLinkDef<HK, HV, CK, CV> link = new BiManyToManyLinkDef<HK, HV, CK, CV>(hostEntity, childEntity);
     BiManyToManyLinkDef<CK, CV, HK, HV> backLink = new BiManyToManyLinkDef<CK, CV, HK, HV>(childEntity, hostEntity);
     link.setBackLink(backLink);
@@ -23,7 +23,7 @@ public class BiManyToManyLinkDef<HK, HV, CK, CV> extends ABiLinkDef<HK, HV, CK, 
     return link;
   }
 
-  public static <HK, HV, CK, CV> BiManyToManyLinkDef<HK, HV, CK, CV> of(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind, String backEdgeKind) {
+  static <HK, HV, CK, CV> BiManyToManyLinkDef<HK, HV, CK, CV> create(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind, String backEdgeKind) {
     BiManyToManyLinkDef<HK, HV, CK, CV> link = new BiManyToManyLinkDef<HK, HV, CK, CV>(hostEntity, childEntity, edgeKind);
     BiManyToManyLinkDef<CK, CV, HK, HV> backLink = new BiManyToManyLinkDef<CK, CV, HK, HV>(childEntity, hostEntity, backEdgeKind);
     link.setBackLink(backLink);

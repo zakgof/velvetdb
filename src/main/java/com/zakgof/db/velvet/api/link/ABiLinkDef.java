@@ -2,7 +2,7 @@ package com.zakgof.db.velvet.api.link;
 
 import com.zakgof.db.velvet.IVelvet;
 
-class ABiLinkDef<HK, HV, CK, CV, OneWayLinkType extends ILinkDef<HK, HV, CK, CV>, BackLinkType extends ABiLinkDef<CK, CV, HK, HV, ?, ?>> extends ALinkDef<HK, HV, CK, CV>implements IBiLinkDef<HK, HV, CK, CV> {
+class ABiLinkDef<HK, HV, CK, CV, OneWayLinkType extends ILinkDef<HK, HV, CK, CV>, BackLinkType extends IBiLinkDef<CK, CV, HK, HV, ?>> extends ALinkDef<HK, HV, CK, CV> implements IBiLinkDef<HK, HV, CK, CV, BackLinkType> {
 
   protected OneWayLinkType oneWay;
   protected BackLinkType backLink;
@@ -16,16 +16,18 @@ class ABiLinkDef<HK, HV, CK, CV, OneWayLinkType extends ILinkDef<HK, HV, CK, CV>
     this.backLink = backLink;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public void connectKeys(IVelvet velvet, HK akey, CK bkey) {
-    oneWay.connectKeys(velvet, akey, bkey);
-    backLink.oneWay.connectKeys(velvet, bkey, akey);
+    oneWay.connectKeys(velvet, akey, bkey);    
+    ((ABiLinkDef< CK, CV, HK, HV, ?, ?>)backLink).oneWay.connectKeys(velvet, bkey, akey);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public void disconnectKeys(IVelvet velvet, HK akey, CK bkey) {
     oneWay.disconnectKeys(velvet, akey, bkey);
-    backLink.oneWay.disconnectKeys(velvet, bkey, akey);
+    ((ABiLinkDef< CK, CV, HK, HV, ?, ?>)backLink).oneWay.disconnectKeys(velvet, bkey, akey);
   }
 
   @Override
