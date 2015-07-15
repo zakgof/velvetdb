@@ -14,13 +14,4 @@ public interface IVelvet {
   
   public <T> List<T> allOf(Class<T> clazz);
 
-  /*
-  public <T> List<T> links(Class<T> clazz, Object key, String edgeKind);
-  
-  public void connect(Object node1, Object node2, String kind);
-  
-  public void disconnect(Object node1, Object node2, String kind);
-  */
-  
-
 }
