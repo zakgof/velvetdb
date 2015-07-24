@@ -13,7 +13,7 @@ import java.util.function.Function;
 
 import com.zakgof.db.kvs.IKvs;
 import com.zakgof.db.kvs.ITransactionalKvs;
-import com.zakgof.db.velvet.IRawVelvet;
+import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 import com.zakgof.db.velvet.api.query.IKeyAnchor;
 import com.zakgof.db.velvet.api.query.IPositionAnchor;
@@ -32,7 +32,7 @@ import com.zakgof.tools.generic.Functions;
  * kvs[@/kind1/ * KEY] -> nodevalue
  * 
  */
-public class GenericKvsVelvet3 implements IRawVelvet {
+public class GenericKvsVelvet3 implements IVelvet {
 
   interface IIndex<K> {
     void add(K indexentry);
@@ -121,7 +121,7 @@ public class GenericKvsVelvet3 implements IRawVelvet {
   }
 
   @Override
-  public <K> Collection<K> allKeys(String kind, Class<K> keyClass) {
+  public <K> List<K> allKeys(String kind, Class<K> keyClass) {
     return new MixedIndex<K>(kvs, nodesKey(kind), keyClass).getAll();
   }
 
