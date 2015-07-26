@@ -20,7 +20,8 @@ public class CachedKvs implements ITransactionalKvs {
       return cached;
     
     T value = kvs.get(clazz, key);
-    cache.put(convert(key), value);
+    if (value != null)
+      cache.put(convert(key), value);
     
     return value;
   }

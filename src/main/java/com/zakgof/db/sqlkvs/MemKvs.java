@@ -95,5 +95,11 @@ public class MemKvs implements ITransactionalKvs {
   public Set<Entry<Buffer, Buffer>> entries() {
     return values.entrySet();
   }
+  
+//  public void copyTo(IKvs destKvs) {
+//    for (Set<Entry<Buffer, Buffer>> e : values.entrySet()) {
+//      destKvs.put(key, value);
+//    }
+//  }
 
 }

@@ -27,6 +27,10 @@ public interface IEntityDef<K, V> {
   public default List<V> getAll(IVelvet velvet) {
     return getAll(velvet, velvet.allKeys(getKind(), getKeyClass()));
   }
+  
+  public default List<K> getAllKeys(IVelvet velvet) {
+    return velvet.allKeys(getKind(), getKeyClass());
+  }
 
   public default void put(IVelvet velvet, V value) {
     velvet.put(getKind(), keyOf(value), value);

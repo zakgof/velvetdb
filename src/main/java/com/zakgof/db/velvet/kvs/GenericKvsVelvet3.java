@@ -84,6 +84,9 @@ public class GenericKvsVelvet3 implements IVelvet {
 
   @Override
   public <T> void put(String kind, Object key, T value) {
+    
+    if (key == null)
+      throw new RuntimeException("Velvet: null key"); // TODO      
 
     addToIndex(KINDS_KEY, kind);
     addToIndex(nodesKey(kind), key);
@@ -178,6 +181,8 @@ public class GenericKvsVelvet3 implements IVelvet {
 
     @Override
     public void connect(K key2) {
+      if (key2 == null)
+        throw new RuntimeException("Velvet: null key"); // TODO
       preConnect();
       addToIndex(indexKey, key2);
     }
@@ -672,7 +677,7 @@ public class GenericKvsVelvet3 implements IVelvet {
         if (entries.length + 1 > MAX_ARRAY_BUCKET) {
           // Array -> Hash
           MixedIndex<K> bucketMixedIndexer = childIndexer(bucketKey, key, bucketIndex);
-          System.out.println("migrate " + bucketKey);
+          // System.out.println("migrate " + bucketKey);
           K[] newEntries = Arrays.copyOf(entries, entries.length + 1);
           newEntries[entries.length] = indexentry;
           bucketMixedIndexer.addAll(newEntries);
