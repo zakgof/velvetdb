@@ -11,8 +11,8 @@ import java.util.stream.Stream;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetUtil;
-import com.zakgof.db.velvet.api.entity.Entity;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
+import com.zakgof.db.velvet.api.entity.impl.Entity;
 import com.zakgof.db.velvet.api.link.IBiLinkDef;
 import com.zakgof.db.velvet.api.link.IMultiLinkDef;
 import com.zakgof.db.velvet.api.link.ISingleLinkDef;
