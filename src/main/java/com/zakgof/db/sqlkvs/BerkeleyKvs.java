@@ -22,7 +22,7 @@ public class BerkeleyKvs implements ITransactionalKvs {
     this.berkeley = berkeley;
     this.txn = txn;
   }
-
+  
   @Override
   public <T> T get(Class<T> clazz, Object key) {
     ZeSerializer serializer = new ZeSerializer();

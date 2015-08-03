@@ -5,11 +5,11 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
-public class LifoCache implements ICache {
+public class GuavaCache implements ICache {
   
   private Cache<Object, Object> cache;
 
-  public LifoCache(long maxSize, long minutes) {
+  public GuavaCache(long maxSize, long minutes) {
     cache = CacheBuilder.newBuilder()
     .maximumWeight(maxSize)
     .weigher((k,v) -> weight(k, v))

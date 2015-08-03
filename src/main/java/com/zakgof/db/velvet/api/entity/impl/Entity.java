@@ -14,10 +14,10 @@ import com.zakgof.db.velvet.api.entity.IEntityDef;
 
 public class Entity<K, V> implements IEntityDef<K, V> {
 
-  private Class<V> valueClass;
-  private Class<K> keyClass;
-  private String kind;
-  private Function<V, K> keyProvider;
+  private final Class<V> valueClass;
+  private final Class<K> keyClass;
+  private final String kind;
+  private final Function<V, K> keyProvider;
 
   Entity(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider) {
     this.valueClass = valueClass;
