@@ -8,12 +8,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.zakgof.db.sqlkvs.MemKvs;
-import com.zakgof.db.velvet.IRawVelvet;
-import com.zakgof.db.velvet.IRawVelvet.IKeyIndexLink;
-import com.zakgof.db.velvet.annotation.AutoKeyed;
 import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.Velvet;
-import com.zakgof.db.velvet.VelvetUtil;
+import com.zakgof.db.velvet.IVelvet.IKeyIndexLink;
+import com.zakgof.db.velvet.annotation.AutoKeyed;
+import com.zakgof.db.velvet.api.entity.IEntityDef;
+import com.zakgof.db.velvet.api.entity.impl.Entities;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 import com.zakgof.db.velvet.api.query.IndexQueryFactory;
 
@@ -21,6 +20,7 @@ public class GenericKvsVelvet3Test {
 
   private GenericKvsVelvet3 raw;
   private IKeyIndexLink<Integer> indexLink;
+  private IEntityDef<String, T1> T1ENTITY = Entities.create(T1.class); 
 
   public static void main(String[] args) {
     new GenericKvsVelvet3Test().testMixedKvs();
@@ -31,23 +31,22 @@ public class GenericKvsVelvet3Test {
   public void testMixedKvs() {
 
     MemKvs kvs = new MemKvs();
-    GenericKvsVelvet3 raw = new GenericKvsVelvet3(kvs);
-    IVelvet velvet = new Velvet(raw);    
+    IVelvet velvet = new GenericKvsVelvet3(kvs);
     
     for (int d=0; d<15000; d++) {    
       T1 t1 = new T1("k" + d, d);
-      velvet.put(t1);
+      T1ENTITY.put(velvet, t1);
       System.out.println(d);
     }
-    velvet.put(new T1("final", -1.0f));
+    T1ENTITY.put(velvet, new T1("final", -1.0f));
     
-    List<T1> list = velvet.allOf(T1.class);
+    List<T1> list = T1ENTITY.getAll(velvet);
     
-    T1 t3_r = velvet.get(T1.class, "k1");
-    T1 t5_r = velvet.get(T1.class, "final");
+    T1 t3_r = T1ENTITY.get(velvet, "k1");
+    T1 t5_r = T1ENTITY.get(velvet, "final");
     
     kvs.dump();
-    raw.dumpIndex(VelvetUtil.keyOfValue(T1.class), "@n/t1");
+    raw.dumpIndex(T1ENTITY.getKeyClass(), "@n/t1");
   }
 
   @Before
@@ -132,7 +131,7 @@ public class GenericKvsVelvet3Test {
     check(raw, indexLink, IndexQueryFactory.nextKey(8)                 ); // b9 -> nil
   }
   
-  private void check(IRawVelvet raw, IKeyIndexLink<Integer> indexLink, IIndexQuery<Integer> query, String...v) {
+  private void check(IVelvet raw, IKeyIndexLink<Integer> indexLink, IIndexQuery<Integer> query, String...v) {
     String[] vals = indexLink.linkKeys(Integer.class, query).stream().map(key -> raw.get(String.class, "child", key)).collect(Collectors.toList()).toArray(new String[]{});
     Assert.assertArrayEquals(v, vals);
   }

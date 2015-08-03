@@ -14,6 +14,10 @@ public enum Entities {
     String kind = kindOf(valueClass);
     return new Entity<>(keyClass, valueClass, kind, annoKeyProvider);
   }
+  
+  public static <K> IEntityDef<K, K>  simple(Class<K> clazz, String kind) {
+    return new SimpleEntity<K>(clazz, kind);
+  }
 
   public static String kindOf(Class<?> clazz) {
     Kind annotation = clazz.getAnnotation(Kind.class);
