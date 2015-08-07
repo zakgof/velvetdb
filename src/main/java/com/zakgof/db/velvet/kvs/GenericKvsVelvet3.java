@@ -26,10 +26,13 @@ import com.zakgof.tools.generic.Functions;
 /**
  * Hardcoded keys:
  * 
- * kvs["@k"] -> Set<String> ["kind1", "kind2", ...] kvs["@e"] -> Set<String> ["edgekind1", "edgekind2", ...] kvs["@n/kind1"] -> Set<kind1keyclass> [node1key, node2key, ...] kvs["@o/edgekind1"] -> Set<linkoriginkeyclass> [linkoriginkey1,
- * linkoriginkey2, ...] kvs["@d/edgekind1/ * ORIGKEY"] -> Set<linkdestkeyclass> [linkoriginkey1, linkoriginkey2, ...]
+ * kvs["@k"] -> Set<String> ["kind1", "kind2", ...] 
+ * kvs["@e"] -> Set<String> ["edgekind1", "edgekind2", ...] 
+ * kvs["@n/kind1"] -> Set<kind1keyclass> [node1key, node2key, ...] 
+ * kvs["@o/edgekind1"] -> Set<linkoriginkeyclass> [linkoriginkey1, * linkoriginkey2, ...] 
+ * kvs["@d/edgekind1/ORIGKEY"] -> Set<linkdestkeyclass> [linkoriginkey1, linkoriginkey2, ...] <- array or BTree or whatevar
  * 
- * kvs[@/kind1/ * KEY] -> nodevalue
+ * kvs[@/kind1/KEY] -> nodevalue
  * 
  */
 public class GenericKvsVelvet3 implements IVelvet {
@@ -523,6 +526,14 @@ public class GenericKvsVelvet3 implements IVelvet {
     new MixedIndex<K>(kvs, key, clazz).dumpIndex(0);
   }
 
+  /**
+   * Store all links in array
+   * pros:
+   * - single read/write op
+   * cons: 
+   * - add/delete - replace the whole array (io too many bytes)
+   * - search - read all and linear in-memory seek (memory, performance)
+   */
   static class ArrayIndex<K> implements IIndex<K> {
 
     private final IKvs kvs;
@@ -582,6 +593,13 @@ public class GenericKvsVelvet3 implements IVelvet {
 
   }
 
+  /**
+   * Hash tree implementation
+   * kvs["@d/edgekind1/ORIGKEY"] -> MixedInfo
+   * @h/bucketpath/ORIGKEY -> array or MixedInfo
+   * arrays expands to 8 buckets after size of 64 (never collapses back)
+   * 
+   */
   static class MixedIndex<K> implements IIndex<K> {
 
     private static class MixedInfo {

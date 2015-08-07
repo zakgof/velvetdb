@@ -11,7 +11,7 @@ public class IndexQueryFactory {
   }
 
   public static <B, M extends Comparable<M>> IIndexQuery<B> greater(M p1) {
-    return IndexQueryFactory.<B> builder().from(new SecondaryIndexAnchor<>(p1)).build();
+    return IndexQueryFactory.<B> builder().greaterS(p1).build();
   }
 
   public static <B, M extends Comparable<M>> IIndexQuery<B> less(M p2) {
