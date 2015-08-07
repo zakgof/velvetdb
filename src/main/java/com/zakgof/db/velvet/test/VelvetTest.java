@@ -1,10 +1,9 @@
-package com.zakgof.db.velvet.kvs;
+package com.zakgof.db.velvet.test;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import com.zakgof.db.sqlkvs.MemKvs;
@@ -15,16 +14,13 @@ import com.zakgof.db.velvet.api.entity.IEntityDef;
 import com.zakgof.db.velvet.api.entity.impl.Entities;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 import com.zakgof.db.velvet.api.query.IndexQueryFactory;
+import com.zakgof.db.velvet.kvs.GenericKvsVelvet3;
 
-public class GenericKvsVelvet3Test {
+public abstract class VelvetTest {
 
-  private GenericKvsVelvet3 raw;
+  private IVelvet velvet;
   private IKeyIndexLink<Integer> indexLink;
   private IEntityDef<String, T1> T1ENTITY = Entities.create(T1.class); 
-
-  public static void main(String[] args) {
-    new GenericKvsVelvet3Test().testMixedKvs();
-  }
 
   @SuppressWarnings("unused")
   @Test
@@ -36,7 +32,7 @@ public class GenericKvsVelvet3Test {
     for (int d=0; d<15000; d++) {    
       T1 t1 = new T1("k" + d, d);
       T1ENTITY.put(velvet, t1);
-      System.out.println(d);
+      // System.out.println(d);
     }
     T1ENTITY.put(velvet, new T1("final", -1.0f));
     
@@ -46,89 +42,90 @@ public class GenericKvsVelvet3Test {
     T1 t5_r = T1ENTITY.get(velvet, "final");
     
     kvs.dump();
-    raw.dumpIndex(T1ENTITY.getKeyClass(), "@n/t1");
+    // raw.dumpIndex(T1ENTITY.getKeyClass(), "@n/t1");
   }
 
-  @Before
-  public void init() {
+  public VelvetTest() {
+   
     String[] name = new String[] {"0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9"};    
-    MemKvs kvs = new MemKvs();
-    raw = new GenericKvsVelvet3(kvs);
+    velvet = createVelvet();
     
-    indexLink = raw.<Integer, String, Integer>index("node1", "edge", String.class, "child", node -> (int)(node.charAt(node.length() - 1) - '0'));
+    indexLink = velvet.<Integer, String, Long>index("node1", "edge", String.class, "child", node -> (long)(int)(node.charAt(node.length() - 1) - '0'));
     
-    raw.put("main", "rootKey", "node1");
+    velvet.put("main", "rootKey", "node1");
     for (int i=0; i<name.length; i++) {
-      raw.put("child", i, name[i]);
+      velvet.put("child", i, name[i]);
       indexLink.connect(i);
     }
   }
+
+  protected abstract IVelvet createVelvet();
   
   @Test
   public void testGreaterOrEq() {
-    check(raw, indexLink, IndexQueryFactory.greaterOrEq(5),     "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(velvet, indexLink, IndexQueryFactory.greaterOrEq(5L),     "a5", "b5", "c5", "a7", "b7", "a9", "b9");
   }
   
   @Test
   public void testEqualsTo() {
-    check(raw, indexLink, IndexQueryFactory.equalsTo(7),        "a7", "b7");
+    check(velvet, indexLink, IndexQueryFactory.equalsTo(7L),        "a7", "b7");
   }
   
   @Test
   public void testEqualsToNonExisting() {
-    check(raw, indexLink, IndexQueryFactory.equalsTo(8)          );
+    check(velvet, indexLink, IndexQueryFactory.equalsTo(8L)          );
   }
   
   @Test
   public void testGreater() {
-    check(raw, indexLink, IndexQueryFactory.greater(5),         "a7", "b7", "a9", "b9");
+    check(velvet, indexLink, IndexQueryFactory.greater(5L),         "a7", "b7", "a9", "b9");
   }
   
   @Test
   public void testFirst() {
-    check(raw, indexLink, IndexQueryFactory.first(),            "0");
+    check(velvet, indexLink, IndexQueryFactory.first(),            "0");
   }
   
   @Test
   public void testLast() {
-    check(raw, indexLink, IndexQueryFactory.last(),             "b9");
+    check(velvet, indexLink, IndexQueryFactory.last(),             "b9");
   }
   
   @Test
   public void testPrev() {
-    check(raw, indexLink, IndexQueryFactory.prevKey(8),         "a9"); // b9 -> a9
+    check(velvet, indexLink, IndexQueryFactory.prevKey(8),         "a9"); // b9 -> a9
   }
   
   @Test
   public void testPrevNil() {
-    check(raw, indexLink, IndexQueryFactory.prevKey(0)          ); // 0 -> nil
+    check(velvet, indexLink, IndexQueryFactory.prevKey(0)          ); // 0 -> nil
   }
   
   @Test
   public void testLess() {
-    check(raw, indexLink, IndexQueryFactory.less(5),            "0", "1");
+    check(velvet, indexLink, IndexQueryFactory.less(5L),            "0", "1");
   }
   
   @Test
   public void testLessOrEq() {
-    check(raw, indexLink, IndexQueryFactory.lessOrEq(5),        "0", "1", "a5", "b5", "c5");
+    check(velvet, indexLink, IndexQueryFactory.lessOrEq(5L),        "0", "1", "a5", "b5", "c5");
   }
   
   
   @Test
   public void testNext1() {
-    check(raw, indexLink, IndexQueryFactory.nextKey(3),         "c5"); // b5 -> c5
+    check(velvet, indexLink, IndexQueryFactory.nextKey(3),         "c5"); // b5 -> c5
   }
   
   
   @Test
   public void testNext2() {
-    check(raw, indexLink, IndexQueryFactory.nextKey(4),            "a7"); // c5 -> a7
+    check(velvet, indexLink, IndexQueryFactory.nextKey(4),            "a7"); // c5 -> a7
   }
   
   @Test
   public void testNextEnd() {
-    check(raw, indexLink, IndexQueryFactory.nextKey(8)                 ); // b9 -> nil
+    check(velvet, indexLink, IndexQueryFactory.nextKey(8)                 ); // b9 -> nil
   }
   
   private void check(IVelvet raw, IKeyIndexLink<Integer> indexLink, IIndexQuery<Integer> query, String...v) {
