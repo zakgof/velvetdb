@@ -7,7 +7,7 @@ public class IndexQueryFactory {
   }
 
   public static <B, M extends Comparable<M>> IIndexQuery<B> range(M p1, boolean inclusive1, M p2, boolean inclusive2) {
-    return IndexQueryFactory.<B> builder().from(new SecondaryIndexAnchor<M>(inclusive1, p1)).to(new SecondaryIndexAnchor<M>(inclusive1, p1)).build();
+    return IndexQueryFactory.<B> builder().from(new SecondaryIndexAnchor<M>(inclusive1, p1)).to(new SecondaryIndexAnchor<M>(inclusive2, p2)).build();
   }
 
   public static <B, M extends Comparable<M>> IIndexQuery<B> greater(M p1) {

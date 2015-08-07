@@ -63,73 +63,108 @@ public abstract class VelvetTest {
   
   @Test
   public void testGreaterOrEq() {
-    check(velvet, indexLink, IndexQueryFactory.greaterOrEq(5L),     "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greaterOrEq(-1L),     "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greaterOrEq(0L),      "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greaterOrEq(5L),      "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greaterOrEq(7L),      "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greaterOrEq(9L),      "a9", "b9");
+    check(IndexQueryFactory.greaterOrEq(10L)      );
   }
   
   @Test
   public void testEqualsTo() {
-    check(velvet, indexLink, IndexQueryFactory.equalsTo(7L),        "a7", "b7");
+    check(IndexQueryFactory.equalsTo(4L));    
+    check(IndexQueryFactory.equalsTo(6L));
+    check(IndexQueryFactory.equalsTo(7L),         "a7", "b7");
+    check(IndexQueryFactory.equalsTo(9L),         "a9", "b9");
+    check(IndexQueryFactory.equalsTo(0L),         "0");
+    check(IndexQueryFactory.equalsTo(10L));
   }
-  
-  @Test
-  public void testEqualsToNonExisting() {
-    check(velvet, indexLink, IndexQueryFactory.equalsTo(8L)          );
-  }
-  
+ 
   @Test
   public void testGreater() {
-    check(velvet, indexLink, IndexQueryFactory.greater(5L),         "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greater(-1L),         "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greater(0L),          "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greater(4L),          "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greater(5L),          "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greater(7L),          "a9", "b9");
+    check(IndexQueryFactory.greater(9L));
+    check(IndexQueryFactory.greater(10L));
   }
   
   @Test
-  public void testFirst() {
-    check(velvet, indexLink, IndexQueryFactory.first(),            "0");
+  public void testFirstLast() {
+    check(IndexQueryFactory.first(),              "0");
+    check(IndexQueryFactory.last(),               "b9");
   }
-  
-  @Test
-  public void testLast() {
-    check(velvet, indexLink, IndexQueryFactory.last(),             "b9");
-  }
-  
+   
   @Test
   public void testPrev() {
-    check(velvet, indexLink, IndexQueryFactory.prevKey(8),         "a9"); // b9 -> a9
-  }
-  
-  @Test
-  public void testPrevNil() {
-    check(velvet, indexLink, IndexQueryFactory.prevKey(0)          ); // 0 -> nil
+    // check(IndexQueryFactory.prevKey(99));
+    check(IndexQueryFactory.prevKey(0));
+    check(IndexQueryFactory.prevKey(1),           "0");
+    check(IndexQueryFactory.prevKey(2),           "1");
+    check(IndexQueryFactory.prevKey(5),           "c5");
+    check(IndexQueryFactory.prevKey(8),           "a9");
+    // check(IndexQueryFactory.prevKey(9));
+    // check(IndexQueryFactory.prevKey(10));
   }
   
   @Test
   public void testLess() {
-    check(velvet, indexLink, IndexQueryFactory.less(5L),            "0", "1");
+    check(IndexQueryFactory.less(-1L));
+    check(IndexQueryFactory.less(0L));
+    check(IndexQueryFactory.less(2L),             "0", "1");
+    check(IndexQueryFactory.less(5L),             "0", "1");
+    check(IndexQueryFactory.less(9L),             "0", "1", "a5", "b5", "c5", "a7", "b7");    
+    check(IndexQueryFactory.less(10L),            "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
   }
   
   @Test
   public void testLessOrEq() {
-    check(velvet, indexLink, IndexQueryFactory.lessOrEq(5L),        "0", "1", "a5", "b5", "c5");
+    check(IndexQueryFactory.lessOrEq(-1L));
+    check(IndexQueryFactory.lessOrEq(0L),         "0");
+    check(IndexQueryFactory.lessOrEq(5L),         "0", "1", "a5", "b5", "c5");
+    check(IndexQueryFactory.lessOrEq(8L),         "0", "1", "a5", "b5", "c5", "a7", "b7");    
+    check(IndexQueryFactory.lessOrEq(9L),         "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.lessOrEq(10L),        "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+  }
+  
+  @Test
+  public void testRange() {
+    check(IndexQueryFactory.range(-1L, true, 10L, true),      "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.range(-1L, false, 10L, false),    "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.range(0L, false, 10L, false),     "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.range(0L, true, 9L, false),       "0", "1", "a5", "b5", "c5", "a7", "b7");
+    check(IndexQueryFactory.range(1L, false, 9L, true),       "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.range(2L, true, 7L, false),       "a5", "b5", "c5");
+    check(IndexQueryFactory.range(2L, true, 6L, true),        "a5", "b5", "c5");
+    check(IndexQueryFactory.range(5L, true, 6L, false),       "a5", "b5", "c5");
+    check(IndexQueryFactory.range(5L, true, 5L, true),        "a5", "b5", "c5");
+    check(IndexQueryFactory.range(5L, true, 5L, false));
+    check(IndexQueryFactory.range(5L, false, 5L, true));
+    check(IndexQueryFactory.range(5L, true, 2L, true));    
   }
   
   
   @Test
   public void testNext1() {
-    check(velvet, indexLink, IndexQueryFactory.nextKey(3),         "c5"); // b5 -> c5
+    check(IndexQueryFactory.nextKey(3),         "c5"); // b5 -> c5
   }
   
   
   @Test
   public void testNext2() {
-    check(velvet, indexLink, IndexQueryFactory.nextKey(4),            "a7"); // c5 -> a7
+    check(IndexQueryFactory.nextKey(4),            "a7"); // c5 -> a7
   }
   
   @Test
   public void testNextEnd() {
-    check(velvet, indexLink, IndexQueryFactory.nextKey(8)                 ); // b9 -> nil
+    check(IndexQueryFactory.nextKey(8)                 ); // b9 -> nil
   }
   
-  private void check(IVelvet raw, IKeyIndexLink<Integer> indexLink, IIndexQuery<Integer> query, String...v) {
-    String[] vals = indexLink.linkKeys(Integer.class, query).stream().map(key -> raw.get(String.class, "child", key)).collect(Collectors.toList()).toArray(new String[]{});
+  private void check(IIndexQuery<Integer> query, String...v) {
+    String[] vals = indexLink.linkKeys(Integer.class, query).stream().map(key -> velvet.get(String.class, "child", key)).collect(Collectors.toList()).toArray(new String[]{});
     Assert.assertArrayEquals(v, vals);
   }
 
