@@ -501,6 +501,11 @@ public class GenericKvsVelvet3 implements IVelvet {
   }
 
   @Override
+  public void begin() {
+    kvs.begin();
+  }
+
+  @Override
   public void rollback() {
     kvs.rollback();
   }

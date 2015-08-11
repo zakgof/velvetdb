@@ -43,6 +43,11 @@ public class CachedKvs implements ITransactionalKvs {
     kvs.delete(key);
     cache.remove(convert(key));
   }
+  
+  @Override
+  public void begin() {
+    kvs.begin();
+  }
 
   @Override
   public void rollback() {

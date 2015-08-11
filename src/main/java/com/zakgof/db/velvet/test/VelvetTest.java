@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.zakgof.db.sqlkvs.MemKvs;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IKeyIndexLink;
 import com.zakgof.db.velvet.annotation.AutoKeyed;
@@ -14,20 +13,31 @@ import com.zakgof.db.velvet.api.entity.IEntityDef;
 import com.zakgof.db.velvet.api.entity.impl.Entities;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 import com.zakgof.db.velvet.api.query.IndexQueryFactory;
-import com.zakgof.db.velvet.kvs.GenericKvsVelvet3;
 
-public abstract class VelvetTest extends AbstractVelvetTest {
+public class VelvetTest {
 
   private IVelvet velvet;
   private IKeyIndexLink<Integer> indexLink;
   private IEntityDef<String, T1> T1ENTITY = Entities.create(T1.class); 
+  
+  public VelvetTest() {
+    
+    velvet = VelvetTestSuite.velvetProvider.get();
+    
+    String[] name = new String[] {"0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9"};    
+    
+    indexLink = velvet.<Integer, String, Long>index("node1", "edge", String.class, "child", node -> (long)(int)(node.charAt(node.length() - 1) - '0'));
+    
+    velvet.put("main", "rootKey", "node1");
+    for (int i=0; i<name.length; i++) {
+      velvet.put("child", i, name[i]);
+      indexLink.connect(i);
+    }
+  }
 
   @SuppressWarnings("unused")
   @Test
   public void testMixedKvs() {
-
-    MemKvs kvs = new MemKvs();
-    IVelvet velvet = new GenericKvsVelvet3(kvs);
     
     for (int d=0; d<15000; d++) {    
       T1 t1 = new T1("k" + d, d);
@@ -41,24 +51,9 @@ public abstract class VelvetTest extends AbstractVelvetTest {
     T1 t3_r = T1ENTITY.get(velvet, "k1");
     T1 t5_r = T1ENTITY.get(velvet, "final");
     
-    kvs.dump();
     // raw.dumpIndex(T1ENTITY.getKeyClass(), "@n/t1");
   }
 
-  public VelvetTest() {
-   
-    String[] name = new String[] {"0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9"};    
-    velvet = createVelvet();
-    
-    indexLink = velvet.<Integer, String, Long>index("node1", "edge", String.class, "child", node -> (long)(int)(node.charAt(node.length() - 1) - '0'));
-    
-    velvet.put("main", "rootKey", "node1");
-    for (int i=0; i<name.length; i++) {
-      velvet.put("child", i, name[i]);
-      indexLink.connect(i);
-    }
-  }
-  
   @Test
   public void testGreaterOrEq() {
     check(IndexQueryFactory.greaterOrEq(-1L),     "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");

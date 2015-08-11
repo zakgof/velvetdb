@@ -54,6 +54,10 @@ public class MemKvs implements ITransactionalKvs {
     writes++;
     writeBytes += keyBuffer.size();
   }
+  
+  @Override
+  public void begin() {
+  }
 
   @Override
   public void rollback() {
