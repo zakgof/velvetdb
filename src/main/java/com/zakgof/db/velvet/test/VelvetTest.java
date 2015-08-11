@@ -16,7 +16,7 @@ import com.zakgof.db.velvet.api.query.IIndexQuery;
 import com.zakgof.db.velvet.api.query.IndexQueryFactory;
 import com.zakgof.db.velvet.kvs.GenericKvsVelvet3;
 
-public abstract class VelvetTest {
+public abstract class VelvetTest extends AbstractVelvetTest {
 
   private IVelvet velvet;
   private IKeyIndexLink<Integer> indexLink;
@@ -58,8 +58,6 @@ public abstract class VelvetTest {
       indexLink.connect(i);
     }
   }
-
-  protected abstract IVelvet createVelvet();
   
   @Test
   public void testGreaterOrEq() {
