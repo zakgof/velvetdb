@@ -183,6 +183,10 @@ public class SqlKvs implements ITransactionalKvs, ILockable {
       throw new RuntimeException(e);
     }
   }
+  
+  @Override
+  public void begin() {
+  }
 
   @Override
   public void rollback() {

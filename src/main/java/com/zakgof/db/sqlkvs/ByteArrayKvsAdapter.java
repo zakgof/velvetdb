@@ -49,6 +49,11 @@ public class ByteArrayKvsAdapter implements ITransactionalKvs {
   }
 
   @Override
+  public void begin() {
+    bakvs.begin();
+  }
+
+  @Override
   public void rollback() {
     bakvs.rollback();
   }
