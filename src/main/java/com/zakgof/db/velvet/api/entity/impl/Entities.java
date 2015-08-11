@@ -1,6 +1,7 @@
 package com.zakgof.db.velvet.api.entity.impl;
 
 import java.util.Locale;
+import java.util.function.Function;
 
 import com.zakgof.db.velvet.annotation.Kind;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
@@ -13,6 +14,10 @@ public enum Entities {
     Class<K> keyClass = annoKeyProvider.getKeyClass();
     String kind = kindOf(valueClass);
     return new Entity<>(keyClass, valueClass, kind, annoKeyProvider);
+  }
+  
+  public static <K, V> IEntityDef<K, V>  create(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider) {
+    return new Entity<>(keyClass, valueClass, kind, keyProvider);
   }
   
   public static <K> IEntityDef<K, K>  simple(Class<K> clazz, String kind) {
