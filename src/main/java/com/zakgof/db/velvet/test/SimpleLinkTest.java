@@ -86,6 +86,66 @@ public class SimpleLinkTest {
     testMultiLinkOverwrite(MANY_TO_MANY);
   }
   
+  @Test
+  public void testSingleBiLink() {
+    fillEntities();
+    
+    TestEnt parent = new TestEnt("key30", 0.03f);
+    TestEnt2 child = new TestEnt2(25);
+    
+    ONE_TO_ONE.connect(velvet, parent, child);
+    Assert.assertTrue(ONE_TO_ONE.back().isConnected(velvet, child, parent));
+  }
+  
+  @Test
+  public void testSingleBiLinkDisconnect() {
+    fillEntities();
+    
+    TestEnt parent = new TestEnt("key30", 0.03f);
+    TestEnt2 child = new TestEnt2(25);
+    
+    ONE_TO_ONE.connect(velvet, parent, child);
+    ONE_TO_ONE.disconnect(velvet, parent, child);
+    
+    Assert.assertFalse(ONE_TO_ONE.back().isConnected(velvet, child, parent));
+  }
+  
+  @Test
+  public void testSingleBiLinkDualReconnect() {
+    fillEntities();
+    
+    TestEnt parent1 = new TestEnt("key30", 0.03f);
+    TestEnt parent2 = new TestEnt("key22", 0.022f);
+    TestEnt2 child = new TestEnt2(25);
+    
+    ONE_TO_ONE.connect(velvet, parent1, child);
+    ONE_TO_ONE.back().connect(velvet, child, parent2);
+    
+    Assert.assertTrue(ONE_TO_ONE.isConnected(velvet, parent2, child));
+    Assert.assertFalse(ONE_TO_ONE.isConnected(velvet, parent1, child));
+    Assert.assertTrue(ONE_TO_ONE.back().isConnected(velvet, child, parent2));
+    Assert.assertFalse(ONE_TO_ONE.back().isConnected(velvet, child, parent1));
+    Assert.assertNull(ONE_TO_ONE.single(velvet, parent1));
+    Assert.assertEquals(child, ONE_TO_ONE.single(velvet, parent2));
+    Assert.assertEquals(parent2, ONE_TO_ONE.back().single(velvet, child));
+  }
+  
+  @Test
+  public void testSingleBiLinkDualDisconnect() {
+    fillEntities();
+    
+    TestEnt parent = new TestEnt("key30", 0.03f);
+    TestEnt2 child = new TestEnt2(25);
+    
+    ONE_TO_ONE.connect(velvet, parent, child);
+    ONE_TO_ONE.back().disconnect(velvet, child, parent);
+    
+    Assert.assertFalse(ONE_TO_ONE.isConnected(velvet, parent, child));
+    Assert.assertFalse(ONE_TO_ONE.back().isConnected(velvet, child, parent));
+    Assert.assertNull(ONE_TO_ONE.single(velvet, parent));
+    Assert.assertNull(ONE_TO_ONE.back().single(velvet, child));
+  }
+  
   private void fillEntities() {
     for (int d = 0; d < COUNT; d++) {
       TestEnt e = new TestEnt("key" + d, d * 0.001f);

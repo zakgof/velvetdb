@@ -33,7 +33,7 @@ public class TestEnt {
         return false;
     } else if (!key.equals(other.key))
       return false;
-    if (Float.floatToIntBits(val) != Float.floatToIntBits(other.val))
+    if (Math.abs(val - other.val) > 1e-6)
       return false;
     return true;
   }
