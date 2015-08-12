@@ -14,13 +14,13 @@ import com.zakgof.db.velvet.api.entity.impl.Entities;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 import com.zakgof.db.velvet.api.query.IndexQueryFactory;
 
-public class VelvetTest {
+public class SecondaryIndexTest {
 
   private IVelvet velvet;
   private IKeyIndexLink<Integer> indexLink;
   private IEntityDef<String, T1> T1ENTITY = Entities.create(T1.class); 
   
-  public VelvetTest() {
+  public SecondaryIndexTest() {
     
     velvet = VelvetTestSuite.velvetProvider.get();
     

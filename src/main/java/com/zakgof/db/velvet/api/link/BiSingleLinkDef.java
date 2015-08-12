@@ -8,10 +8,22 @@ class BiSingleLinkDef<HK, HV, CK, CV> extends ABiLinkDef<HK, HV, CK, CV, SingleL
   BiSingleLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
     super(new SingleLinkDef<HK, HV, CK, CV>(hostEntity, childEntity));
   }
+  
+  BiSingleLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind) {
+    super(new SingleLinkDef<HK, HV, CK, CV>(hostEntity, childEntity, edgeKind));
+  }
 
   static <HK, HV, CK, CV> BiSingleLinkDef<HK, HV, CK, CV> create(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
     BiSingleLinkDef<HK, HV, CK, CV> link = new BiSingleLinkDef<HK, HV, CK, CV>(hostEntity, childEntity);
     BiSingleLinkDef<CK, CV, HK, HV> backLink = new BiSingleLinkDef<CK, CV, HK, HV>(childEntity, hostEntity);
+    link.setBackLink(backLink);
+    backLink.setBackLink(link);
+    return link;
+  }
+  
+  static <HK, HV, CK, CV> BiSingleLinkDef<HK, HV, CK, CV> create(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind, String backEdgeKind) {
+    BiSingleLinkDef<HK, HV, CK, CV> link = new BiSingleLinkDef<HK, HV, CK, CV>(hostEntity, childEntity, edgeKind);
+    BiSingleLinkDef<CK, CV, HK, HV> backLink = new BiSingleLinkDef<CK, CV, HK, HV>(childEntity, hostEntity, backEdgeKind);
     link.setBackLink(backLink);
     backLink.setBackLink(link);
     return link;

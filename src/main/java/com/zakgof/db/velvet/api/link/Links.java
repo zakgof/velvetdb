@@ -28,8 +28,16 @@ public class Links {
     return BiSingleLinkDef.create(hostEntity, childEntity);
   }
   
+  public static <HK, HV, CK, CV> IBiSingleLinkDef<HK, HV, CK, CV> biSingle(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind, String backEdgeKind) {
+    return BiSingleLinkDef.create(hostEntity, childEntity, edgeKind, backEdgeKind);
+  }
+  
   public static <HK, HV, CK, CV> IBiMultiLinkDef<HK, HV, CK, CV> biMulti(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
     return BiMultiLinkDef.create(hostEntity, childEntity);
+  }
+  
+  public static <HK, HV, CK, CV> IBiMultiLinkDef<HK, HV, CK, CV> biMulti(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind, String backEdgeKind) {
+    return BiMultiLinkDef.create(hostEntity, childEntity, edgeKind, backEdgeKind);
   }
   
   public static <HK, HV, CK, CV> IBiManyToManyLinkDef<HK, HV, CK, CV> biManyToMany(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
