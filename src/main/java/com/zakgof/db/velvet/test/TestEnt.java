@@ -10,6 +10,34 @@ public class TestEnt {
   public TestEnt() {
   }
 
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((key == null) ? 0 : key.hashCode());
+    result = prime * result + Float.floatToIntBits(val);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    TestEnt other = (TestEnt) obj;
+    if (key == null) {
+      if (other.key != null)
+        return false;
+    } else if (!key.equals(other.key))
+      return false;
+    if (Float.floatToIntBits(val) != Float.floatToIntBits(other.val))
+      return false;
+    return true;
+  }
+
   public TestEnt(String key, float val) {
     this.key = key;
     this.val = val;
