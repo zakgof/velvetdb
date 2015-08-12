@@ -1,5 +1,6 @@
 package com.zakgof.db.velvet.test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.After;
@@ -87,7 +88,7 @@ public class SimpleLinkTest {
   }
   
   @Test
-  public void testSingleBiLink() {
+  public void testBiSingleLink() {
     fillEntities();
     
     TestEnt parent = new TestEnt("key30", 0.03f);
@@ -111,7 +112,7 @@ public class SimpleLinkTest {
   }
   
   @Test
-  public void testSingleBiLinkDualReconnect() {
+  public void testBiSingleLinkDualReconnect() {
     fillEntities();
     
     TestEnt parent1 = new TestEnt("key30", 0.03f);
@@ -131,7 +132,7 @@ public class SimpleLinkTest {
   }
   
   @Test
-  public void testSingleBiLinkDualDisconnect() {
+  public void testBiSingleLinkDualDisconnect() {
     fillEntities();
     
     TestEnt parent = new TestEnt("key30", 0.03f);
@@ -145,6 +146,148 @@ public class SimpleLinkTest {
     Assert.assertNull(ONE_TO_ONE.single(velvet, parent));
     Assert.assertNull(ONE_TO_ONE.back().single(velvet, child));
   }
+  
+  @Test
+  public void testBiMultiLink() {
+    fillEntities();
+    
+    TestEnt parent = new TestEnt("key30", 0.03f);
+    TestEnt2 child1 = new TestEnt2(25);
+    TestEnt2 child2 = new TestEnt2(26);
+    TestEnt2 child3 = new TestEnt2(27);
+    
+    ONE_TO_MANY.connect(velvet, parent, child1);
+    ONE_TO_MANY.connect(velvet, parent, child2);
+    ONE_TO_MANY.connect(velvet, parent, child3);
+    
+    Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child1));
+    Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child2));
+    Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child3));       
+  }
+  
+  @Test
+  public void testBiMultiLinkBackConnect() {
+    fillEntities();
+    
+    TestEnt parent = new TestEnt("key30", 0.03f);
+    TestEnt2 child1 = new TestEnt2(25);
+    TestEnt2 child2 = new TestEnt2(26);
+    TestEnt2 child3 = new TestEnt2(27);
+    
+    ONE_TO_MANY.connect(velvet, parent, child1);
+    ONE_TO_MANY.connect(velvet, parent, child2);
+    ONE_TO_MANY.back().connect(velvet, child3, parent);
+    
+    Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child1));
+    Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child2));
+    Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child3));
+    
+    List<TestEnt2> children = ONE_TO_MANY.multi(velvet, parent);
+    
+    Assert.assertEquals(3, children.size());
+    Assert.assertTrue(children.contains(child1));
+    Assert.assertTrue(children.contains(child2));
+    Assert.assertTrue(children.contains(child3));
+  }
+  
+  @Test
+  public void testBiMultiLinkDisconnect() {
+    fillEntities();
+    
+    TestEnt parent = new TestEnt("key30", 0.03f);
+    TestEnt2 child1 = new TestEnt2(25);
+    TestEnt2 child2 = new TestEnt2(26);
+    TestEnt2 child3 = new TestEnt2(88);
+        
+    ONE_TO_MANY.connect(velvet, parent, child1);
+    ONE_TO_MANY.connect(velvet, parent, child2);
+    ONE_TO_MANY.connect(velvet, parent, child3);
+    ONE_TO_MANY.disconnect(velvet, parent, child2);
+    
+    Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child1));    
+    Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child3));
+    Assert.assertNull(ONE_TO_MANY.back().single(velvet, child2));
+    
+    List<TestEnt2> children = ONE_TO_MANY.multi(velvet, parent);
+    
+    Assert.assertEquals(2, children.size());
+    Assert.assertTrue(children.contains(child1));
+    Assert.assertTrue(children.contains(child3));
+    Assert.assertFalse(children.contains(child2));
+  }
+  
+  @Test
+  public void testBiMultiLinkBackDisconnect() {
+    fillEntities();
+    
+    TestEnt parent = new TestEnt("key30", 0.03f);
+    TestEnt2 child1 = new TestEnt2(25);
+    TestEnt2 child2 = new TestEnt2(26);
+    TestEnt2 child3 = new TestEnt2(88);
+        
+    ONE_TO_MANY.connect(velvet, parent, child1);
+    ONE_TO_MANY.connect(velvet, parent, child2);
+    ONE_TO_MANY.connect(velvet, parent, child3);
+    ONE_TO_MANY.back().disconnect(velvet, child2, parent);
+    
+    Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child1));    
+    Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child3));
+    Assert.assertNull(ONE_TO_MANY.back().single(velvet, child2));
+    
+    List<TestEnt2> children = ONE_TO_MANY.multi(velvet, parent);
+    
+    Assert.assertEquals(2, children.size());
+    Assert.assertTrue(children.contains(child1));
+    Assert.assertTrue(children.contains(child3));
+    Assert.assertFalse(children.contains(child2));
+  }
+  
+  @Test
+  public void testBiMultiLinkReparent() {
+    fillEntities();
+    
+    TestEnt parent1 = new TestEnt("key30", 0.03f);
+    TestEnt parent2 = new TestEnt("key33", 0.033f);
+    TestEnt2 child1 = new TestEnt2(25);
+    TestEnt2 child2 = new TestEnt2(26);
+    TestEnt2 child3 = new TestEnt2(88);
+        
+    ONE_TO_MANY.connect(velvet, parent1, child1);
+    ONE_TO_MANY.connect(velvet, parent1, child2);
+    ONE_TO_MANY.connect(velvet, parent1, child3);
+    ONE_TO_MANY.back().connect(velvet, child3, parent2);
+    
+    List<TestEnt2> children1 = ONE_TO_MANY.multi(velvet, parent1);
+    List<TestEnt2> children2 = ONE_TO_MANY.multi(velvet, parent2);
+    
+    
+    Assert.assertTrue(children1.containsAll(Arrays.asList(child1, child2)));
+    Assert.assertTrue(children2.containsAll(Arrays.asList(child3)));
+    
+    Assert.assertEquals(2, children1.size());
+    Assert.assertEquals(1, children2.size());    
+  }
+  
+  @Test
+  public void testBiManyToManyMultiLink() {
+    fillEntities();
+    
+    TestEnt parent1 = new TestEnt("key30", 0.03f);
+    TestEnt parent2 = new TestEnt("key35", 0.035f);
+    TestEnt parent3 = new TestEnt("key36", 0.036f);
+    TestEnt2 child1 = new TestEnt2(25);
+    TestEnt2 child2 = new TestEnt2(26);
+    TestEnt2 child3 = new TestEnt2(27);
+    
+    MANY_TO_MANY.connect(velvet, parent1, child1);
+    MANY_TO_MANY.connect(velvet, parent1, child2);
+    MANY_TO_MANY.connect(velvet, parent1, child3);
+    MANY_TO_MANY.connect(velvet, parent2, child1);
+    MANY_TO_MANY.connect(velvet, parent2, child3);
+    MANY_TO_MANY.connect(velvet, parent3, child3);
+    
+  }
+  
   
   private void fillEntities() {
     for (int d = 0; d < COUNT; d++) {
