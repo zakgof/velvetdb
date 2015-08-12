@@ -11,8 +11,8 @@ class BiManyToManyLinkDef<HK, HV, CK, CV> extends ABiLinkDef<HK, HV, CK, CV, Mul
     super(new MultiLinkDef<HK, HV, CK, CV>(hostEntity, childEntity));
   }
 
-  private BiManyToManyLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String backEdgeKind) {
-    super(new MultiLinkDef<HK, HV, CK, CV>(hostEntity, childEntity, backEdgeKind));
+  private BiManyToManyLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind) {
+    super(new MultiLinkDef<HK, HV, CK, CV>(hostEntity, childEntity, edgeKind));
   }
 
   static <HK, HV, CK, CV> BiManyToManyLinkDef<HK, HV, CK, CV> create(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {

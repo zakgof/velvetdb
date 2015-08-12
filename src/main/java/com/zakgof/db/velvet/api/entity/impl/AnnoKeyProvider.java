@@ -31,16 +31,17 @@ class AnnoKeyProvider<K, V> implements Function<V, K> {
       }
       for (Method method : valueClass.getDeclaredMethods()) { // TODO: include inherited
         method.setAccessible(true);
-        if (method.getAnnotation(Key.class) != null)
-          keyClass = (Class<K>) method.getReturnType();
-          provider = (value -> {
-            try {
-              return (K) method.invoke(value);
-            } catch (Exception e) {
-              throw new RuntimeException(e);
-            }
-          });
-        return;
+        if (method.getAnnotation(Key.class) != null) {
+            keyClass = (Class<K>) method.getReturnType();
+            provider = (value -> {
+              try {
+                return (K) method.invoke(value);
+              } catch (Exception e) {
+                throw new RuntimeException(e);
+              }
+            });
+          return;
+        }
       }
       throw new RuntimeException("No annotation for key found in " + valueClass);
     } catch (Exception e) {

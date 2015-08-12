@@ -8,6 +8,10 @@ public class BiParentLinkDef<HK, HV, CK, CV> extends ABiLinkDef<HK, HV, CK, CV, 
   BiParentLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
     super(new SingleLinkDef<HK, HV, CK, CV>(hostEntity, childEntity));
   }
+  
+  BiParentLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind) {
+    super(new SingleLinkDef<HK, HV, CK, CV>(hostEntity, childEntity, edgeKind));
+  }
 
   @Override
   public CV single(IVelvet velvet, HV node) {
