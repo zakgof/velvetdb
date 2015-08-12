@@ -38,6 +38,14 @@ class BiSingleLinkDef<HK, HV, CK, CV> extends ABiLinkDef<HK, HV, CK, CV, SingleL
   public CK singleKey(IVelvet velvet, HK key) {
     return oneWay.singleKey(velvet, key);
   }
+  
+  @Override
+  public void connectKeys(IVelvet velvet, HK akey, CK bkey) {
+    CK oldChildKey = singleKey(velvet, akey);
+    if (oldChildKey != null)
+      backLink.disconnectKeys(velvet, oldChildKey, akey);
+    super.connectKeys(velvet, akey, bkey);
+  }
 
   @Override
   public String toString() {

@@ -32,7 +32,7 @@ class SingleLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV>implem
   ILink<CK> index(IVelvet velvet, HK akey) {
     return velvet.index(akey, getKind(), LinkType.Single);
   }
-
+  
   @Override
   public String toString() {
     return "single " + super.toString();
