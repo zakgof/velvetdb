@@ -100,4 +100,8 @@ public class Links {
     };
   }
 
+  public static <HK, HV, CK extends Comparable<CK>, CV> PriIndexMultiLinkDef<HK, HV, CK, CV> pri(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
+    return new PriIndexMultiLinkDef<>(hostEntity, childEntity);
+  }
+
 }

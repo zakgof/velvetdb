@@ -8,16 +8,15 @@ import com.zakgof.db.velvet.IVelvet.IKeyIndexLink;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 
-public class IndexedMultiLinkDef<HK, HV, CK, CV, C extends Comparable<C>> extends MultiLinkDef<HK, HV, CK, CV>implements IIndexedMultiGetter<HK, HV, CK, CV, C> {
+public class SecIndexMultiLinkDef<HK, HV, CK, CV, C extends Comparable<C>> extends MultiLinkDef<HK, HV, CK, CV>implements IIndexedMultiGetter<HK, HV, CK, CV, C> {
 
   private final Function<CV, C> metric;
 
-  public IndexedMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Function<CV, C> metric) {
+  public SecIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Function<CV, C> metric) {
     super(hostEntity, childEntity);
     this.metric = metric;
-
   }
-
+  
   protected IKeyIndexLink<CK> index(IVelvet velvet, HK akey) {
     return velvet.<CK, CV, C> index(akey, getKind(), getChildEntity().getValueClass(), getChildEntity().getKind(), metric);
   }
