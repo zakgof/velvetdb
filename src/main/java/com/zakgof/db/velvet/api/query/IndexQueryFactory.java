@@ -2,71 +2,81 @@ package com.zakgof.db.velvet.api.query;
 
 public class IndexQueryFactory {
 
-  public static <K> Builder<K> builder() {
-    return new Builder<K>();
+  public static Builder builder() {
+    return new Builder();
   }
 
-  public static <B, M extends Comparable<M>> IIndexQuery<B> range(M p1, boolean inclusive1, M p2, boolean inclusive2) {
-    return IndexQueryFactory.<B> builder().from(new SecondaryIndexAnchor<M>(inclusive1, p1)).to(new SecondaryIndexAnchor<M>(inclusive2, p2)).build();
+  public static <M extends Comparable<M>> IIndexQuery rangeS(M p1, boolean inclusive1, M p2, boolean inclusive2) {
+    return IndexQueryFactory.builder().from(new SecondaryIndexAnchor<M>(inclusive1, p1)).to(new SecondaryIndexAnchor<M>(inclusive2, p2)).build();
   }
 
-  public static <B, M extends Comparable<M>> IIndexQuery<B> greater(M p1) {
-    return IndexQueryFactory.<B> builder().greaterS(p1).build();
+  public static <M extends Comparable<M>> IIndexQuery greaterS(M p1) {
+    return IndexQueryFactory.builder().greaterS(p1).build();
   }
 
-  public static <B, M extends Comparable<M>> IIndexQuery<B> less(M p2) {
-    return IndexQueryFactory.<B> builder().lessS(p2).build();
+  public static <M extends Comparable<M>> IIndexQuery lessS(M p2) {
+    return IndexQueryFactory.builder().lessS(p2).build();
   }
 
-  public static <B, M extends Comparable<M>> IIndexQuery<B> greaterOrEq(M p1) {
-    return IndexQueryFactory.<B> builder().greaterOrEqS(p1).build();
+  public static <M extends Comparable<M>> IIndexQuery greaterOrEqS(M p1) {
+    return IndexQueryFactory.builder().greaterOrEqS(p1).build();
   }
 
-  public static <B, M extends Comparable<M>> IIndexQuery<B> lessOrEq(M p2) {
-    return IndexQueryFactory.<B> builder().lessOrEqS(p2).build();
+  public static <M extends Comparable<M>> IIndexQuery lessOrEqS(M p2) {
+    return IndexQueryFactory.builder().lessOrEqS(p2).build();
   }
 
-  public static <B> IIndexQuery<B> first(int limit) {
-    return IndexQueryFactory.<B> builder().limit(limit).build();
+  public static <B, M extends Comparable<M>> IIndexQuery equalsToS(M p) {
+    return IndexQueryFactory.builder().greaterOrEqS(p).lessOrEqS(p).build();
   }
 
-  public static <B> IIndexQuery<B> first() {
+  /////
+
+  public static <K extends Comparable<K>> IIndexQuery range(K p1, boolean inclusive1, K p2, boolean inclusive2) {
+    return IndexQueryFactory.builder().from(new KeyAnchor<K>(inclusive1, p1)).to(new KeyAnchor<K>(inclusive2, p2)).build();
+  }
+
+  public static <K extends Comparable<K>> IIndexQuery greater(K p1) {
+    return IndexQueryFactory.builder().greaterK(p1).build();
+  }
+
+  public static <K extends Comparable<K>> IIndexQuery less(K p2) {
+    return IndexQueryFactory.builder().lessK(p2).build();
+  }
+
+  public static <K extends Comparable<K>> IIndexQuery greaterOrEq(K p1) {
+    return IndexQueryFactory.builder().greaterOrEqK(p1).build();
+  }
+
+  public static <K extends Comparable<K>> IIndexQuery lessOrEq(K p2) {
+    return IndexQueryFactory.builder().lessOrEqK(p2).build();
+  }
+
+  public static IIndexQuery first(int limit) {
+    return IndexQueryFactory.builder().limit(limit).build();
+  }
+
+  public static IIndexQuery first() {
     return first(1);
   }
 
-  public static <B> IIndexQuery<B> last() {
+  public static IIndexQuery last() {
     return last(1);
   }
 
-  public static <B> IIndexQuery<B> last(int limit) {
-    return IndexQueryFactory.<B> builder().descending().limit(limit).build();
+  public static IIndexQuery last(int limit) {
+    return IndexQueryFactory.builder().descending().limit(limit).build();
   }
 
-  public static <B, M extends Comparable<M>> IIndexQuery<B> equalsTo(M p) {
-    return IndexQueryFactory.<B> builder().greaterOrEqS(p).lessOrEqS(p).build();
+  public static <K extends Comparable<K>> IIndexQuery prev(K key) {
+    return IndexQueryFactory.builder().lessK(key).descending().limit(1).build();
   }
 
-//  public static <T, K> IIndexQuery<K> prev(T node) {
-//    @SuppressWarnings("unchecked")
-//    K key = (K) VelvetUtil.keyOfValue(node);
-//    return prevKey(key);
-//  }
-
-  public static <T, K> IIndexQuery<K> prevKey(K key) {
-    return IndexQueryFactory.<K> builder().lessK(key).descending().limit(1).build();
+  public static <K extends Comparable<K>> IIndexQuery next(K key) {
+    return IndexQueryFactory.builder().greaterK(key).limit(1).build();
   }
 
-//  public static <T, K> IIndexQuery<K> next(T node) {
-//    @SuppressWarnings("unchecked")
-//    K key = (K) VelvetUtil.keyOfValue(node);
-//    return nextKey(key);
-//  }
-
-  public static <T, K> IIndexQuery<K> nextKey(K key) {
-    return IndexQueryFactory.<K> builder().greaterK(key).limit(1).build();
-  }
-
-  public static class Builder<K> {
+  public static class Builder {
 
     private boolean ascending = true;
     private int offset = 0;
@@ -74,77 +84,77 @@ public class IndexQueryFactory {
     private IQueryAnchor highAnchor;
     private IQueryAnchor lowAnchor;
 
-    public <M extends Comparable<M>> Builder<K> greaterS(M value) {
+    public <M extends Comparable<M>> Builder greaterS(M value) {
       this.lowAnchor = new SecondaryIndexAnchor<>(false, value);
       return this;
     }
 
-    public <M extends Comparable<M>> Builder<K> greaterOrEqS(M value) {
+    public <M extends Comparable<M>> Builder greaterOrEqS(M value) {
       this.lowAnchor = new SecondaryIndexAnchor<>(true, value);
       return this;
     }
 
-    public <M extends Comparable<M>> Builder<K> lessS(M value) {
+    public <M extends Comparable<M>> Builder lessS(M value) {
       this.highAnchor = new SecondaryIndexAnchor<>(false, value);
       return this;
     }
 
-    public <M extends Comparable<M>> Builder<K> lessOrEqS(M value) {
+    public <M extends Comparable<M>> Builder lessOrEqS(M value) {
       this.highAnchor = new SecondaryIndexAnchor<>(true, value);
       return this;
     }
 
-    public Builder<K> greaterK(K key) {
+    public <K extends Comparable<K>> Builder greaterK(K key) {
       this.lowAnchor = new KeyAnchor<>(false, key);
       return this;
     }
 
-    public Builder<K> greaterOrEqK(K key) {
+    public <K extends Comparable<K>> Builder greaterOrEqK(K key) {
       this.lowAnchor = new KeyAnchor<>(true, key);
       return this;
     }
 
-    public Builder<K> lessK(K key) {
+    public <K extends Comparable<K>> Builder lessK(K key) {
       this.highAnchor = new KeyAnchor<>(false, key);
       return this;
     }
 
-    public Builder<K> lessOrEqK(K key) {
+    public <K extends Comparable<K>> Builder lessOrEqK(K key) {
       this.highAnchor = new KeyAnchor<>(true, key);
       return this;
     }
 
-    public Builder<K> from(IQueryAnchor lowAnchor) {
+    public Builder from(IQueryAnchor lowAnchor) {
       this.lowAnchor = lowAnchor;
       return this;
     }
 
-    public Builder<K> to(IQueryAnchor highAnchor) {
+    public Builder to(IQueryAnchor highAnchor) {
       this.highAnchor = highAnchor;
       return this;
     }
 
-    public Builder<K> offset(int offset) {
+    public Builder offset(int offset) {
       this.offset = offset;
       return this;
     }
 
-    public Builder<K> limit(int limit) {
+    public Builder limit(int limit) {
       this.limit = limit;
       return this;
     }
 
-    public Builder<K> descending() {
+    public Builder descending() {
       this.ascending = false;
       return this;
     }
 
-    public IIndexQuery<K> build() {
-      return new Query<K>(lowAnchor, highAnchor, limit, offset, ascending);
+    public IIndexQuery build() {
+      return new Query(lowAnchor, highAnchor, limit, offset, ascending);
     }
   }
 
-  private static class Query<K> implements IIndexQuery<K> {
+  private static class Query implements IIndexQuery {
 
     private final boolean ascending;
     private final int offset;
@@ -220,7 +230,7 @@ class PositionAnchor extends AbstractAnchor implements IPositionAnchor {
 
 }
 
-class KeyAnchor<K> extends AbstractAnchor implements IKeyAnchor<K> {
+class KeyAnchor<K extends Comparable<K>> extends AbstractAnchor implements IKeyAnchor {
 
   public KeyAnchor(K key) {
     super(true);

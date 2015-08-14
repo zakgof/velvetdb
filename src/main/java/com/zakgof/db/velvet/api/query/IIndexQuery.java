@@ -1,7 +1,7 @@
 package com.zakgof.db.velvet.api.query;
 
 
-public interface IIndexQuery<K> {
+public interface IIndexQuery {
    IQueryAnchor getLowAnchor();
    IQueryAnchor getHighAnchor();
    int getLimit();
