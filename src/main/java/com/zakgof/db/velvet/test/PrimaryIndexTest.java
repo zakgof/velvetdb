@@ -148,7 +148,7 @@ public class PrimaryIndexTest {
 
   */
   
-  private void check(IIndexQuery<Integer> query, int...v) {
+  private void check(IIndexQuery query, int...v) {
     int[] keys = MULTI.indexed(query).multi(velvet, root).stream().mapToInt(TestEnt2::getKey).toArray();
     Assert.assertArrayEquals(v, keys);
   }

@@ -354,12 +354,12 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public List<K> linkKeys(Class<K> clazz, IIndexQuery<K> query) {      
+    public List<K> linkKeys(Class<K> clazz, IIndexQuery query) {      
       K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);      
       return queryArray(index, query);
     }
 
-    List<K> queryArray(K[] array, IIndexQuery<K> query) {
+    List<K> queryArray(K[] array, IIndexQuery query) {
       
       if (array == null)
         return new ArrayList<>();

@@ -32,7 +32,7 @@ public interface IVelvet extends ITransactional, ILockable {
   
   public interface IKeyIndexLink<K> extends ILink<K> {
     void update(K key2);
-    List<K> linkKeys(Class<K> clazz, IIndexQuery<K> query);
+    List<K> linkKeys(Class<K> clazz, IIndexQuery query);
   }
   
   public enum LinkType {
