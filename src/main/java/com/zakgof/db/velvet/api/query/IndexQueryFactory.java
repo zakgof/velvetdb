@@ -51,6 +51,10 @@ public class IndexQueryFactory {
   public static <K extends Comparable<K>> IIndexQuery lessOrEq(K p2) {
     return IndexQueryFactory.builder().lessOrEqK(p2).build();
   }
+  
+  public static <K extends Comparable<K>> IIndexQuery equalsTo(K p) {
+    return IndexQueryFactory.builder().greaterOrEqK(p).lessOrEqK(p).build();
+  }
 
   public static IIndexQuery first(int limit) {
     return IndexQueryFactory.builder().limit(limit).build();
@@ -230,7 +234,7 @@ class PositionAnchor extends AbstractAnchor implements IPositionAnchor {
 
 }
 
-class KeyAnchor<K extends Comparable<K>> extends AbstractAnchor implements IKeyAnchor {
+class KeyAnchor<K extends Comparable<K>> extends AbstractAnchor implements IKeyAnchor<K> {
 
   public KeyAnchor(K key) {
     super(true);
@@ -247,6 +251,11 @@ class KeyAnchor<K extends Comparable<K>> extends AbstractAnchor implements IKeyA
   @Override
   public K getKey() {
     return key;
+  }
+  
+  @Override
+  public String toString() {
+    return "Key=" + key + "," + (isIncluding() ? "incl" : "excl");
   }
 
 }
