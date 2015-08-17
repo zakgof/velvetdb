@@ -45,54 +45,50 @@ public class PrimaryIndexTest {
 
   @Test
   public void testGreaterOrEq() {
-    check(IndexQueryFactory.greaterOrEq(-1L),     1, 2, 3, 4, 6, 7, 8, 9);
-    check(IndexQueryFactory.greaterOrEq(1L),      1, 2, 3, 4, 6, 7, 8, 9);
-    check(IndexQueryFactory.greaterOrEq(5L),      6, 7, 8, 9);
-    check(IndexQueryFactory.greaterOrEq(6L),      6, 7, 8, 9);
-    check(IndexQueryFactory.greaterOrEq(9L),      9);
-    check(IndexQueryFactory.greaterOrEq(10L)      );
+    check(IndexQueryFactory.greaterOrEq(-1),     1, 2, 3, 4, 6, 7, 8, 9);
+    check(IndexQueryFactory.greaterOrEq(1),      1, 2, 3, 4, 6, 7, 8, 9);
+    check(IndexQueryFactory.greaterOrEq(5),      6, 7, 8, 9);
+    check(IndexQueryFactory.greaterOrEq(6),      6, 7, 8, 9);
+    check(IndexQueryFactory.greaterOrEq(9),      9);
+    check(IndexQueryFactory.greaterOrEq(10)      );
   }
   
-  /*
+  
   @Test
   public void testEqualsTo() {
-    check(IndexQueryFactory.equalsTo(4L));    
-    check(IndexQueryFactory.equalsTo(6L));
-    check(IndexQueryFactory.equalsTo(7L),         "a7", "b7");
-    check(IndexQueryFactory.equalsTo(9L),         "a9", "b9");
-    check(IndexQueryFactory.equalsTo(0L),         "0");
-    check(IndexQueryFactory.equalsTo(10L));
+    check(IndexQueryFactory.equalsTo(4),         4);
+    check(IndexQueryFactory.equalsTo(1),         1);
+    check(IndexQueryFactory.equalsTo(9),         9);
+    check(IndexQueryFactory.equalsTo(-1));
+    check(IndexQueryFactory.equalsTo(5));
+    check(IndexQueryFactory.equalsTo(10));
   }
  
   @Test
   public void testGreater() {
-    check(IndexQueryFactory.greater(-1L),         "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.greater(0L),          "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.greater(4L),          "a5", "b5", "c5", "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.greater(5L),          "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.greater(7L),          "a9", "b9");
-    check(IndexQueryFactory.greater(9L));
-    check(IndexQueryFactory.greater(10L));
+    check(IndexQueryFactory.greater(-1),     1, 2, 3, 4, 6, 7, 8, 9);
+    check(IndexQueryFactory.greater(1),      2, 3, 4, 6, 7, 8, 9);
+    check(IndexQueryFactory.greater(5),      6, 7, 8, 9);
+    check(IndexQueryFactory.greater(6),      7, 8, 9);
+    check(IndexQueryFactory.greater(9));
+    check(IndexQueryFactory.greater(10));
   }
   
   @Test
   public void testFirstLast() {
-    check(IndexQueryFactory.first(),              "0");
-    check(IndexQueryFactory.last(),               "b9");
+    check(IndexQueryFactory.first(),              1);
+    check(IndexQueryFactory.last(),               9);
   }
    
   @Test
-  public void testPrev() {
-    // check(IndexQueryFactory.prevKey(99));
-    check(IndexQueryFactory.prevKey(0));
-    check(IndexQueryFactory.prevKey(1),           "0");
-    check(IndexQueryFactory.prevKey(2),           "1");
-    check(IndexQueryFactory.prevKey(5),           "c5");
-    check(IndexQueryFactory.prevKey(8),           "a9");
-    // check(IndexQueryFactory.prevKey(9));
-    // check(IndexQueryFactory.prevKey(10));
+  public void testNext() {
+    check(IndexQueryFactory.next(-1),        1);
+    check(IndexQueryFactory.next(1),         2);
+    check(IndexQueryFactory.next(4),         6);
+    check(IndexQueryFactory.next(9));
   }
   
+  /*
   @Test
   public void testLess() {
     check(IndexQueryFactory.less(-1L));
