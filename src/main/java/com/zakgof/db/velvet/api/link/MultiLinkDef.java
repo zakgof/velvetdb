@@ -36,7 +36,7 @@ class MultiLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV> implem
   }
 
   protected ILink<CK> index(IVelvet velvet, HK hkey) {
-    return velvet.index(hkey, getKind(), LinkType.Multi);
+    return velvet.simpleIndex(hkey, getKind(), LinkType.Multi);
   }
 
   @Override

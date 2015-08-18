@@ -15,7 +15,7 @@ class AnnoKeyProvider<K, V> implements Function<V, K> {
   @SuppressWarnings("unchecked")
   AnnoKeyProvider(Class<V> valueClass) {     
     try {
-      for (Field field : Entity.getAllFields(valueClass)) {
+      for (Field field : EntityDef.getAllFields(valueClass)) {
         field.setAccessible(true);
         if (field.getAnnotation(Key.class) != null || field.getAnnotation(AutoKey.class) != null) {
           keyClass = (Class<K>) field.getType();

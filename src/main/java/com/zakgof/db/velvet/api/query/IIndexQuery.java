@@ -1,10 +1,15 @@
 package com.zakgof.db.velvet.api.query;
 
+public interface IIndexQuery<K extends Comparable<K>> {
+  
+  IQueryAnchor<K> getLowAnchor();
 
-public interface IIndexQuery {
-   IQueryAnchor getLowAnchor();
-   IQueryAnchor getHighAnchor();
-   int getLimit();
-   int getOffset();
-   boolean isAscending();
+  IQueryAnchor<K> getHighAnchor();
+
+  int getLimit();
+
+  int getOffset();
+
+  boolean isAscending();
+  
 }

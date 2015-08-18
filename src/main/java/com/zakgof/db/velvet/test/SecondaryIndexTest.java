@@ -17,7 +17,7 @@ import com.zakgof.db.velvet.api.query.IndexQueryFactory;
 public class SecondaryIndexTest {
 
   private IVelvet velvet;
-  private IKeyIndexLink<Integer> indexLink;
+  private IKeyIndexLink<Integer, Long> indexLink;
   private IEntityDef<String, T1> T1ENTITY = Entities.create(T1.class); 
   
   public SecondaryIndexTest() {
@@ -26,7 +26,7 @@ public class SecondaryIndexTest {
     
     String[] name = new String[] {"0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9"};    
     
-    indexLink = velvet.<Integer, String, Long>index("node1", "edge", String.class, "child", node -> (long)(int)(node.charAt(node.length() - 1) - '0'));
+    indexLink = velvet.<Integer, String, Long>secondaryKeyIndex("node1", "edge", String.class, "child", node -> (long)(int)(node.charAt(node.length() - 1) - '0'));
     
     velvet.put("main", "rootKey", "node1");
     for (int i=0; i<name.length; i++) {
@@ -56,33 +56,33 @@ public class SecondaryIndexTest {
 
   @Test
   public void testGreaterOrEq() {
-    check(IndexQueryFactory.greaterOrEqS(-1L),     "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.greaterOrEqS(0L),      "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.greaterOrEqS(5L),      "a5", "b5", "c5", "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.greaterOrEqS(7L),      "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.greaterOrEqS(9L),      "a9", "b9");
-    check(IndexQueryFactory.greaterOrEqS(10L)      );
+    check(IndexQueryFactory.greaterOrEq(-1L),     "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greaterOrEq(0L),      "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greaterOrEq(5L),      "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greaterOrEq(7L),      "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greaterOrEq(9L),      "a9", "b9");
+    check(IndexQueryFactory.greaterOrEq(10L)      );
   }
   
   @Test
   public void testEqualsTo() {
-    check(IndexQueryFactory.equalsToS(4L));    
-    check(IndexQueryFactory.equalsToS(6L));
-    check(IndexQueryFactory.equalsToS(7L),         "a7", "b7");
-    check(IndexQueryFactory.equalsToS(9L),         "a9", "b9");
-    check(IndexQueryFactory.equalsToS(0L),         "0");
-    check(IndexQueryFactory.equalsToS(10L));
+    check(IndexQueryFactory.equalsTo(4L));    
+    check(IndexQueryFactory.equalsTo(6L));
+    check(IndexQueryFactory.equalsTo(7L),         "a7", "b7");
+    check(IndexQueryFactory.equalsTo(9L),         "a9", "b9");
+    check(IndexQueryFactory.equalsTo(0L),         "0");
+    check(IndexQueryFactory.equalsTo(10L));
   }
  
   @Test
   public void testGreater() {
-    check(IndexQueryFactory.greaterS(-1L),         "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.greaterS(0L),          "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.greaterS(4L),          "a5", "b5", "c5", "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.greaterS(5L),          "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.greaterS(7L),          "a9", "b9");
-    check(IndexQueryFactory.greaterS(9L));
-    check(IndexQueryFactory.greaterS(10L));
+    check(IndexQueryFactory.greater(-1L),         "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greater(0L),          "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greater(4L),          "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greater(5L),          "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.greater(7L),          "a9", "b9");
+    check(IndexQueryFactory.greater(9L));
+    check(IndexQueryFactory.greater(10L));
   }
   
   @Test
@@ -105,38 +105,38 @@ public class SecondaryIndexTest {
   
   @Test
   public void testLess() {
-    check(IndexQueryFactory.lessS(-1L));
-    check(IndexQueryFactory.lessS(0L));
-    check(IndexQueryFactory.lessS(2L),             "0", "1");
-    check(IndexQueryFactory.lessS(5L),             "0", "1");
-    check(IndexQueryFactory.lessS(9L),             "0", "1", "a5", "b5", "c5", "a7", "b7");    
-    check(IndexQueryFactory.lessS(10L),            "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.less(-1L));
+    check(IndexQueryFactory.less(0L));
+    check(IndexQueryFactory.less(2L),             "0", "1");
+    check(IndexQueryFactory.less(5L),             "0", "1");
+    check(IndexQueryFactory.less(9L),             "0", "1", "a5", "b5", "c5", "a7", "b7");    
+    check(IndexQueryFactory.less(10L),            "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
   }
   
   @Test
   public void testLessOrEq() {
-    check(IndexQueryFactory.lessOrEqS(-1L));
-    check(IndexQueryFactory.lessOrEqS(0L),         "0");
-    check(IndexQueryFactory.lessOrEqS(5L),         "0", "1", "a5", "b5", "c5");
-    check(IndexQueryFactory.lessOrEqS(8L),         "0", "1", "a5", "b5", "c5", "a7", "b7");    
-    check(IndexQueryFactory.lessOrEqS(9L),         "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.lessOrEqS(10L),        "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.lessOrEq(-1L));
+    check(IndexQueryFactory.lessOrEq(0L),         "0");
+    check(IndexQueryFactory.lessOrEq(5L),         "0", "1", "a5", "b5", "c5");
+    check(IndexQueryFactory.lessOrEq(8L),         "0", "1", "a5", "b5", "c5", "a7", "b7");    
+    check(IndexQueryFactory.lessOrEq(9L),         "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.lessOrEq(10L),        "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
   }
   
   @Test
   public void testRange() {
-    check(IndexQueryFactory.rangeS(-1L, true, 10L, true),      "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.rangeS(-1L, false, 10L, false),    "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.rangeS(0L, false, 10L, false),     "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.rangeS(0L, true, 9L, false),       "0", "1", "a5", "b5", "c5", "a7", "b7");
-    check(IndexQueryFactory.rangeS(1L, false, 9L, true),       "a5", "b5", "c5", "a7", "b7", "a9", "b9");
-    check(IndexQueryFactory.rangeS(2L, true, 7L, false),       "a5", "b5", "c5");
-    check(IndexQueryFactory.rangeS(2L, true, 6L, true),        "a5", "b5", "c5");
-    check(IndexQueryFactory.rangeS(5L, true, 6L, false),       "a5", "b5", "c5");
-    check(IndexQueryFactory.rangeS(5L, true, 5L, true),        "a5", "b5", "c5");
-    check(IndexQueryFactory.rangeS(5L, true, 5L, false));
-    check(IndexQueryFactory.rangeS(5L, false, 5L, true));
-    check(IndexQueryFactory.rangeS(5L, true, 2L, true));    
+    check(IndexQueryFactory.range(-1L, true, 10L, true),      "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.range(-1L, false, 10L, false),    "0", "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.range(0L, false, 10L, false),     "1", "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.range(0L, true, 9L, false),       "0", "1", "a5", "b5", "c5", "a7", "b7");
+    check(IndexQueryFactory.range(1L, false, 9L, true),       "a5", "b5", "c5", "a7", "b7", "a9", "b9");
+    check(IndexQueryFactory.range(2L, true, 7L, false),       "a5", "b5", "c5");
+    check(IndexQueryFactory.range(2L, true, 6L, true),        "a5", "b5", "c5");
+    check(IndexQueryFactory.range(5L, true, 6L, false),       "a5", "b5", "c5");
+    check(IndexQueryFactory.range(5L, true, 5L, true),        "a5", "b5", "c5");
+    check(IndexQueryFactory.range(5L, true, 5L, false));
+    check(IndexQueryFactory.range(5L, false, 5L, true));
+    check(IndexQueryFactory.range(5L, true, 2L, true));    
   }
   
   

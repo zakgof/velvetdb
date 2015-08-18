@@ -13,10 +13,10 @@ abstract class AIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<M>> exten
     super(hostEntity, childEntity);
   }
 
-  abstract protected IKeyIndexLink<CK> index(IVelvet velvet, HK akey);
+  abstract protected IKeyIndexLink<CK, M> index(IVelvet velvet, HK akey);
 
   @Override
-  public IMultiGetter<HK, HV, CK, CV> indexed(IIndexQuery indexQuery) {
+  public IMultiGetter<HK, HV, CK, CV> indexed(IIndexQuery<M> indexQuery) {
 
     return new IMultiGetter<HK, HV, CK, CV>() {
 

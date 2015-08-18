@@ -15,10 +15,7 @@ import com.zakgof.db.kvs.IKvs;
 import com.zakgof.db.kvs.ITransactionalKvs;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
-import com.zakgof.db.velvet.api.query.IKeyAnchor;
-import com.zakgof.db.velvet.api.query.IPositionAnchor;
 import com.zakgof.db.velvet.api.query.IQueryAnchor;
-import com.zakgof.db.velvet.api.query.ISecondaryIndexAnchor;
 import com.zakgof.tools.ArrayUtil;
 import com.zakgof.tools.KeyGen;
 import com.zakgof.tools.generic.Functions;
@@ -35,6 +32,8 @@ import com.zakgof.tools.generic.Functions;
  * kvs[@/kind1/KEY] -> nodevalue
  * 
  */
+
+
 public class GenericKvsVelvet3 implements IVelvet {
 
   interface IIndex<K> {
@@ -132,18 +131,18 @@ public class GenericKvsVelvet3 implements IVelvet {
   }
 
   @Override
-  public <K, T, M extends Comparable<M>> IKeyIndexLink<K> index(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric) {
+  public <K, T, M extends Comparable<M>> IKeyIndexLink<K> secondaryKeyIndex(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric) {
     return new SortedLink<K, T, M>(key1, edgekind, nodeClazz, nodekind, nodeMetric);
   }
   
   @Override
-  public <K extends Comparable<K>, T> IKeyIndexLink<K> index(Object key1, String edgekind) {
+  public <K extends Comparable<K>, T> IKeyIndexLink<K> primaryKeyIndex(Object key1, String edgekind) {
     return new SortedLink<K, T, K>(key1, edgekind, null, null, null);
   }
   
 
   @Override
-  public <K> ILink<K> index(Object key1, String edgekind, LinkType type) {
+  public <K> ILink<K> simpleIndex(Object key1, String edgekind, LinkType type) {
     // TODO Auto-generated method stub
     if (type == LinkType.Single)
       return new SingleLink<K>(key1, edgekind);
@@ -354,7 +353,7 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public List<K> linkKeys(Class<K> clazz, IIndexQuery query) {      
+    public List<K> linkKeys(Class<K> clazz, IIndexQuery<K> query) {      
       K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);      
       return queryArray(index, query);
     }
@@ -394,7 +393,7 @@ public class GenericKvsVelvet3 implements IVelvet {
      * @param anchor
      * @return
      */
-    private int getLeftIndex(K[] index, IQueryAnchor anchor) {
+    private int getLeftIndex(K[] index, IQueryAnchor<K> anchor) {
       if (anchor == null)
         return 0;
       

@@ -55,12 +55,12 @@ public class PrimaryIndexTest {
   
   @Test
   public void testGreaterOrEqDesc() {
-    check(IndexQueryFactory.builder().descending().greaterOrEqK(-1).build(),     9, 8, 7, 6, 4, 3, 2, 1);
-    check(IndexQueryFactory.builder().descending().greaterOrEqK(1).build(),      9, 8, 7, 6, 4, 3, 2, 1);
-    check(IndexQueryFactory.builder().descending().greaterOrEqK(5).build(),      9, 8, 7, 6);
-    check(IndexQueryFactory.builder().descending().greaterOrEqK(6).build(),      9, 8, 7, 6);
-    check(IndexQueryFactory.builder().descending().greaterOrEqK(9).build(),      9);
-    check(IndexQueryFactory.builder().descending().greaterOrEqK(10).build()      );
+    check(IndexQueryFactory.<Integer>builder().descending().greaterOrEq(-1).build(),     9, 8, 7, 6, 4, 3, 2, 1);
+    check(IndexQueryFactory.<Integer>builder().descending().greaterOrEq(1).build(),      9, 8, 7, 6, 4, 3, 2, 1);
+    check(IndexQueryFactory.<Integer>builder().descending().greaterOrEq(5).build(),      9, 8, 7, 6);
+    check(IndexQueryFactory.<Integer>builder().descending().greaterOrEq(6).build(),      9, 8, 7, 6);
+    check(IndexQueryFactory.<Integer>builder().descending().greaterOrEq(9).build(),      9);
+    check(IndexQueryFactory.<Integer>builder().descending().greaterOrEq(10).build()      );
   }
   
   
@@ -137,30 +137,30 @@ public class PrimaryIndexTest {
   
   @Test
   public void testRangeDesc() {
-    check(IndexQueryFactory.builder().descending().greaterOrEqK(2).lessK(8).build(),   7, 6, 4, 3, 2);     
-    check(IndexQueryFactory.builder().descending().greaterOrEqK(8).lessK(8).build());
-    check(IndexQueryFactory.builder().descending().greaterK(0).lessK(3).build(),   2, 1);
-    check(IndexQueryFactory.builder().lessOrEqK(7).descending().greaterK(5).build(),  7, 6);
-    check(IndexQueryFactory.builder().lessK(10).descending().greaterOrEqK(5).build(),  9, 8, 7, 6);
+    check(IndexQueryFactory.<Integer>builder().descending().greaterOrEq(2).less(8).build(),   7, 6, 4, 3, 2);     
+    check(IndexQueryFactory.<Integer>builder().descending().greaterOrEq(8).less(8).build());
+    check(IndexQueryFactory.<Integer>builder().descending().greater(0).less(3).build(),   2, 1);
+    check(IndexQueryFactory.<Integer>builder().lessOrEq(7).descending().greater(5).build(),  7, 6);
+    check(IndexQueryFactory.<Integer>builder().less(10).descending().greaterOrEq(5).build(),  9, 8, 7, 6);
   }
   
   @Test
   public void testLimitOffset() {
-    check(IndexQueryFactory.builder().greaterOrEqK(2).lessK(8).limit(2).build(),        2, 3);
-    check(IndexQueryFactory.builder().greaterOrEqK(2).lessK(8).limit(10).build(),       2, 3, 4, 6, 7);
-    check(IndexQueryFactory.builder().greaterOrEqK(2).lessK(8).limit(10).offset(2).build(),  4, 6, 7);
-    check(IndexQueryFactory.builder().greaterOrEqK(2).lessK(8).limit(2).offset(2).build(),  4, 6);
-    check(IndexQueryFactory.builder().greaterOrEqK(2).lessK(8).limit(1).offset(10).build());    
-    check(IndexQueryFactory.builder().greaterOrEqK(2).lessK(8).limit(1).descending().offset(1).build(),     6);
-    check(IndexQueryFactory.builder().greaterOrEqK(2).lessK(8).limit(10).descending().offset(1).build(),     6, 4, 3, 2);
-    check(IndexQueryFactory.builder().greaterOrEqK(2).lessK(8).limit(1).descending().offset(4).build(),      2);
-    check(IndexQueryFactory.builder().limit(4).build(),                     1, 2, 3, 4);
-    check(IndexQueryFactory.builder().limit(4).descending().build(),        9, 8, 7, 6);
-    check(IndexQueryFactory.builder().limit(4).offset(2).build(),                    3, 4, 6, 7);
-    check(IndexQueryFactory.builder().limit(4).descending().offset(5).build(),       3, 2, 1);
+    check(IndexQueryFactory.<Integer>builder().greaterOrEq(2).less(8).limit(2).build(),        2, 3);
+    check(IndexQueryFactory.<Integer>builder().greaterOrEq(2).less(8).limit(10).build(),       2, 3, 4, 6, 7);
+    check(IndexQueryFactory.<Integer>builder().greaterOrEq(2).less(8).limit(10).offset(2).build(),  4, 6, 7);
+    check(IndexQueryFactory.<Integer>builder().greaterOrEq(2).less(8).limit(2).offset(2).build(),  4, 6);
+    check(IndexQueryFactory.<Integer>builder().greaterOrEq(2).less(8).limit(1).offset(10).build());    
+    check(IndexQueryFactory.<Integer>builder().greaterOrEq(2).less(8).limit(1).descending().offset(1).build(),     6);
+    check(IndexQueryFactory.<Integer>builder().greaterOrEq(2).less(8).limit(10).descending().offset(1).build(),     6, 4, 3, 2);
+    check(IndexQueryFactory.<Integer>builder().greaterOrEq(2).less(8).limit(1).descending().offset(4).build(),      2);
+    check(IndexQueryFactory.<Integer>builder().limit(4).build(),                     1, 2, 3, 4);
+    check(IndexQueryFactory.<Integer>builder().limit(4).descending().build(),        9, 8, 7, 6);
+    check(IndexQueryFactory.<Integer>builder().limit(4).offset(2).build(),                    3, 4, 6, 7);
+    check(IndexQueryFactory.<Integer>builder().limit(4).descending().offset(5).build(),       3, 2, 1);
   }
   
-  private void check(IIndexQuery query, int...v) {
+  private void check(IIndexQuery<Integer> query, int...v) {
     int[] keys = MULTI.indexed(query).multi(velvet, root).stream().mapToInt(TestEnt2::getKey).toArray();
     Assert.assertArrayEquals(v, keys);
   }
