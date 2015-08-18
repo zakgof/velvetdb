@@ -13,15 +13,15 @@ public enum Entities {
     AnnoKeyProvider<K, V> annoKeyProvider = new AnnoKeyProvider<K, V>(valueClass);
     Class<K> keyClass = annoKeyProvider.getKeyClass();
     String kind = kindOf(valueClass);
-    return new Entity<>(keyClass, valueClass, kind, annoKeyProvider);
+    return new EntityDef<>(keyClass, valueClass, kind, annoKeyProvider);
   }
   
   public static <K, V> IEntityDef<K, V>  create(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider) {
-    return new Entity<>(keyClass, valueClass, kind, keyProvider);
+    return new EntityDef<>(keyClass, valueClass, kind, keyProvider);
   }
   
-  public static <K> IEntityDef<K, K>  simple(Class<K> clazz, String kind) {
-    return new SimpleEntity<K>(clazz, kind);
+  public static <K> IEntityDef<K, K>  selfKeyed(Class<K> clazz, String kind) {
+    return new SelfKeyedEntityDef<K>(clazz, kind);
   }
 
   public static String kindOf(Class<?> clazz) {

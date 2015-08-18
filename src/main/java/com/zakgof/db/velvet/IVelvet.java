@@ -17,11 +17,11 @@ public interface IVelvet extends ITransactional, ILockable {
 
   public void delete(String kind, Object key);
 
-  public <K> ILink<K> index(Object key1, String edgekind, LinkType type);
+  public <K> ILink<K> simpleIndex(Object key1, String edgekind, LinkType type);
 
-  public <K extends Comparable<K>, T> IKeyIndexLink<K> index(Object key1, String edgekind);
+  public <K extends Comparable<K>, T> IKeyIndexLink<K, K> primaryKeyIndex(Object key1, String edgekind);
   
-  public <K, T, M extends Comparable<M>> IKeyIndexLink<K> index(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric);
+  public <K, T, M extends Comparable<M>> IKeyIndexLink<K, M> secondaryKeyIndex(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric);
 
   public interface ILink<K> {
     void connect(K key2);
@@ -30,9 +30,9 @@ public interface IVelvet extends ITransactional, ILockable {
     boolean isConnected(K bkey);
   }
   
-  public interface IKeyIndexLink<K> extends ILink<K> {
+  public interface IKeyIndexLink<K, M extends Comparable<M>> extends ILink<K> {
     void update(K key2);
-    List<K> linkKeys(Class<K> clazz, IIndexQuery query);
+    List<K> linkKeys(Class<K> clazz, IIndexQuery<M> query);
   }
   
   public enum LinkType {

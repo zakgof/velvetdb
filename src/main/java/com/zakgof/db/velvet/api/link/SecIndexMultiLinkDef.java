@@ -15,7 +15,7 @@ public class SecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<M>> exten
     this.metric = metric;
   }
   
-  protected IKeyIndexLink<CK> index(IVelvet velvet, HK akey) {
-    return velvet.<CK, CV, M> index(akey, getKind(), getChildEntity().getValueClass(), getChildEntity().getKind(), metric);
+  protected IKeyIndexLink<CK, M> index(IVelvet velvet, HK akey) {
+    return velvet.<CK, CV, M> secondaryKeyIndex(akey, getKind(), getChildEntity().getValueClass(), getChildEntity().getKind(), metric);
   }
 }
