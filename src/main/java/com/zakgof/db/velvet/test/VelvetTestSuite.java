@@ -9,7 +9,7 @@ import org.junit.runners.Suite.SuiteClasses;
 import com.zakgof.db.velvet.IVelvet;
 
 @RunWith(Suite.class)
-@SuiteClasses({PrimaryIndexTest.class})
+@SuiteClasses({PutGetTest.class, SimpleLinkTest.class, PrimaryIndexTest.class})
 
 public abstract class VelvetTestSuite {
   public static Supplier<IVelvet> velvetProvider;

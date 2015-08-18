@@ -152,11 +152,11 @@ public class PrimaryIndexTest {
     check(IndexQueryFactory.builder().greaterOrEqK(2).lessK(8).limit(2).offset(2).build(),  4, 6);
     check(IndexQueryFactory.builder().greaterOrEqK(2).lessK(8).limit(1).offset(10).build());    
     check(IndexQueryFactory.builder().greaterOrEqK(2).lessK(8).limit(1).descending().offset(1).build(),     6);
-    check(IndexQueryFactory.builder().greaterOrEqK(2).lessK(8).limit(10).descending().offset(1).build(),     6, 5, 4, 3, 2, 1);
-    check(IndexQueryFactory.builder().greaterOrEqK(2).lessK(8).limit(1).descending().offset(5).build(),      2);
-    check(IndexQueryFactory.builder().limit(4).build(),                     2, 3, 4, 6);
+    check(IndexQueryFactory.builder().greaterOrEqK(2).lessK(8).limit(10).descending().offset(1).build(),     6, 4, 3, 2);
+    check(IndexQueryFactory.builder().greaterOrEqK(2).lessK(8).limit(1).descending().offset(4).build(),      2);
+    check(IndexQueryFactory.builder().limit(4).build(),                     1, 2, 3, 4);
     check(IndexQueryFactory.builder().limit(4).descending().build(),        9, 8, 7, 6);
-    check(IndexQueryFactory.builder().limit(4).offset(2).build(),                    4, 6, 7, 8);
+    check(IndexQueryFactory.builder().limit(4).offset(2).build(),                    3, 4, 6, 7);
     check(IndexQueryFactory.builder().limit(4).descending().offset(5).build(),       3, 2, 1);
   }
   
