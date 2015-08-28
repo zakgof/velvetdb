@@ -22,12 +22,12 @@ abstract class AIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<M>> exten
 
       @Override
       public List<CV> multi(IVelvet velvet, HV node) {
-        return getChildEntity().getAll(velvet, multiKeys(velvet, getHostEntity().keyOf(node)));
+        return getChildEntity().get(velvet, multiKeys(velvet, getHostEntity().keyOf(node)));
       }
 
       @Override
       public List<CK> multiKeys(IVelvet velvet, HK akey) {
-        return index(velvet, akey).linkKeys(getChildEntity().getKeyClass(), indexQuery);
+        return index(velvet, akey).keys(getChildEntity().getKeyClass(), indexQuery);
       }
     };
   }

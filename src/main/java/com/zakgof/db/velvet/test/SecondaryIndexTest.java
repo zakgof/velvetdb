@@ -1,6 +1,5 @@
 package com.zakgof.db.velvet.test;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.Assert;
@@ -18,7 +17,7 @@ public class SecondaryIndexTest {
 
   private IVelvet velvet;
   private IKeyIndexLink<Integer, Long> indexLink;
-  private IEntityDef<String, T1> T1ENTITY = Entities.create(T1.class); 
+  private IEntityDef<String, T1> T1ENTITY = Entities.anno(T1.class); 
   
   public SecondaryIndexTest() {
     
@@ -28,30 +27,11 @@ public class SecondaryIndexTest {
     
     indexLink = velvet.<Integer, String, Long>secondaryKeyIndex("node1", "edge", String.class, "child", node -> (long)(int)(node.charAt(node.length() - 1) - '0'));
     
-    velvet.put("main", "rootKey", "node1");
+    velvet.store("main", String.class, String.class).put("rootKey", "node1");
     for (int i=0; i<name.length; i++) {
-      velvet.put("child", i, name[i]);
-      indexLink.connect(i);
+      velvet.store("child", Integer.class, String.class).put(i, name[i]);
+      indexLink.put(i);
     }
-  }
-
-  @SuppressWarnings("unused")
-  @Test
-  public void testMixedKvs() {
-    
-    for (int d=0; d<15000; d++) {    
-      T1 t1 = new T1("k" + d, d);
-      T1ENTITY.put(velvet, t1);
-      // System.out.println(d);
-    }
-    T1ENTITY.put(velvet, new T1("final", -1.0f));
-    
-    List<T1> list = T1ENTITY.getAll(velvet);
-    
-    T1 t3_r = T1ENTITY.get(velvet, "k1");
-    T1 t5_r = T1ENTITY.get(velvet, "final");
-    
-    // raw.dumpIndex(T1ENTITY.getKeyClass(), "@n/t1");
   }
 
   @Test
@@ -157,7 +137,7 @@ public class SecondaryIndexTest {
   }
   
   private void check(IIndexQuery query, String...v) {
-    String[] vals = indexLink.linkKeys(Integer.class, query).stream().map(key -> velvet.get(String.class, "child", key)).collect(Collectors.toList()).toArray(new String[]{});
+    String[] vals = indexLink.keys(Integer.class, query).stream().map(key -> velvet.store("child", Integer.class, String.class).get(key)).collect(Collectors.toList()).toArray(new String[]{});
     Assert.assertArrayEquals(v, vals);
   }
 

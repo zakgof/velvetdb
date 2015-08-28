@@ -9,37 +9,43 @@ import com.zakgof.db.velvet.api.query.IIndexQuery;
 
 public interface IVelvet extends ITransactional, ILockable {
 
-  public <T> T get(Class<T> clazz, String kind, Object key);
-
-  public <K> List<K> allKeys(String kind, Class<K> keyClass);
-
-  public <T> void put(String kind, Object key, T value);
-
-  public void delete(String kind, Object key);
-
+  public <K, V> IStore<K, V> store(String kind, Class<K> keyClass, Class<V> valueClass);
+  
+  public <K extends Comparable<K>, V> ISortedStore<K, V> sortedStore(String kind, Class<K> keyClass, Class<V> valueClass);
+  
+  
   public <K> ILink<K> simpleIndex(Object key1, String edgekind, LinkType type);
 
   public <K extends Comparable<K>, T> IKeyIndexLink<K, K> primaryKeyIndex(Object key1, String edgekind);
   
   public <K, T, M extends Comparable<M>> IKeyIndexLink<K, M> secondaryKeyIndex(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric);
+  
+  public interface IStore<K, V> {
+    V get(K key);
+    void put(K key, V value);
+    void delete(K key);
+    List<K> keys();
+    boolean contains(K key);
+  }
+  
+  public interface ISortedStore<K extends Comparable<K>, V> extends IStore<K, V> {
+    List<K> keys(IIndexQuery<K> query);
+  }
 
   public interface ILink<K> {
-    void connect(K key2);
-    void disconnect(K key2);
-    List<K> linkKeys(Class<K> clazz);
-    boolean isConnected(K bkey);
+    void put(K key2);
+    void delete(K key2);
+    List<K> keys(Class<K> clazz);
+    boolean contains(K key2);
   }
   
   public interface IKeyIndexLink<K, M extends Comparable<M>> extends ILink<K> {
     void update(K key2);
-    List<K> linkKeys(Class<K> clazz, IIndexQuery<M> query);
+    List<K> keys(Class<K> clazz, IIndexQuery<M> query);
   }
   
   public enum LinkType {
     Single,
     Multi,
-    
-    PriBTree,
-    SecBTree,
   }
 }

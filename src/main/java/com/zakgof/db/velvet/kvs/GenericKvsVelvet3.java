@@ -182,7 +182,7 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public void connect(K key2) {
+    public void put(K key2) {
       if (key2 == null)
         throw new RuntimeException("Velvet: null key"); // TODO
       preConnect();
@@ -190,19 +190,19 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public void disconnect(K key2) {
+    public void delete(K key2) {
       // TODO : locking ?
       if (!removeFromIndex(indexKey, key2))
         disconnect();
     }
     
     @Override
-    public boolean isConnected(K bkey) {
+    public boolean contains(K bkey) {
       return new MixedIndex<K>(kvs, indexKey, (Class<K>)bkey.getClass()).contains(bkey);
     }
 
     @Override
-    public List<K> linkKeys(Class<K> clazz) {
+    public List<K> keys(Class<K> clazz) {
       return new MixedIndex<K>(kvs, indexKey, clazz).getAll();
     }
 
@@ -215,14 +215,14 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public void connect(K key2) {
+    public void put(K key2) {
       preConnect();
       // TODO : test for existing ?
       kvs.put(indexKey, key2);
     }
 
     @Override
-    public void disconnect(K key2) {
+    public void delete(K key2) {
       // TODO : locking ?
       // TODO : optional check
       // Object key2ref = kvs.get(key2.getClass(), indexKey);
@@ -234,12 +234,12 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public List<K> linkKeys(Class<K> clazz) {
+    public List<K> keys(Class<K> clazz) {
       return Arrays.asList(kvs.get(clazz, indexKey));
     }
     
     @Override
-    public boolean isConnected(K bkey) {      
+    public boolean contains(K bkey) {      
       return bkey.equals(kvs.get(bkey.getClass(), indexKey));
     }
 
@@ -262,7 +262,7 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public void connect(K key2) {
+    public void put(K key2) {
       preConnect();
       @SuppressWarnings("unchecked")
       Class<K> clazz = (Class<K>) key2.getClass();
@@ -315,7 +315,7 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public void disconnect(K key2) {
+    public void delete(K key2) {
       @SuppressWarnings("unchecked")
       Class<K> clazz = (Class<K>) key2.getClass();
       K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);
@@ -332,7 +332,7 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
     
     @Override
-    public boolean isConnected(K bkey) {
+    public boolean contains(K bkey) {
       @SuppressWarnings("unchecked")
       Class<K> clazz = (Class<K>) bkey.getClass();
       K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);
@@ -340,7 +340,7 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public List<K> linkKeys(Class<K> clazz) {
+    public List<K> keys(Class<K> clazz) {
       K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);
       List<K> list = index == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(index)); // TODO : perf
       return list;
@@ -348,12 +348,12 @@ public class GenericKvsVelvet3 implements IVelvet {
 
     @Override
     public void update(K key2) {
-      disconnect(key2);
-      connect(key2); // TODO: performance      
+      delete(key2);
+      put(key2); // TODO: performance      
     }
 
     @Override
-    public List<K> linkKeys(Class<K> clazz, IIndexQuery<M> query) {      
+    public List<K> keys(Class<K> clazz, IIndexQuery<M> query) {      
       K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);      
       return queryArray(index, query);
     }

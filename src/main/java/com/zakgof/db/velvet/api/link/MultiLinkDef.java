@@ -27,12 +27,12 @@ class MultiLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV> implem
 
   @Override
   public List<CV> multi(IVelvet velvet, HV node) {
-    return getChildEntity().getAll(velvet, multiKeys(velvet, getHostEntity().keyOf(node)));
+    return getChildEntity().get(velvet, multiKeys(velvet, getHostEntity().keyOf(node)));
   }
 
   @Override
   public List<CK> multiKeys(IVelvet velvet, HK key) {
-    return index(velvet, key).linkKeys(getChildEntity().getKeyClass());
+    return index(velvet, key).keys(getChildEntity().getKeyClass());
   }
 
   protected ILink<CK> index(IVelvet velvet, HK hkey) {

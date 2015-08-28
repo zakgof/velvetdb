@@ -25,7 +25,7 @@ class SingleLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV>implem
 
   @Override
   public CK singleKey(IVelvet velvet, HK key) {
-    List<CK> linkKeys = (List<CK>) index(velvet, key).linkKeys(getChildEntity().getKeyClass());
+    List<CK> linkKeys = (List<CK>) index(velvet, key).keys(getChildEntity().getKeyClass());
     return linkKeys.isEmpty() ? null : linkKeys.get(0);
   }
  

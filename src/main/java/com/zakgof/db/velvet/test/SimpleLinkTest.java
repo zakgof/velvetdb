@@ -22,8 +22,8 @@ public class SimpleLinkTest {
   private static final int COUNT = 1000;
   private IVelvet velvet;
 
-  private IEntityDef<String, TestEnt> ENTITY = Entities.create(TestEnt.class);
-  private IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.create(TestEnt2.class);
+  private IEntityDef<String, TestEnt> ENTITY = Entities.anno(TestEnt.class);
+  private IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.anno(TestEnt2.class);
 
   private ISingleLinkDef<String, TestEnt, Integer, TestEnt2> SINGLE = Links.single(ENTITY, ENTITY2, "single");
   private IMultiLinkDef<String, TestEnt, Integer, TestEnt2> MULTI = Links.multi(ENTITY, ENTITY2, "multi");

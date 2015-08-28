@@ -12,7 +12,7 @@ import com.zakgof.db.velvet.api.link.PriIndexMultiLinkDef;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 import com.zakgof.db.velvet.api.query.IndexQueryFactory;
 
-public class PrimaryIndexTest {
+public class SortedEntityTest {
 
   private IVelvet velvet; 
   
@@ -27,7 +27,7 @@ public class PrimaryIndexTest {
     velvet.rollback();
   }
 
-  public PrimaryIndexTest() {
+  public SortedEntityTest() {
     
     velvet = VelvetTestSuite.velvetProvider.get();
     

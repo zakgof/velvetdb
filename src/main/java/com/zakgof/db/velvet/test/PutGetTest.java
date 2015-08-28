@@ -15,7 +15,7 @@ public class PutGetTest {
   private static final int COUNT = 1000;
   private static final int HALFCOUNT = COUNT / 2;
   private IVelvet velvet;
-  private IEntityDef<String, TestEnt> ENTITY = Entities.create(TestEnt.class);
+  private IEntityDef<String, TestEnt> ENTITY = Entities.anno(TestEnt.class);
 
   public PutGetTest() {
     velvet = VelvetTestSuite.velvetProvider.get();
@@ -39,7 +39,7 @@ public class PutGetTest {
       Assert.assertEquals(d * 0.001f, ent.getVal(), 1e-5);
     }
     Assert.assertNull(ENTITY.get(velvet, "key1001"));
-    List<TestEnt> allValues = ENTITY.getAll(velvet);
+    List<TestEnt> allValues = ENTITY.get(velvet);
     Assert.assertEquals(COUNT, allValues.size());
   }
 
@@ -59,7 +59,7 @@ public class PutGetTest {
       Assert.assertEquals("key" + d, ent.getKey());
       Assert.assertEquals(d * 0.002f, ent.getVal(), 1e-5);
     }
-    List<TestEnt> allValues = ENTITY.getAll(velvet);
+    List<TestEnt> allValues = ENTITY.get(velvet);
     Assert.assertEquals(COUNT, allValues.size());
   }
 
@@ -72,7 +72,7 @@ public class PutGetTest {
     for (int d = 0; d < HALFCOUNT; d++) {
       ENTITY.deleteKey(velvet, "key" + d);
     }
-    List<TestEnt> allValues = ENTITY.getAll(velvet);
+    List<TestEnt> allValues = ENTITY.get(velvet);
     Assert.assertEquals(HALFCOUNT, allValues.size());
     for (int d = 0; d < HALFCOUNT; d++) {
       TestEnt ent = ENTITY.get(velvet, "key" + d);
