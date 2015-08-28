@@ -131,12 +131,12 @@ public class GenericKvsVelvet3 implements IVelvet {
   }
 
   @Override
-  public <K, T, M extends Comparable<M>> IKeyIndexLink<K> secondaryKeyIndex(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric) {
+  public <K, T, M extends Comparable<M>> IKeyIndexLink<K, M> secondaryKeyIndex(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric) {  
     return new SortedLink<K, T, M>(key1, edgekind, nodeClazz, nodekind, nodeMetric);
   }
   
   @Override
-  public <K extends Comparable<K>, T> IKeyIndexLink<K> primaryKeyIndex(Object key1, String edgekind) {
+  public <K extends Comparable<K>, T> IKeyIndexLink<K, K> primaryKeyIndex(Object key1, String edgekind) {
     return new SortedLink<K, T, K>(key1, edgekind, null, null, null);
   }
   
@@ -245,7 +245,7 @@ public class GenericKvsVelvet3 implements IVelvet {
 
   }
 
-  private class SortedLink<K, T, M extends Comparable<M>> extends BaseLink implements IKeyIndexLink<K> {
+  private class SortedLink<K, T, M extends Comparable<M>> extends BaseLink implements IKeyIndexLink<K, M> {
 
     private final Function<K, M> keyMetric;
 
@@ -353,7 +353,7 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public List<K> linkKeys(Class<K> clazz, IIndexQuery<K> query) {      
+    public List<K> linkKeys(Class<K> clazz, IIndexQuery<M> query) {      
       K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);      
       return queryArray(index, query);
     }
@@ -393,36 +393,37 @@ public class GenericKvsVelvet3 implements IVelvet {
      * @param anchor
      * @return
      */
-    private int getLeftIndex(K[] index, IQueryAnchor<K> anchor) {
-      if (anchor == null)
-        return 0;
-      
-      K key = null;
-      int position = -1;
-      M m1 = null;
-      if (anchor instanceof IKeyAnchor) {
-        key = ((IKeyAnchor<K>)anchor).getKey();
-        m1 = keyMetric.apply(key);
-      } else if (anchor instanceof IPositionAnchor) {
-        position = ((IPositionAnchor)anchor).getPosition();
-        return anchor.isIncluding() ? position : position + 1;
-      } else if (anchor instanceof ISecondaryIndexAnchor) {
-        m1 = ((ISecondaryIndexAnchor<M>)anchor).getValue();
-      }
-      boolean right = !anchor.isIncluding() && key == null;
-      int i1 = searchForInsert(index, m1, right);
-      if (key == null)
-        return i1;
-      
-      for (int i=i1;; i++) {
-        if (i == index.length || keyMetric.apply(index[i]).compareTo(m1) > 0)
-          if (anchor.isIncluding())
-            throw new NoSuchElementException();
-          else
-            return i;
-        if (index[i].equals(key))
-          return anchor.isIncluding() ? i : i + 1;        
-      }
+    private int getLeftIndex(K[] index, IQueryAnchor<?> anchor) {
+//      if (anchor == null)
+//        return 0;
+//      
+//      K key = null;
+//      int position = -1;
+//      M m1 = null;
+//      if (anchor instanceof IKeyAnchor) {
+//        key = ((IKeyAnchor<K>)anchor).getKey();
+//        m1 = keyMetric.apply(key);
+//      } else if (anchor instanceof IPositionAnchor) {
+//        position = ((IPositionAnchor)anchor).getPosition();
+//        return anchor.isIncluding() ? position : position + 1;
+//      } else if (anchor instanceof ISecondaryIndexAnchor) {
+//        m1 = ((ISecondaryIndexAnchor<M>)anchor).getValue();
+//      }
+//      boolean right = !anchor.isIncluding() && key == null;
+//      int i1 = searchForInsert(index, m1, right);
+//      if (key == null)
+//        return i1;
+//      
+//      for (int i=i1;; i++) {
+//        if (i == index.length || keyMetric.apply(index[i]).compareTo(m1) > 0)
+//          if (anchor.isIncluding())
+//            throw new NoSuchElementException();
+//          else
+//            return i;
+//        if (index[i].equals(key))
+//          return anchor.isIncluding() ? i : i + 1;        
+//      }
+      return 0; // TODO
     }
     
     /**
@@ -436,6 +437,8 @@ public class GenericKvsVelvet3 implements IVelvet {
      * @return
      */
     private int getRightIndex(K[] index, IQueryAnchor anchor) {
+      
+      /*
       if (anchor == null)
         return index.length - 1;
       
@@ -465,6 +468,8 @@ public class GenericKvsVelvet3 implements IVelvet {
         if (index[i].equals(key))
           return anchor.isIncluding() ? i : i - 1;        
       }
+      */
+      return 0; // TODO
     }
 
   }
