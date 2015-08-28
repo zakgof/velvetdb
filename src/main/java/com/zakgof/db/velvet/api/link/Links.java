@@ -2,6 +2,7 @@ package com.zakgof.db.velvet.api.link;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
@@ -102,6 +103,10 @@ public class Links {
 
   public static <HK, HV, CK extends Comparable<CK>, CV> PriIndexMultiLinkDef<HK, HV, CK, CV> pri(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
     return new PriIndexMultiLinkDef<>(hostEntity, childEntity);
+  }
+  
+  public static <HK, HV, CK, CV, M extends Comparable<M>> SecIndexMultiLinkDef<HK, HV, CK, CV, M> sec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
+    return new SecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric);
   }
 
 }
