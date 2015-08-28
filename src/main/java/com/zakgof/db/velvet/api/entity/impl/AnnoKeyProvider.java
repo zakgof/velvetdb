@@ -2,6 +2,10 @@ package com.zakgof.db.velvet.api.entity.impl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.function.Function;
 
 import com.zakgof.db.velvet.annotation.AutoKey;
@@ -15,7 +19,7 @@ class AnnoKeyProvider<K, V> implements Function<V, K> {
   @SuppressWarnings("unchecked")
   AnnoKeyProvider(Class<V> valueClass) {     
     try {
-      for (Field field : EntityDef.getAllFields(valueClass)) {
+      for (Field field : getAllFields(valueClass)) {
         field.setAccessible(true);
         if (field.getAnnotation(Key.class) != null || field.getAnnotation(AutoKey.class) != null) {
           keyClass = (Class<K>) field.getType();
@@ -47,6 +51,23 @@ class AnnoKeyProvider<K, V> implements Function<V, K> {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+  
+  static List<Field> getAllFields(Class<?> type) {
+    List<Field> fields = new ArrayList<Field>();
+
+    Field[] declaredFields = type.getDeclaredFields();
+    Arrays.sort(declaredFields, new Comparator<Field>() {
+      @Override
+      public int compare(Field f1, Field f2) {
+        return f1.getName().compareTo(f2.getName());
+      }
+    });
+    for (Field field : declaredFields)
+      fields.add(field);
+    if (type.getSuperclass() != null)
+      fields.addAll(getAllFields(type.getSuperclass()));
+    return fields;
   }
 
   @Override

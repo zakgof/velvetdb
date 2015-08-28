@@ -15,32 +15,27 @@ public interface IEntityDef<K, V> {
   public K keyOf(V value);
 
   public String getKind();
+  
+  //
 
-  public default V get(IVelvet velvet, K key) {
-    return velvet.get(getValueClass(), getKind(), key);
-  }
+  public V get(IVelvet velvet, K key);
+  
+  public List<K> keys(IVelvet velvet);
 
-  public default List<V> getAll(IVelvet velvet, Collection<K> keys) {
+  public void put(IVelvet velvet, V value);
+  
+  public void deleteKey(IVelvet velvet, K key);
+  
+  
+  public default List<V> get(IVelvet velvet, Collection<K> keys) {
     return keys.stream().map(key -> get(velvet, key)).collect(Collectors.toList());
   }
   
-  public default List<V> getAll(IVelvet velvet) {
-    return getAll(velvet, velvet.allKeys(getKind(), getKeyClass()));
-  }
-  
-  public default List<K> getAllKeys(IVelvet velvet) {
-    return velvet.allKeys(getKind(), getKeyClass());
-  }
-
-  public default void put(IVelvet velvet, V value) {
-    velvet.put(getKind(), keyOf(value), value);
+  public default List<V> get(IVelvet velvet) {
+    return get(velvet, keys(velvet));
   }
 
   public default void deleteValue(IVelvet velvet, V value) {
-    velvet.delete(getKind(), keyOf(value));
-  }
-  
-  public default void deleteKey(IVelvet velvet, K key) {
-    velvet.delete(getKind(), key);
+    deleteKey(velvet, keyOf(value));
   }
 }

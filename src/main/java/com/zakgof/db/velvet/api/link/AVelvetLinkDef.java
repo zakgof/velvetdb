@@ -22,17 +22,17 @@ abstract class AVelvetLinkDef<HK, HV, CK, CV> extends ALinkDef<HK, HV, CK, CV> {
 
   @Override
   public void connectKeys(IVelvet velvet, HK akey, CK bkey) {
-    index(velvet, akey).connect(bkey);
+    index(velvet, akey).put(bkey);
   }
 
   @Override
   public void disconnectKeys(IVelvet velvet, HK akey, CK bkey) {
-    index(velvet, akey).disconnect(bkey);
+    index(velvet, akey).delete(bkey);
   }
   
   @Override
   public boolean isConnectedKeys(IVelvet velvet, HK akey, CK bkey) {
-    return index(velvet, akey).isConnected(bkey);
+    return index(velvet, akey).contains(bkey);
   }
 
 }

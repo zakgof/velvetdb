@@ -5,21 +5,20 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.IVelvet.IKeyIndexLink;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
 import com.zakgof.db.velvet.api.entity.impl.Entities;
 import com.zakgof.db.velvet.api.link.Links;
-import com.zakgof.db.velvet.api.link.SecIndexMultiLinkDef;
+import com.zakgof.db.velvet.api.link.PriIndexMultiLinkDef;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 import com.zakgof.db.velvet.api.query.IndexQueryFactory;
 
-public class SecondaryIndexTest {
+public class SortedEntityTest {
 
-  private IVelvet velvet;
-  private IKeyIndexLink<Integer, Long> indexLink;
+  private IVelvet velvet; 
+  
   private IEntityDef<String, TestEnt> ENTITY = Entities.anno(TestEnt.class);
-  private IEntityDef<Integer, TestEnt3> ENTITY3 = Entities.create(Integer.class, TestEnt3.class, "realpojo", TestEnt3::getKey);
-  private SecIndexMultiLinkDef<String, TestEnt, Integer, TestEnt3, Long> MULTI = Links.sec(ENTITY, ENTITY3, Long.class, TestEnt3::getWeight);
+  private IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.anno(TestEnt2.class);
+  private PriIndexMultiLinkDef<String, TestEnt, Integer, TestEnt2> MULTI = Links.pri(ENTITY, ENTITY2);
 
   private TestEnt root;
 
@@ -28,82 +27,68 @@ public class SecondaryIndexTest {
     velvet.rollback();
   }
 
-  public SecondaryIndexTest() {
+  public SortedEntityTest() {
     
     velvet = VelvetTestSuite.velvetProvider.get();
     
-    TestEnt3[] vals = new TestEnt3[] {
-       new TestEnt3(54, 1L, "one-A"),
-       new TestEnt3(44, 1L, "one-B"),
-       new TestEnt3(33, 2L, "two"),
-       new TestEnt3(21, 3L, "three"),
-       new TestEnt3(34, 4L, "four-A"),
-       new TestEnt3(47, 4L, "four-B"),
-       new TestEnt3(60, 4L, "four-C"),
-       new TestEnt3(99, 6L, "six-A"),
-       new TestEnt3(31, 6L, "six-B"),
-    };
+    Integer[] keys = new Integer[] {7, 2, 9, 1, 4, 8, 3, 6};
     root = new TestEnt("root", 1.0f);
     ENTITY.put(velvet, root);
     
-    for (TestEnt3 val : vals) {
-      ENTITY3.put(velvet, val);
-      MULTI.connect(velvet, root, val);
+    for (Integer key : keys) {
+      TestEnt2 e2 = new TestEnt2(key);
+      ENTITY2.put(velvet, e2);
+      MULTI.connect(velvet, root, e2);
     }
+    
   }
 
   @Test
   public void testGreaterOrEq() {
-    check(IndexQueryFactory.greaterOrEq(-1L),     "one-A", "one-B", "two", "three", "four-A", "four-B", "four-C", "six-A",  "six-B");
-    check(IndexQueryFactory.greaterOrEq(1L),      "one-A", "one-B", "two", "three", "four-A", "four-B", "four-C", "six-A",  "six-B");
-    check(IndexQueryFactory.greaterOrEq(3L),      "three", "four-A", "four-B", "four-C", "six-A",  "six-B");
-    check(IndexQueryFactory.greaterOrEq(4L),      "four-A", "four-B", "four-C", "six-A",  "six-B");
-    check(IndexQueryFactory.greaterOrEq(5L),      "six-A",  "six-B");
-    check(IndexQueryFactory.greaterOrEq(6L),      "six-A",  "six-B");
-    check(IndexQueryFactory.greaterOrEq(7L)        );
+    check(IndexQueryFactory.greaterOrEq(-1),     1, 2, 3, 4, 6, 7, 8, 9);
+    check(IndexQueryFactory.greaterOrEq(1),      1, 2, 3, 4, 6, 7, 8, 9);
+    check(IndexQueryFactory.greaterOrEq(5),      6, 7, 8, 9);
+    check(IndexQueryFactory.greaterOrEq(6),      6, 7, 8, 9);
+    check(IndexQueryFactory.greaterOrEq(9),      9);
+    check(IndexQueryFactory.greaterOrEq(10)      );
   }
   
   @Test
   public void testGreaterOrEqDesc() {
-    check(IndexQueryFactory.<Long>builder().descending().greaterOrEq(-1L).build(),     "six-B", "six-A", "four-C", "four-B", "four-A", "three", "two", "one-B", "one-A");  
-    check(IndexQueryFactory.<Long>builder().descending().greaterOrEq(1L).build(),      "six-B", "six-A", "four-C", "four-B", "four-A", "three", "two", "one-B", "one-A");
-    check(IndexQueryFactory.<Long>builder().descending().greaterOrEq(3L).build(),      "six-B", "six-A", "four-C", "four-B", "four-A", "three");
-    check(IndexQueryFactory.<Long>builder().descending().greaterOrEq(4L).build(),      "six-B", "six-A", "four-C", "four-B", "four-A");
-    check(IndexQueryFactory.<Long>builder().descending().greaterOrEq(5L).build(),      "six-B", "six-A");
-    check(IndexQueryFactory.<Long>builder().descending().greaterOrEq(6L).build(),      "six-B", "six-A");
-    check(IndexQueryFactory.<Long>builder().descending().greaterOrEq(7L).build()      );
+    check(IndexQueryFactory.<Integer>builder().descending().greaterOrEq(-1).build(),     9, 8, 7, 6, 4, 3, 2, 1);
+    check(IndexQueryFactory.<Integer>builder().descending().greaterOrEq(1).build(),      9, 8, 7, 6, 4, 3, 2, 1);
+    check(IndexQueryFactory.<Integer>builder().descending().greaterOrEq(5).build(),      9, 8, 7, 6);
+    check(IndexQueryFactory.<Integer>builder().descending().greaterOrEq(6).build(),      9, 8, 7, 6);
+    check(IndexQueryFactory.<Integer>builder().descending().greaterOrEq(9).build(),      9);
+    check(IndexQueryFactory.<Integer>builder().descending().greaterOrEq(10).build()      );
   }
   
   
   @Test
   public void testEqualsTo() {
-    check(IndexQueryFactory.equalsTo(-1L)      );
-    check(IndexQueryFactory.equalsTo(1L),      "one-A", "one-B");
-    check(IndexQueryFactory.equalsTo(3L),      "three");
-    check(IndexQueryFactory.equalsTo(4L),      "four-A", "four-B", "four-C");
-    check(IndexQueryFactory.equalsTo(5L)       );
-    check(IndexQueryFactory.equalsTo(6L),      "six-A",  "six-B");
-    check(IndexQueryFactory.equalsTo(7L)       );
+    check(IndexQueryFactory.equalsTo(4),         4);
+    check(IndexQueryFactory.equalsTo(1),         1);
+    check(IndexQueryFactory.equalsTo(9),         9);
+    check(IndexQueryFactory.equalsTo(-1));
+    check(IndexQueryFactory.equalsTo(5));
+    check(IndexQueryFactory.equalsTo(10));
   }
  
   @Test
   public void testGreater() {
-    check(IndexQueryFactory.greater(-1L),     "one-A", "one-B", "two", "three", "four-A", "four-B", "four-C", "six-A", "six-B");
-    check(IndexQueryFactory.greater(1L),      "two", "three", "four-A", "four-B", "four-C", "six-A",  "six-B");
-    check(IndexQueryFactory.greater(3L),      "four-A", "four-B", "four-C", "six-A",  "six-B");
-    check(IndexQueryFactory.greater(4L),      "six-A",  "six-B");
-    check(IndexQueryFactory.greater(5L),      "six-A",  "six-B");
-    check(IndexQueryFactory.greater(6L)        );
-    check(IndexQueryFactory.greater(7L)        );
+    check(IndexQueryFactory.greater(-1),     1, 2, 3, 4, 6, 7, 8, 9);
+    check(IndexQueryFactory.greater(1),      2, 3, 4, 6, 7, 8, 9);
+    check(IndexQueryFactory.greater(5),      6, 7, 8, 9);
+    check(IndexQueryFactory.greater(6),      7, 8, 9);
+    check(IndexQueryFactory.greater(9));
+    check(IndexQueryFactory.greater(10));
   }
   
   @Test
   public void testFirstLast() {
-    check(IndexQueryFactory.first(),           "one-A");
-    check(IndexQueryFactory.last(),            "six-B");
+    check(IndexQueryFactory.first(),              1);
+    check(IndexQueryFactory.last(),               9);
   }
-  
-  /*
    
   @Test
   public void testNext() {
@@ -174,11 +159,10 @@ public class SecondaryIndexTest {
     check(IndexQueryFactory.<Integer>builder().limit(4).offset(2).build(),                    3, 4, 6, 7);
     check(IndexQueryFactory.<Integer>builder().limit(4).descending().offset(5).build(),       3, 2, 1);
   }
-  */
   
-  private void check(IIndexQuery<Long> query, String...v) {
-    String[] vals = MULTI.indexed(query).multi(velvet, root).stream().map(TestEnt3::getStr).toArray(n -> new String[n]);
-    Assert.assertArrayEquals(v, vals);
+  private void check(IIndexQuery<Integer> query, int...v) {
+    int[] keys = MULTI.indexed(query).multi(velvet, root).stream().mapToInt(TestEnt2::getKey).toArray();
+    Assert.assertArrayEquals(v, keys);
   }
 
 }
