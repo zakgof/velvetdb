@@ -131,12 +131,12 @@ public class GenericKvsVelvet3 implements IVelvet {
   }
 
   @Override
-  public <K, T, M extends Comparable<M>> IKeyIndexLink<K> secondaryKeyIndex(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric) {
+  public <K, T, M extends Comparable<M>> IKeyIndexLink<K, M> secondaryKeyIndex(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric) {  
     return new SortedLink<K, T, M>(key1, edgekind, nodeClazz, nodekind, nodeMetric);
   }
   
   @Override
-  public <K extends Comparable<K>, T> IKeyIndexLink<K> primaryKeyIndex(Object key1, String edgekind) {
+  public <K extends Comparable<K>, T> IKeyIndexLink<K, K> primaryKeyIndex(Object key1, String edgekind) {
     return new SortedLink<K, T, K>(key1, edgekind, null, null, null);
   }
   
@@ -182,7 +182,7 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public void connect(K key2) {
+    public void put(K key2) {
       if (key2 == null)
         throw new RuntimeException("Velvet: null key"); // TODO
       preConnect();
@@ -190,19 +190,19 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public void disconnect(K key2) {
+    public void delete(K key2) {
       // TODO : locking ?
       if (!removeFromIndex(indexKey, key2))
         disconnect();
     }
     
     @Override
-    public boolean isConnected(K bkey) {
+    public boolean contains(K bkey) {
       return new MixedIndex<K>(kvs, indexKey, (Class<K>)bkey.getClass()).contains(bkey);
     }
 
     @Override
-    public List<K> linkKeys(Class<K> clazz) {
+    public List<K> keys(Class<K> clazz) {
       return new MixedIndex<K>(kvs, indexKey, clazz).getAll();
     }
 
@@ -215,14 +215,14 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public void connect(K key2) {
+    public void put(K key2) {
       preConnect();
       // TODO : test for existing ?
       kvs.put(indexKey, key2);
     }
 
     @Override
-    public void disconnect(K key2) {
+    public void delete(K key2) {
       // TODO : locking ?
       // TODO : optional check
       // Object key2ref = kvs.get(key2.getClass(), indexKey);
@@ -234,18 +234,18 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public List<K> linkKeys(Class<K> clazz) {
+    public List<K> keys(Class<K> clazz) {
       return Arrays.asList(kvs.get(clazz, indexKey));
     }
     
     @Override
-    public boolean isConnected(K bkey) {      
+    public boolean contains(K bkey) {      
       return bkey.equals(kvs.get(bkey.getClass(), indexKey));
     }
 
   }
 
-  private class SortedLink<K, T, M extends Comparable<M>> extends BaseLink implements IKeyIndexLink<K> {
+  private class SortedLink<K, T, M extends Comparable<M>> extends BaseLink implements IKeyIndexLink<K, M> {
 
     private final Function<K, M> keyMetric;
 
@@ -262,7 +262,7 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public void connect(K key2) {
+    public void put(K key2) {
       preConnect();
       @SuppressWarnings("unchecked")
       Class<K> clazz = (Class<K>) key2.getClass();
@@ -315,7 +315,7 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public void disconnect(K key2) {
+    public void delete(K key2) {
       @SuppressWarnings("unchecked")
       Class<K> clazz = (Class<K>) key2.getClass();
       K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);
@@ -332,7 +332,7 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
     
     @Override
-    public boolean isConnected(K bkey) {
+    public boolean contains(K bkey) {
       @SuppressWarnings("unchecked")
       Class<K> clazz = (Class<K>) bkey.getClass();
       K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);
@@ -340,7 +340,7 @@ public class GenericKvsVelvet3 implements IVelvet {
     }
 
     @Override
-    public List<K> linkKeys(Class<K> clazz) {
+    public List<K> keys(Class<K> clazz) {
       K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);
       List<K> list = index == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(index)); // TODO : perf
       return list;
@@ -348,12 +348,12 @@ public class GenericKvsVelvet3 implements IVelvet {
 
     @Override
     public void update(K key2) {
-      disconnect(key2);
-      connect(key2); // TODO: performance      
+      delete(key2);
+      put(key2); // TODO: performance      
     }
 
     @Override
-    public List<K> linkKeys(Class<K> clazz, IIndexQuery<K> query) {      
+    public List<K> keys(Class<K> clazz, IIndexQuery<M> query) {      
       K[] index = kvs.get(GenericKvsVelvet3.<K> getArrayClass(clazz), indexKey);      
       return queryArray(index, query);
     }
@@ -393,36 +393,37 @@ public class GenericKvsVelvet3 implements IVelvet {
      * @param anchor
      * @return
      */
-    private int getLeftIndex(K[] index, IQueryAnchor<K> anchor) {
-      if (anchor == null)
-        return 0;
-      
-      K key = null;
-      int position = -1;
-      M m1 = null;
-      if (anchor instanceof IKeyAnchor) {
-        key = ((IKeyAnchor<K>)anchor).getKey();
-        m1 = keyMetric.apply(key);
-      } else if (anchor instanceof IPositionAnchor) {
-        position = ((IPositionAnchor)anchor).getPosition();
-        return anchor.isIncluding() ? position : position + 1;
-      } else if (anchor instanceof ISecondaryIndexAnchor) {
-        m1 = ((ISecondaryIndexAnchor<M>)anchor).getValue();
-      }
-      boolean right = !anchor.isIncluding() && key == null;
-      int i1 = searchForInsert(index, m1, right);
-      if (key == null)
-        return i1;
-      
-      for (int i=i1;; i++) {
-        if (i == index.length || keyMetric.apply(index[i]).compareTo(m1) > 0)
-          if (anchor.isIncluding())
-            throw new NoSuchElementException();
-          else
-            return i;
-        if (index[i].equals(key))
-          return anchor.isIncluding() ? i : i + 1;        
-      }
+    private int getLeftIndex(K[] index, IQueryAnchor<?> anchor) {
+//      if (anchor == null)
+//        return 0;
+//      
+//      K key = null;
+//      int position = -1;
+//      M m1 = null;
+//      if (anchor instanceof IKeyAnchor) {
+//        key = ((IKeyAnchor<K>)anchor).getKey();
+//        m1 = keyMetric.apply(key);
+//      } else if (anchor instanceof IPositionAnchor) {
+//        position = ((IPositionAnchor)anchor).getPosition();
+//        return anchor.isIncluding() ? position : position + 1;
+//      } else if (anchor instanceof ISecondaryIndexAnchor) {
+//        m1 = ((ISecondaryIndexAnchor<M>)anchor).getValue();
+//      }
+//      boolean right = !anchor.isIncluding() && key == null;
+//      int i1 = searchForInsert(index, m1, right);
+//      if (key == null)
+//        return i1;
+//      
+//      for (int i=i1;; i++) {
+//        if (i == index.length || keyMetric.apply(index[i]).compareTo(m1) > 0)
+//          if (anchor.isIncluding())
+//            throw new NoSuchElementException();
+//          else
+//            return i;
+//        if (index[i].equals(key))
+//          return anchor.isIncluding() ? i : i + 1;        
+//      }
+      return 0; // TODO
     }
     
     /**
@@ -436,6 +437,8 @@ public class GenericKvsVelvet3 implements IVelvet {
      * @return
      */
     private int getRightIndex(K[] index, IQueryAnchor anchor) {
+      
+      /*
       if (anchor == null)
         return index.length - 1;
       
@@ -465,6 +468,8 @@ public class GenericKvsVelvet3 implements IVelvet {
         if (index[i].equals(key))
           return anchor.isIncluding() ? i : i - 1;        
       }
+      */
+      return 0; // TODO
     }
 
   }
