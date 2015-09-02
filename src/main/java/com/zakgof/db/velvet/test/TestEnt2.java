@@ -11,8 +11,12 @@ public class TestEnt2 {
   }
 
   public TestEnt2(int key) {
+    this(key, "v" + key);
+  }
+  
+  public TestEnt2(int key, String val) {
     this.key = key;
-    this.val = "v" + key;
+    this.val = val;
   }
 
   public String getVal() {
