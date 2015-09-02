@@ -10,8 +10,12 @@ import com.zakgof.db.velvet.IVelvet;
 
 @RunWith(Suite.class)
 // @SuiteClasses({PutGetTest.class, SimpleLinkTest.class, PrimaryIndexTest.class, SecondaryIndexTest.class, SortedStoreTest.class})
-@SuiteClasses({SecondaryIndexTest.class})
+@SuiteClasses({ConcurrentWriteTest.class})
 
 public abstract class VelvetTestSuite {
+  
   public static Supplier<IVelvet> velvetProvider;
+  
+  public static Supplier<IVelvet> velvetTxnProvider;
+  
 }
