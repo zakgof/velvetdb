@@ -1,16 +1,17 @@
 package com.zakgof.db.velvet.api.entity.impl;
 
 import java.util.List;
+import java.util.function.Function;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.ISortedStore;
 import com.zakgof.db.velvet.api.entity.ISortableEntityDef;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 
-public class SortedAnnoEntityDef<K extends Comparable<K>, V> extends AnnoEntityDef<K, V> implements ISortableEntityDef<K, V> {
+public class SortedEntityDef<K extends Comparable<K>, V> extends EntityDef<K, V> implements ISortableEntityDef<K, V> {
   
-  SortedAnnoEntityDef(Class<V> valueClass, AnnoKeyProvider<K, V> annoKeyProvider) {
-    super(valueClass, annoKeyProvider);
+  SortedEntityDef(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider) {
+    super(keyClass, valueClass, kind, keyProvider);
   }
 
   @Override

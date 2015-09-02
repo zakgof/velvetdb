@@ -18,7 +18,7 @@ public interface IVelvet extends ITransactional, ILockable {
 
   public <K extends Comparable<K>, T> IKeyIndexLink<K, K> primaryKeyIndex(Object key1, String edgekind);
   
-  public <K, T, M extends Comparable<M>> IKeyIndexLink<K, M> secondaryKeyIndex(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric, Class<M> mclazz);
+  public <K, T, M extends Comparable<M>> IKeyIndexLink<K, M> secondaryKeyIndex(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<K> keyClass);
   
   public interface IStore<K, V> {
     V get(K key);
