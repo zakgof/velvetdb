@@ -156,30 +156,3 @@ public class IndexQueryFactory {
   }
 
 }
-
-class QueryAnchor<K extends Comparable<K>> implements IQueryAnchor<K> {
-
-  private final boolean including;
-  
-  private final K value;
-
-  public QueryAnchor(K value) {
-    this(true, value);
-  }
-
-  public QueryAnchor(boolean including, K value) {
-    this.including = including;
-    this.value = value;
-  }
-
-  @Override
-  public boolean isIncluding() {
-    return including;
-  }
-
-  @Override
-  public K getKey() {
-    return value;
-  }
-
-}

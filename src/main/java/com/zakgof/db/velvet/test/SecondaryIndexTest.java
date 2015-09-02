@@ -83,7 +83,6 @@ public class SecondaryIndexTest {
     check(IndexQueryFactory.<Long>builder().descending().greaterOrEq(7L).build()      );
   }
   
-  
   @Test
   public void testEqualsTo() {
     check(IndexQueryFactory.equalsTo(-1L)      );
@@ -105,6 +104,31 @@ public class SecondaryIndexTest {
     check(IndexQueryFactory.greater(6L)        );
     check(IndexQueryFactory.greater(7L)        );
   }
+  
+  @Test
+  public void testLess() {
+    check(IndexQueryFactory.less(-1L)     );
+    check(IndexQueryFactory.less(1L)      );
+    check(IndexQueryFactory.less(3L),      rOne, "two");
+    check(IndexQueryFactory.less(4L),      rOne, "two", "three");
+    check(IndexQueryFactory.less(5L),      rOne, "two", "three", rFour);
+    check(IndexQueryFactory.less(6L),      rOne, "two", "three", rFour);
+    check(IndexQueryFactory.less(7L),      rOne, "two", "three", rFour, rSix );
+  }
+  
+  @Test
+  public void testLessOrEq() {
+    check(IndexQueryFactory.lessOrEq(-1L)     );
+    check(IndexQueryFactory.lessOrEq(1L),      rOne);
+    check(IndexQueryFactory.lessOrEq(3L),      rOne, "two", "three");
+    check(IndexQueryFactory.lessOrEq(4L),      rOne, "two", "three", rFour);
+    check(IndexQueryFactory.lessOrEq(5L),      rOne, "two", "three", rFour);
+    check(IndexQueryFactory.lessOrEq(6L),      rOne, "two", "three", rFour, rSix);
+    check(IndexQueryFactory.lessOrEq(7L),      rOne, "two", "three", rFour, rSix );
+  }
+  
+
+  
    
   /*
    
@@ -114,28 +138,6 @@ public class SecondaryIndexTest {
     check(IndexQueryFactory.next(1),         2);
     check(IndexQueryFactory.next(4),         6);
     check(IndexQueryFactory.next(9));
-  }
-  
-  @Test
-  public void testLess() {
-    check(IndexQueryFactory.less(-1));
-    check(IndexQueryFactory.less(1));
-    check(IndexQueryFactory.less(2),         1);
-    check(IndexQueryFactory.less(5),         1, 2, 3, 4);
-    check(IndexQueryFactory.less(6),         1, 2, 3, 4);
-    check(IndexQueryFactory.less(9),         1, 2, 3, 4, 6, 7, 8);    
-    check(IndexQueryFactory.less(10),        1, 2, 3, 4, 6, 7, 8, 9);
-  }
-  
-  @Test
-  public void testLessOrEq() {
-    check(IndexQueryFactory.lessOrEq(-1));
-    check(IndexQueryFactory.lessOrEq(1),         1);
-    check(IndexQueryFactory.lessOrEq(2),         1, 2);
-    check(IndexQueryFactory.lessOrEq(5),         1, 2, 3, 4);
-    check(IndexQueryFactory.lessOrEq(6),         1, 2, 3, 4, 6);
-    check(IndexQueryFactory.lessOrEq(9),         1, 2, 3, 4, 6, 7, 8, 9);    
-    check(IndexQueryFactory.lessOrEq(10),        1, 2, 3, 4, 6, 7, 8, 9);
   }
   
   @Test
