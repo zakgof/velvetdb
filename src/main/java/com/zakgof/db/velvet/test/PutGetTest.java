@@ -2,29 +2,17 @@ package com.zakgof.db.velvet.test;
 
 import java.util.List;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
 import com.zakgof.db.velvet.api.entity.impl.Entities;
 
-public class PutGetTest {
+public class PutGetTest extends AVelvetTest {
 
   private static final int COUNT = 1000;
   private static final int HALFCOUNT = COUNT / 2;
-  private IVelvet velvet;
   private IEntityDef<String, TestEnt> ENTITY = Entities.anno(TestEnt.class);
-
-  public PutGetTest() {
-    velvet = VelvetTestSuite.velvetProvider.get();
-  }
-
-  @After
-  public void rollback() {
-    velvet.rollback();
-  }
 
   @Test
   public void testSimplePutGet() {

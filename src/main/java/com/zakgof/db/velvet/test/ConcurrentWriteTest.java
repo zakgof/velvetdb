@@ -4,7 +4,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -16,26 +15,16 @@ import com.zakgof.db.velvet.api.link.ISingleLinkDef;
 import com.zakgof.db.velvet.api.link.Links;
 
 
-public class ConcurrentWriteTest {
+public class ConcurrentWriteTest extends AVelvetTest {
 
   private static final int CHUNK_SIZE = 100;
   private static final int THREADS = 5;
-  private IVelvet velvet;
-
+  
   private IEntityDef<String, TestEnt> ENTITY = Entities.anno(TestEnt.class);
   private IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.anno(TestEnt2.class);
 
   private ISingleLinkDef<String, TestEnt, Integer, TestEnt2> SINGLE = Links.single(ENTITY, ENTITY2, "single");
   private IMultiLinkDef<String, TestEnt, Integer, TestEnt2> MULTI = Links.multi(ENTITY, ENTITY2, "multi");
-
-  public ConcurrentWriteTest() {
-    velvet = VelvetTestSuite.velvetProvider.get();
-  }
-
-  @After
-  public void rollback() {
-    velvet.rollback();
-  }
 
   @Test
   public void testSingleTransactionMassiveEntityPut() throws InterruptedException {

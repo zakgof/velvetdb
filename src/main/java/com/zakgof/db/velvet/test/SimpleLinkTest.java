@@ -3,11 +3,9 @@ package com.zakgof.db.velvet.test;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
 import com.zakgof.db.velvet.api.entity.impl.Entities;
 import com.zakgof.db.velvet.api.link.IBiManyToManyLinkDef;
@@ -17,10 +15,9 @@ import com.zakgof.db.velvet.api.link.IMultiLinkDef;
 import com.zakgof.db.velvet.api.link.ISingleLinkDef;
 import com.zakgof.db.velvet.api.link.Links;
 
-public class SimpleLinkTest {
+public class SimpleLinkTest extends AVelvetTest  {
 
   private static final int COUNT = 1000;
-  private IVelvet velvet;
 
   private IEntityDef<String, TestEnt> ENTITY = Entities.anno(TestEnt.class);
   private IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.anno(TestEnt2.class);
@@ -31,15 +28,6 @@ public class SimpleLinkTest {
   private IBiSingleLinkDef<String, TestEnt, Integer, TestEnt2> ONE_TO_ONE = Links.biSingle(ENTITY, ENTITY2, "bisingle", "bisingle-back");
   private IBiMultiLinkDef<String, TestEnt, Integer, TestEnt2> ONE_TO_MANY = Links.biMulti(ENTITY, ENTITY2, "bimulti", "bimulti-back");
   private IBiManyToManyLinkDef<String, TestEnt, Integer, TestEnt2> MANY_TO_MANY = Links.biManyToMany(ENTITY, ENTITY2, "many", "many-back");
-
-  public SimpleLinkTest() {
-    velvet = VelvetTestSuite.velvetProvider.get();
-  }
-
-  @After
-  public void rollback() {
-    velvet.rollback();
-  }
 
   @Test
   public void testSingleLink() {

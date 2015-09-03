@@ -6,16 +6,15 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
-import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.IVelvetEnvironment;
 
 @RunWith(Suite.class)
-// @SuiteClasses({PutGetTest.class, SimpleLinkTest.class, PrimaryIndexTest.class, SecondaryIndexTest.class, SortedStoreTest.class})
-@SuiteClasses({ConcurrentWriteTest.class})
+ @SuiteClasses({PutGetTest.class, SimpleLinkTest.class, PrimaryIndexTest.class, SecondaryIndexTest.class, SortedStoreTest.class})
+// @SuiteClasses({PutGetTest.class})
 
 public abstract class VelvetTestSuite {
   
-  public static Supplier<IVelvet> velvetProvider;
+  public static Supplier<IVelvetEnvironment> velvetProvider;
   
-  public static Supplier<IVelvet> velvetTxnProvider;
   
 }

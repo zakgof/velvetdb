@@ -3,16 +3,14 @@ package com.zakgof.db.velvet;
 import java.util.List;
 import java.util.function.Function;
 
-import com.zakgof.db.ILockable;
-import com.zakgof.db.ITransactional;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 
-public interface IVelvet extends ITransactional, ILockable {
+public interface IVelvet {
 
   public <K, V> IStore<K, V> store(String kind, Class<K> keyClass, Class<V> valueClass);
   
   public <K extends Comparable<K>, V> ISortedStore<K, V> sortedStore(String kind, Class<K> keyClass, Class<V> valueClass);
-  
+
   
   public <K> ILink<K> simpleIndex(Object key1, String edgekind, LinkType type);
 
