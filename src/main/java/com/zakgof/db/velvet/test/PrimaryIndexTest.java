@@ -1,10 +1,9 @@
 package com.zakgof.db.velvet.test;
 
-import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
-import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
 import com.zakgof.db.velvet.api.entity.impl.Entities;
 import com.zakgof.db.velvet.api.link.Links;
@@ -12,9 +11,7 @@ import com.zakgof.db.velvet.api.link.PriIndexMultiLinkDef;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 import com.zakgof.db.velvet.api.query.IndexQueryFactory;
 
-public class PrimaryIndexTest {
-
-  private IVelvet velvet; 
+public class PrimaryIndexTest extends AVelvetTest {
   
   private IEntityDef<String, TestEnt> ENTITY = Entities.anno(TestEnt.class);
   private IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.anno(TestEnt2.class);
@@ -22,14 +19,8 @@ public class PrimaryIndexTest {
 
   private TestEnt root;
 
-  @After
-  public void rollback() {
-    velvet.rollback();
-  }
-
-  public PrimaryIndexTest() {
-    
-    velvet = VelvetTestSuite.velvetProvider.get();
+  @Before
+  public void init() {
     
     Integer[] keys = new Integer[] {7, 2, 9, 1, 4, 8, 3, 6};
     root = new TestEnt("root", 1.0f);

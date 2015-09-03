@@ -1,7 +1,7 @@
 package com.zakgof.db.kvs;
 
-import com.zakgof.db.ITransactional;
+import txn.ITransactionalEnvironment;
 
-public interface ITransactionalKvs extends IKvs, ITransactional {
+public interface ITransactionalKvs extends IKvs, ITransactionalEnvironment {
 
 }

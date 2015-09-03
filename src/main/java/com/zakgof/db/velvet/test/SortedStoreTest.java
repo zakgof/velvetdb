@@ -5,25 +5,22 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
-import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.api.entity.ISortableEntityDef;
 import com.zakgof.db.velvet.api.entity.impl.Entities;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 import com.zakgof.db.velvet.api.query.IndexQueryFactory;
 
-public class SortedStoreTest {
-
-  private IVelvet velvet;
+public class SortedStoreTest extends AVelvetTest {
 
   private ISortableEntityDef<Integer, TestEnt2> ENTITY2 = Entities.sortedAnno(TestEnt2.class);
   private ISortableEntityDef<Integer, TestEnt3> ENTITY_EMPTY = Entities.sorted(Integer.class, TestEnt3.class, "realpojo", TestEnt3::getKey);
 
-  public SortedStoreTest() {
-    velvet = VelvetTestSuite.velvetProvider.get();
+  @Before
+  public void init() {
     
     // v1 v2 v3 v5 v7    
     ENTITY2.put(velvet, new TestEnt2(7));    
@@ -32,11 +29,6 @@ public class SortedStoreTest {
     ENTITY2.put(velvet, new TestEnt2(3));
     ENTITY2.put(velvet, new TestEnt2(1));
     
-  }
-
-  @After
-  public void rollback() {
-    velvet.rollback();
   }
 
   @Test
