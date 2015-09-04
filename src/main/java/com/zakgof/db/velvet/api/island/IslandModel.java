@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.api.entity.Entities;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
-import com.zakgof.db.velvet.api.entity.impl.Entities;
 import com.zakgof.db.velvet.api.link.IBiLinkDef;
 import com.zakgof.db.velvet.api.link.IMultiLinkDef;
 import com.zakgof.db.velvet.api.link.ISingleLinkDef;

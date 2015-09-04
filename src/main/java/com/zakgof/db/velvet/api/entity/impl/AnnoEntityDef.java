@@ -10,7 +10,7 @@ import com.zakgof.db.velvet.annotation.Kind;
 
 public class AnnoEntityDef<K, V> extends EntityDef<K, V> {
   
-  AnnoEntityDef(Class<V> valueClass, AnnoKeyProvider<K, V> annoKeyProvider) {
+  public AnnoEntityDef(Class<V> valueClass, AnnoKeyProvider<K, V> annoKeyProvider) {
     super(annoKeyProvider.getKeyClass(), valueClass, kindOf(valueClass), annoKeyProvider);
   }
   

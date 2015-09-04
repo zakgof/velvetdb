@@ -10,7 +10,7 @@ import com.zakgof.db.velvet.api.query.IIndexQuery;
 
 public class SortedEntityDef<K extends Comparable<K>, V> extends EntityDef<K, V> implements ISortableEntityDef<K, V> {
   
-  SortedEntityDef(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider) {
+  public SortedEntityDef(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider) {
     super(keyClass, valueClass, kind, keyProvider);
   }
 

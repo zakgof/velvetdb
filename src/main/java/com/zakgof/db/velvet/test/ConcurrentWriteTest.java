@@ -7,8 +7,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.zakgof.db.velvet.api.entity.Entities;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
-import com.zakgof.db.velvet.api.entity.impl.Entities;
 import com.zakgof.db.velvet.api.link.IMultiLinkDef;
 import com.zakgof.db.velvet.api.link.ISingleLinkDef;
 import com.zakgof.db.velvet.api.link.Links;
@@ -71,6 +71,14 @@ public class ConcurrentWriteTest extends AVelvetTest {
    
     checkValues();
   }
+  
+  @Test
+  public void testMultipleTransactionMassiveLinkConnect() throws InterruptedException {
+    
+   // TODO
+  }
+  
+  
 
   private void checkValues() {
     env.execute(velvet ->  {

@@ -1,8 +1,6 @@
 package com.zakgof.db.sqlkvs;
 
-import txn.ITransactionalEnvironment;
-
-public interface IByteArrayKvs extends ITransactionalEnvironment {
+public interface IByteArrayKvs {
 
   public byte[] get(byte[] keyBytes);
 

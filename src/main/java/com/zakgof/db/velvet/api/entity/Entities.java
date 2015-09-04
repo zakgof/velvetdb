@@ -1,9 +1,12 @@
-package com.zakgof.db.velvet.api.entity.impl;
+package com.zakgof.db.velvet.api.entity;
 
 import java.util.function.Function;
 
-import com.zakgof.db.velvet.api.entity.IEntityDef;
-import com.zakgof.db.velvet.api.entity.ISortableEntityDef;
+import com.zakgof.db.velvet.api.entity.impl.AnnoEntityDef;
+import com.zakgof.db.velvet.api.entity.impl.AnnoKeyProvider;
+import com.zakgof.db.velvet.api.entity.impl.EntityDef;
+import com.zakgof.db.velvet.api.entity.impl.SortedAnnoEntityDef;
+import com.zakgof.db.velvet.api.entity.impl.SortedEntityDef;
 
 public enum Entities {
   ;

@@ -9,7 +9,7 @@ import com.zakgof.db.velvet.api.query.IIndexQuery;
 
 public class SortedAnnoEntityDef<K extends Comparable<K>, V> extends AnnoEntityDef<K, V> implements ISortableEntityDef<K, V> {
   
-  SortedAnnoEntityDef(Class<V> valueClass, AnnoKeyProvider<K, V> annoKeyProvider) {
+  public SortedAnnoEntityDef(Class<V> valueClass, AnnoKeyProvider<K, V> annoKeyProvider) {
     super(valueClass, annoKeyProvider);
   }
 

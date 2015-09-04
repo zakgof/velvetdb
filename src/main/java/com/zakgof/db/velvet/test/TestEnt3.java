@@ -1,6 +1,10 @@
 package com.zakgof.db.velvet.test;
 
-public class TestEnt3 {
+import java.io.Serializable;
+
+public class TestEnt3 implements Serializable {
+  
+  private static final long serialVersionUID = -662154305170322611L;
   
   private int key;
   private long weight;

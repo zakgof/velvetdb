@@ -1,9 +1,13 @@
 package com.zakgof.db.velvet.test;
 
+import java.io.Serializable;
+
 import com.zakgof.db.velvet.annotation.Key;
 
-public class TestEnt {
+public class TestEnt implements Serializable {
 
+  private static final long serialVersionUID = -624857516746316365L;
+  
   private float val;
   private String key;
 
