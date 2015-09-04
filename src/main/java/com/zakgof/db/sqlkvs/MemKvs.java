@@ -8,13 +8,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.zakgof.db.kvs.ITransactionalKvs;
+import com.zakgof.db.kvs.IKvs;
 import com.zakgof.serialize.ZeSerializer;
 import com.zakgof.tools.Buffer;
 import com.zakgof.tools.io.SimpleInputStream;
 import com.zakgof.tools.io.SimpleOutputStream;
 
-public class MemKvs implements ITransactionalKvs {
+public class MemKvs implements IKvs {
   
   private final Map<Buffer, Buffer> values = new HashMap<>();
   
@@ -53,20 +53,6 @@ public class MemKvs implements ITransactionalKvs {
     values.remove(keyBuffer);
     writes++;
     writeBytes += keyBuffer.size();
-  }
-  
-  @Override
-  public void begin() {
-  }
-
-  @Override
-  public void rollback() {
-    // Not implemented
-  }
-
-  @Override
-  public void commit() {
-    // TODO Auto-generated method stub
   }
 
   public void persist(OutputStream stream) throws IOException {

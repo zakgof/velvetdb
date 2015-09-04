@@ -2,10 +2,10 @@ package com.zakgof.db.sqlkvs;
 
 import java.io.ByteArrayInputStream;
 
-import com.zakgof.db.kvs.ITransactionalKvs;
+import com.zakgof.db.kvs.IKvs;
 import com.zakgof.serialize.ZeSerializer;
 
-public class ByteArrayKvsAdapter implements ITransactionalKvs {
+public class ByteArrayKvsAdapter implements IKvs {
 
   private IByteArrayKvs bakvs;
 
@@ -46,21 +46,6 @@ public class ByteArrayKvsAdapter implements ITransactionalKvs {
     bakvs.delete(keyBytes);
     writes++;
     writeBytes += keyBytes.length;
-  }
-
-  @Override
-  public void begin() {
-    bakvs.begin();
-  }
-
-  @Override
-  public void rollback() {
-    bakvs.rollback();
-  }
-
-  @Override
-  public void commit() {
-    bakvs.commit();
   }
 
   private long reads = 0;

@@ -2,7 +2,7 @@ package txn;
 
 public interface ITransactionalEnvironment<H> {
   
-  public void execute(ITransactionCall<H> transaction) throws Throwable;
+  public void execute(ITransactionCall<H> transaction);
   
   @SuppressWarnings("unchecked")
   public default <R> R calculate(ITransactionCalc<H, R> transaction) {

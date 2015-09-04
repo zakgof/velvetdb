@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
 import com.zakgof.db.velvet.api.entity.impl.Entities;
 import com.zakgof.db.velvet.api.link.IMultiLinkDef;
@@ -17,8 +16,9 @@ import com.zakgof.db.velvet.api.link.Links;
 
 public class ConcurrentWriteTest extends AVelvetTest {
 
-  private static final int CHUNK_SIZE = 100;
-  private static final int THREADS = 5;
+  private static final int CHUNK_SIZE = 10000;
+  private static final int THREADS = 50;
+  private static final int TXN_PER_THREAD = 10;
   
   private IEntityDef<String, TestEnt> ENTITY = Entities.anno(TestEnt.class);
   private IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.anno(TestEnt2.class);
@@ -33,30 +33,54 @@ public class ConcurrentWriteTest extends AVelvetTest {
     for (int t=0; t<THREADS; t++) {
       final int t1 = t;
       executor.execute(() -> {
-        IVelvet v = VelvetTestSuite.velvetTxnProvider.get();
-        for (int i=0; i<CHUNK_SIZE; i++) {
-          System.err.println("write : " + (t1 * 1000000 + i));
-          ENTITY2.put(v, new TestEnt2(t1 * 1000000 + i,  "" + t1 + "." + i));
-        }
-        v.commit();
+        env.execute(velvet ->  {
+          for (int i=0; i<CHUNK_SIZE; i++) {
+            ENTITY2.put(velvet, new TestEnt2(t1 * 1000000 + i,  "" + t1 + "." + i));
+          }
+        });        
       });
     }
     
     executor.shutdown();
     executor.awaitTermination(1, TimeUnit.DAYS);
    
-    IVelvet v = VelvetTestSuite.velvetTxnProvider.get();
+    checkValues();
+  }
+  
+  @Test
+  public void testMultipleTransactionMassiveEntityPut() throws InterruptedException {
+    
+    ExecutorService executor = Executors.newFixedThreadPool(THREADS);
+    for (int t=0; t<THREADS; t++) {
+      final int t1 = t;
+      executor.execute(() -> {
+        for (int x=0; x<TXN_PER_THREAD; x++ ) {
+          final int x1 = x;
+          env.execute(velvet ->  {
+            for (int i=0; i<CHUNK_SIZE / TXN_PER_THREAD; i++) {
+              int index =  x1 * CHUNK_SIZE / TXN_PER_THREAD + i;
+              ENTITY2.put(velvet, new TestEnt2(t1 * 1000000 + index,  "" + t1 + "." + index));
+            }
+          });    
+        }
+      });
+    }
+    
+    executor.shutdown();
+    executor.awaitTermination(1, TimeUnit.DAYS);
+   
+    checkValues();
+  }
+
+  private void checkValues() {
+    env.execute(velvet ->  {
     for (int t=0; t<THREADS; t++) 
       for (int i=0; i<CHUNK_SIZE; i++) {
-        System.err.println("read : " + (t * 1000000 + i));
-        TestEnt2 val = ENTITY2.get(v, t * 1000000 + i);
+        TestEnt2 val = ENTITY2.get(velvet, t * 1000000 + i);
         Assert.assertNotNull("Can't get val " + t + "." + i, val);
         Assert.assertEquals("" + t + "." + i, val.getVal());
       }
-    v.commit();
-    
-    velvet.commit();
-    
+    });
   }
  
 }

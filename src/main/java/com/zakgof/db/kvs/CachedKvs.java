@@ -3,12 +3,12 @@ package com.zakgof.db.kvs;
 import com.zakgof.db.ICache;
 import com.zakgof.tools.Buffer;
 
-public class CachedKvs implements ITransactionalKvs {
+public class CachedKvs implements IKvs {
 
-  private final ITransactionalKvs kvs;
+  private final IKvs kvs;
   private final ICache cache;
 
-  public CachedKvs(ITransactionalKvs kvs, ICache cache) {
+  public CachedKvs(IKvs kvs, ICache cache) {
     this.kvs = kvs;
     this.cache = cache;
   }
@@ -42,21 +42,6 @@ public class CachedKvs implements ITransactionalKvs {
   public void delete(Object key) {    
     kvs.delete(key);
     cache.remove(convert(key));
-  }
-  
-  @Override
-  public void begin() {
-    kvs.begin();
-  }
-
-  @Override
-  public void rollback() {
-    kvs.rollback();
-  }
-
-  @Override
-  public void commit() {
-    kvs.commit();
   }
 
 }

@@ -15,7 +15,7 @@ import com.zakgof.db.velvet.api.link.IMultiLinkDef;
 import com.zakgof.db.velvet.api.link.ISingleLinkDef;
 import com.zakgof.db.velvet.api.link.Links;
 
-public class SimpleLinkTest extends AVelvetTest  {
+public class SimpleLinkTest extends AVelvetTxnTest  {
 
   private static final int COUNT = 1000;
 

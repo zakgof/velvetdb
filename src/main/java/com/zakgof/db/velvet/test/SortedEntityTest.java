@@ -11,7 +11,7 @@ import com.zakgof.db.velvet.api.link.PriIndexMultiLinkDef;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 import com.zakgof.db.velvet.api.query.IndexQueryFactory;
 
-public class SortedEntityTest extends AVelvetTest {
+public class SortedEntityTest extends AVelvetTxnTest {
   
   private IEntityDef<String, TestEnt> ENTITY = Entities.anno(TestEnt.class);
   private IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.anno(TestEnt2.class);

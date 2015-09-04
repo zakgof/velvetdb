@@ -2,9 +2,11 @@ package com.zakgof.db.velvet.kvs;
 
 import org.junit.BeforeClass;
 
-import com.zakgof.db.sqlkvs.MemKvs;
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.IVelvetEnvironment;
 import com.zakgof.db.velvet.test.VelvetTestSuite;
+
+import txn.ITransactionCall;
 
 public class MemKvsVelvetSuite extends VelvetTestSuite {
 
@@ -13,9 +15,18 @@ public class MemKvsVelvetSuite extends VelvetTestSuite {
     velvetProvider = () -> createVelvet();  
   }
 
-  private static IVelvet createVelvet() {
-    MemKvs kvs = new MemKvs();
-    return new GenericKvsVelvet3(kvs);
+  private static IVelvetEnvironment createVelvet() {
+    return new IVelvetEnvironment() {
+      
+      @Override
+      public void execute(ITransactionCall<IVelvet> transaction) {
+        // transaction.execute(new GenericKvsVelvet(new MemKvs()));
+      }
+      
+      @Override
+      public void close() {
+      }
+    };
   }
 
 }

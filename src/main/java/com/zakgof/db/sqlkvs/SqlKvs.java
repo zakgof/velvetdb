@@ -12,12 +12,12 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import com.zakgof.db.ILockable;
-import com.zakgof.db.kvs.ITransactionalKvs;
+import com.zakgof.db.kvs.IKvs;
 import com.zakgof.serialize.ISerializer;
 import com.zakgof.serialize.ZeSerializer;
 import com.zakgof.tools.Buffer;
 
-public class SqlKvs implements ITransactionalKvs, ILockable {
+public class SqlKvs implements IKvs, ILockable {
 
   private final Connection connection;
   private final ISerializer serializer;
@@ -161,8 +161,6 @@ public class SqlKvs implements ITransactionalKvs, ILockable {
     }
   }
 
-
-
   @Override
   public void lock(String lockName, long timeout) {
     try (PreparedStatement statement = connection.prepareStatement("SELECT GET_LOCK(?, ?)")) {
@@ -179,28 +177,6 @@ public class SqlKvs implements ITransactionalKvs, ILockable {
     try (PreparedStatement statement = connection.prepareStatement("SELECT RELEASE_LOCK(?)")) {
       statement.setString(1, lockName);
       statement.execute();
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-  }
-  
-  @Override
-  public void begin() {
-  }
-
-  @Override
-  public void rollback() {
-    try {
-      connection.rollback();
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  @Override
-  public void commit() {
-    try {
-      connection.commit();
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }

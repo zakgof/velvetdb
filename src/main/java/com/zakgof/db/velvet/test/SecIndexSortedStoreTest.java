@@ -14,7 +14,7 @@ import com.zakgof.db.velvet.api.entity.impl.Entities;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 import com.zakgof.db.velvet.api.query.IndexQueryFactory;
 
-public class SecIndexSortedStoreTest extends AVelvetTest {
+public class SecIndexSortedStoreTest extends AVelvetTxnTest {
 
   private ISortableEntityDef<Integer, TestEnt2> ENTITY2 = Entities.sortedAnno(TestEnt2.class);
 
