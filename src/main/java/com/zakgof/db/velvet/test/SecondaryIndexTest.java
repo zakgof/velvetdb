@@ -17,7 +17,7 @@ import com.zakgof.db.velvet.api.link.SecIndexMultiLinkDef;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 import com.zakgof.db.velvet.api.query.IndexQueryFactory;
 
-public class SecondaryIndexTest extends AVelvetTest {
+public class SecondaryIndexTest extends AVelvetTxnTest {
   
   private IEntityDef<String, TestEnt> ENTITY = Entities.anno(TestEnt.class);
   private IEntityDef<Integer, TestEnt3> ENTITY3 = Entities.create(Integer.class, TestEnt3.class, "realpojo", TestEnt3::getKey);

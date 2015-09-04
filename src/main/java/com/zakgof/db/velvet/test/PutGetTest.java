@@ -8,7 +8,7 @@ import org.junit.Test;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
 import com.zakgof.db.velvet.api.entity.impl.Entities;
 
-public class PutGetTest extends AVelvetTest {
+public class PutGetTest extends AVelvetTxnTest {
 
   private static final int COUNT = 1000;
   private static final int HALFCOUNT = COUNT / 2;
