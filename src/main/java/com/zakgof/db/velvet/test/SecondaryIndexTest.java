@@ -10,8 +10,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.zakgof.db.velvet.api.entity.Entities;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
-import com.zakgof.db.velvet.api.entity.impl.Entities;
 import com.zakgof.db.velvet.api.link.Links;
 import com.zakgof.db.velvet.api.link.SecIndexMultiLinkDef;
 import com.zakgof.db.velvet.api.query.IIndexQuery;

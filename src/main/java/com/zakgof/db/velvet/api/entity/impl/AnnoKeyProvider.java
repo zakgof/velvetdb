@@ -11,13 +11,13 @@ import java.util.function.Function;
 import com.zakgof.db.velvet.annotation.AutoKey;
 import com.zakgof.db.velvet.annotation.Key;
 
-class AnnoKeyProvider<K, V> implements Function<V, K> {
+public class AnnoKeyProvider<K, V> implements Function<V, K> {
   
   private Function<V, K> provider = null;
   private Class<K> keyClass;
   
   @SuppressWarnings("unchecked")
-  AnnoKeyProvider(Class<V> valueClass) {     
+  public AnnoKeyProvider(Class<V> valueClass) {     
     try {
       for (Field field : getAllFields(valueClass)) {
         field.setAccessible(true);

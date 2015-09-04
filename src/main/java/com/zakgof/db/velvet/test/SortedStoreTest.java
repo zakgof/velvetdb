@@ -9,8 +9,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.zakgof.db.velvet.api.entity.Entities;
 import com.zakgof.db.velvet.api.entity.ISortableEntityDef;
-import com.zakgof.db.velvet.api.entity.impl.Entities;
 import com.zakgof.db.velvet.api.query.IIndexQuery;
 import com.zakgof.db.velvet.api.query.IndexQueryFactory;
 

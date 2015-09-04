@@ -6,8 +6,8 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.zakgof.db.velvet.api.entity.Entities;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
-import com.zakgof.db.velvet.api.entity.impl.Entities;
 import com.zakgof.db.velvet.api.link.IBiManyToManyLinkDef;
 import com.zakgof.db.velvet.api.link.IBiMultiLinkDef;
 import com.zakgof.db.velvet.api.link.IBiSingleLinkDef;

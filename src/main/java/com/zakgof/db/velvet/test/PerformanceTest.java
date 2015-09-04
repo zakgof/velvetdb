@@ -4,8 +4,8 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import com.zakgof.db.velvet.api.entity.Entities;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
-import com.zakgof.db.velvet.api.entity.impl.Entities;
 
 public class PerformanceTest extends AVelvetTest {
 

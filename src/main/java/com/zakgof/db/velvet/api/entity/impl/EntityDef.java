@@ -7,14 +7,14 @@ import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IStore;
 import com.zakgof.db.velvet.api.entity.IEntityDef;
 
-class EntityDef<K, V> implements IEntityDef<K, V> {
+public class EntityDef<K, V> implements IEntityDef<K, V> {
   
   private final Class<V> valueClass;
   private final Class<K> keyClass;
   private final String kind;
   private final Function<V, K> keyProvider;
 
-  EntityDef(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider) {
+  public EntityDef(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider) {
     this.valueClass = valueClass;
     this.keyClass = keyClass;
     this.kind = kind;
