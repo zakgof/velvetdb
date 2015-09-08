@@ -1,25 +1,5 @@
 package com.zakgof.db.velvet.kvs;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.function.Function;
-
-import com.zakgof.db.kvs.IKvs;
-import com.zakgof.db.kvs.ITransactionalKvs;
-import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.api.query.IIndexQuery;
-import com.zakgof.db.velvet.api.query.IQueryAnchor;
-import com.zakgof.tools.ArrayUtil;
-import com.zakgof.tools.KeyGen;
-import com.zakgof.tools.generic.Functions;
-
 /**
  * Hardcoded keys:
  * 
@@ -31,7 +11,7 @@ import com.zakgof.tools.generic.Functions;
  * 
  * kvs[@/kind1/KEY] -> nodevalue
  * 
- */
+ 
 
 
 public class GenericKvsVelvet3 implements IVelvet {
@@ -46,7 +26,7 @@ public class GenericKvsVelvet3 implements IVelvet {
     List<K> getAll();
   }
 
-  private final ITransactionalKvs kvs;
+  private final IKvs kvs;
 
   private static final String KINDS_KEY = "@k";
   private static final String EDGEKINDS_KEY = "@e";
@@ -303,15 +283,15 @@ public class GenericKvsVelvet3 implements IVelvet {
         if (array[i].equals(value))
           return i;
       return -1;
-      /*
-      M valueMetric = metric.apply(value);
+      
+      -- M valueMetric = metric.apply(value);
       int i = searchForInsert(array, valueMetric, true) - 1;
       for(;;i--) {
         if (i < 0 || valueMetric.compareTo(metric.apply(array[i])) < 0)
           return -1;
         if (array[i].equals(value))
           return i;
-      }*/
+      } --
     }
 
     @Override
@@ -383,7 +363,7 @@ public class GenericKvsVelvet3 implements IVelvet {
       return list;
     }
     
-    /**
+    *
      * key inclusive: left then scan
      * key exclusive: left then scan
      * value inclusive: left
@@ -392,7 +372,7 @@ public class GenericKvsVelvet3 implements IVelvet {
      * @param index
      * @param anchor
      * @return
-     */
+     *
     private int getLeftIndex(K[] index, IQueryAnchor<?> anchor) {
 //      if (anchor == null)
 //        return 0;
@@ -426,7 +406,7 @@ public class GenericKvsVelvet3 implements IVelvet {
       return 0; // TODO
     }
     
-    /**
+     *
      * key inclusive: right then scan
      * key exclusive: right then scan
      * value inclusive: right
@@ -435,7 +415,7 @@ public class GenericKvsVelvet3 implements IVelvet {
      * @param index
      * @param anchor
      * @return
-     */
+     
     private int getRightIndex(K[] index, IQueryAnchor anchor) {
       
       /*
@@ -468,13 +448,13 @@ public class GenericKvsVelvet3 implements IVelvet {
         if (index[i].equals(key))
           return anchor.isIncluding() ? i : i - 1;        
       }
-      */
+      
       return 0; // TODO
     }
 
   }
   
-  /**
+  
    * 
    * Leaf = 
    *  - keyarray
@@ -488,7 +468,7 @@ public class GenericKvsVelvet3 implements IVelvet {
    *    
    * 
    * 
-   */
+   
 //  private class SortedBTreeLink<K, T, M extends Comparable<M>> extends BaseLink implements ISortedIndexLink<K, T, M> {
 
 
@@ -523,26 +503,26 @@ public class GenericKvsVelvet3 implements IVelvet {
     return new MixedIndex<K>(kvs, linkOriginsKey(edgeKind), keyClass).getAll();
   }
 
-  /*
+  
    * Checks:
    * 
    * L0 - all nodes are of correct class
    * 
    * L1 - all nodes are of correct kind - in-key key is same as key key
-   */
+   
 
   public <K> void dumpIndex(Class<K> clazz, Object key) {
     new MixedIndex<K>(kvs, key, clazz).dumpIndex(0);
   }
 
-  /**
+  *
    * Store all links in array
    * pros:
    * - single read/write op
    * cons: 
    * - add/delete - replace the whole array (io too many bytes)
    * - search - read all and linear in-memory seek (memory, performance)
-   */
+   
   static class ArrayIndex<K> implements IIndex<K> {
 
     private final IKvs kvs;
@@ -602,13 +582,13 @@ public class GenericKvsVelvet3 implements IVelvet {
 
   }
 
-  /**
+  *
    * Hash tree implementation
    * kvs["@d/edgekind1/ORIGKEY"] -> MixedInfo
    * @h/bucketpath/ORIGKEY -> array or MixedInfo
    * arrays expands to 8 buckets after size of 64 (never collapses back)
    * 
-   */
+  
   static class MixedIndex<K> implements IIndex<K> {
 
     private static class MixedInfo {
@@ -864,3 +844,4 @@ public class GenericKvsVelvet3 implements IVelvet {
   }
 
 }
+*/
