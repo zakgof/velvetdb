@@ -4,7 +4,7 @@ import java.util.WeakHashMap;
 
 import com.zakgof.db.velvet.IVelvet;
 
-public class KeylessEntityDef<V> extends EntityDef<Long, V> {
+public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> {
   
   private final WeakHashMap<V, Long> keys = new WeakHashMap<>();
   
