@@ -5,8 +5,7 @@ import org.junit.BeforeClass;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvetEnvironment;
 import com.zakgof.db.velvet.test.VelvetTestSuite;
-
-import txn.ITransactionCall;
+import com.zakgof.db.velvet.txn.ITransactionCall;
 
 public class MemKvsVelvetSuite extends VelvetTestSuite {
 

@@ -10,7 +10,6 @@ public interface IVelvet {
   public <K, V> IStore<K, V> store(String kind, Class<K> keyClass, Class<V> valueClass);
   
   public <K extends Comparable<K>, V> ISortedStore<K, V> sortedStore(String kind, Class<K> keyClass, Class<V> valueClass);
-
   
   public <K> ILink<K> simpleIndex(Object key1, String edgekind, LinkType type);
 
@@ -20,7 +19,8 @@ public interface IVelvet {
   
   public interface IStore<K, V> {
     V get(K key);
-    void put(K key, V value);
+    void put(K key, V value);    
+    K put(V value);    
     void delete(K key);
     List<K> keys();
     boolean contains(K key);

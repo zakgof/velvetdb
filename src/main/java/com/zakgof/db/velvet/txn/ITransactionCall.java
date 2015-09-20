@@ -1,4 +1,4 @@
-package txn;
+package com.zakgof.db.velvet.txn;
 
 @FunctionalInterface
 public interface ITransactionCall<H> {

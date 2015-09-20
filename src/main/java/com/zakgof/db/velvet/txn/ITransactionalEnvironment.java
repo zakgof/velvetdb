@@ -1,4 +1,4 @@
-package txn;
+package com.zakgof.db.velvet.txn;
 
 public interface ITransactionalEnvironment<H> {
   
