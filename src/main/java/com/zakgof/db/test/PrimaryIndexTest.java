@@ -13,9 +13,9 @@ import com.zakgof.db.velvet.query.IndexQueryFactory;
 
 public class PrimaryIndexTest extends AVelvetTxnTest {
   
-  private IEntityDef<String, TestEnt> ENTITY = Entities.anno(TestEnt.class);
-  private IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.anno(TestEnt2.class);
-  private PriIndexMultiLinkDef<String, TestEnt, Integer, TestEnt2> MULTI = Links.pri(ENTITY, ENTITY2);
+  protected IEntityDef<String, TestEnt> ENTITY = Entities.anno(TestEnt.class);
+  protected IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.anno(TestEnt2.class);
+  protected PriIndexMultiLinkDef<String, TestEnt, Integer, TestEnt2> MULTI = Links.pri(ENTITY, ENTITY2);
 
   private TestEnt root;
 

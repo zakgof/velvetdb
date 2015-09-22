@@ -14,13 +14,14 @@ import com.zakgof.db.velvet.IVelvetEnvironment;
    PutGetTest.class,
    SimpleLinkTest.class,
    PrimaryIndexTest.class,
+   PrimaryIndexTest2.class,
    SecondaryIndexTest.class,
    SortedStoreTest.class,
    PerformanceTest.class,
    ConcurrentWriteTest.class
 })
 
-// @SuiteClasses({ConcurrentWriteTest.class})
+// @SuiteClasses({SortedStoreTest.class})
 
 public abstract class VelvetTestSuite {
   
