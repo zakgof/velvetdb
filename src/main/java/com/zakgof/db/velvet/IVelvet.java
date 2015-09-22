@@ -3,7 +3,7 @@ package com.zakgof.db.velvet;
 import java.util.List;
 import java.util.function.Function;
 
-import com.zakgof.db.velvet.api.query.IIndexQuery;
+import com.zakgof.db.velvet.query.IIndexQuery;
 
 public interface IVelvet {
 
