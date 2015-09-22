@@ -1,6 +1,6 @@
 package com.zakgof.db.kvs;
 
-import com.zakgof.db.ICache;
+import com.zakgof.db.cache.ICache;
 import com.zakgof.tools.Buffer;
 
 public class CachedKvs implements IKvs {
