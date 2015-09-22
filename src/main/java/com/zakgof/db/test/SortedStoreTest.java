@@ -38,6 +38,23 @@ public class SortedStoreTest extends AVelvetTxnTest {
   }
   
   @Test
+  public void testStringOrder() {
+    final ISortableEntityDef<String, TestEnt> ENTITY = Entities.sortedAnno(TestEnt.class);
+    ENTITY.put(velvet, new TestEnt("Aaa",    7.1f));
+    ENTITY.put(velvet, new TestEnt("ab",     9.1f));    
+    ENTITY.put(velvet, new TestEnt("",       0.1f));
+    ENTITY.put(velvet, new TestEnt("Az",     6.1f));     
+    ENTITY.put(velvet, new TestEnt("b",      1.1f));    
+    ENTITY.put(velvet, new TestEnt("Aa",     5.1f));
+    ENTITY.put(velvet, new TestEnt("a",      0.1f));
+    ENTITY.put(velvet, new TestEnt("aaaa",   8.1f));
+    ENTITY.put(velvet, new TestEnt("Aaa",    7.1f));
+    ENTITY.put(velvet, new TestEnt("ab",     9.1f));    
+    List<String> list = ENTITY.get(velvet).stream().map(TestEnt::getKey).collect(Collectors.toList());
+    Assert.assertEquals(Arrays.asList("", "Aa", "Aaa", "Az", "a", "aaaa", "ab", "b"), list);
+  }
+  
+  @Test
   public void testGreater() {
     check(IndexQueryFactory.greater(0),                                1, 2, 3, 5, 7);
     check(IndexQueryFactory.greater(1),                                2, 3, 5, 7);
