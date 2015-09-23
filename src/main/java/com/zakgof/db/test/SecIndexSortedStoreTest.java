@@ -12,7 +12,7 @@ import org.junit.Test;
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.ISortableEntityDef;
 import com.zakgof.db.velvet.query.IIndexQuery;
-import com.zakgof.db.velvet.query.IndexQueryFactory;
+import com.zakgof.db.velvet.query.Queries;
 
 public class SecIndexSortedStoreTest extends AVelvetTxnTest {
 
@@ -37,8 +37,8 @@ public class SecIndexSortedStoreTest extends AVelvetTxnTest {
 
   @Test
   public void testGetAll() {
-    check(IndexQueryFactory.<Integer>builder().build(),  r("v1", "1a", "1b"), "v2", r("v3", "3a"), "v5", r("v7", "7a", "7b"));
-    check(IndexQueryFactory.<Integer>builder().descending().build(), r("v7", "7a", "7b"), "v5",  r("v3", "3a"), "2", r("v1", "1a", "1b"));
+    check(Queries.<Integer>builder().build(),  r("v1", "1a", "1b"), "v2", r("v3", "3a"), "v5", r("v7", "7a", "7b"));
+    check(Queries.<Integer>builder().descending().build(), r("v7", "7a", "7b"), "v5",  r("v3", "3a"), "2", r("v1", "1a", "1b"));
   }
   
   private Object r(String... s) {

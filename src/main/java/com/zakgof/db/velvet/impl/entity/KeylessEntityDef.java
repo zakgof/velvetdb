@@ -3,8 +3,9 @@ package com.zakgof.db.velvet.impl.entity;
 import java.util.WeakHashMap;
 
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.entity.IKeylessEntityDef;
 
-public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> {
+public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKeylessEntityDef<V> {
   
   private final WeakHashMap<V, Long> keys = new WeakHashMap<>();
   
