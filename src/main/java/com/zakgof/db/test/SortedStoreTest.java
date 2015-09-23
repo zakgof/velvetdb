@@ -12,7 +12,7 @@ import org.junit.Test;
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.ISortableEntityDef;
 import com.zakgof.db.velvet.query.IIndexQuery;
-import com.zakgof.db.velvet.query.IndexQueryFactory;
+import com.zakgof.db.velvet.query.Queries;
 
 public class SortedStoreTest extends AVelvetTxnTest {
 
@@ -33,8 +33,8 @@ public class SortedStoreTest extends AVelvetTxnTest {
 
   @Test
   public void testGetAll() {
-    check(IndexQueryFactory.<Integer>builder().build(),  1, 2, 3, 5, 7);
-    check(IndexQueryFactory.<Integer>builder().descending().build(), 7, 5, 3, 2, 1);
+    check(Queries.<Integer>builder().build(),  1, 2, 3, 5, 7);
+    check(Queries.<Integer>builder().descending().build(), 7, 5, 3, 2, 1);
   }
   
   @Test
@@ -56,78 +56,78 @@ public class SortedStoreTest extends AVelvetTxnTest {
   
   @Test
   public void testGreater() {
-    check(IndexQueryFactory.greater(0),                                1, 2, 3, 5, 7);
-    check(IndexQueryFactory.greater(1),                                2, 3, 5, 7);
-    check(IndexQueryFactory.greater(4),                                5, 7);
-    check(IndexQueryFactory.greater(5),                                7);
-    check(IndexQueryFactory.greater(7)                                 );
-    check(IndexQueryFactory.greater(8)                                 );    
+    check(Queries.greater(0),                                1, 2, 3, 5, 7);
+    check(Queries.greater(1),                                2, 3, 5, 7);
+    check(Queries.greater(4),                                5, 7);
+    check(Queries.greater(5),                                7);
+    check(Queries.greater(7)                                 );
+    check(Queries.greater(8)                                 );    
   }
   
   @Test
   public void testGreaterOrEquals() {
-    check(IndexQueryFactory.greaterOrEq(0),                            1, 2, 3, 5, 7);
-    check(IndexQueryFactory.greaterOrEq(1),                            1, 2, 3, 5, 7);
-    check(IndexQueryFactory.greaterOrEq(4),                            5, 7);
-    check(IndexQueryFactory.greaterOrEq(5),                            5, 7);
-    check(IndexQueryFactory.greaterOrEq(7),                            7);
-    check(IndexQueryFactory.greaterOrEq(8)                             );
+    check(Queries.greaterOrEq(0),                            1, 2, 3, 5, 7);
+    check(Queries.greaterOrEq(1),                            1, 2, 3, 5, 7);
+    check(Queries.greaterOrEq(4),                            5, 7);
+    check(Queries.greaterOrEq(5),                            5, 7);
+    check(Queries.greaterOrEq(7),                            7);
+    check(Queries.greaterOrEq(8)                             );
   }
   
   @Test
   public void testLess() {
-    check(IndexQueryFactory.less(0)                                    );
-    check(IndexQueryFactory.less(1)                                    );
-    check(IndexQueryFactory.less(4),                                   1, 2, 3);
-    check(IndexQueryFactory.less(5),                                   1, 2, 3);
-    check(IndexQueryFactory.less(7),                                   1, 2, 3, 5);
-    check(IndexQueryFactory.less(8),                                   1, 2, 3, 5, 7);
+    check(Queries.less(0)                                    );
+    check(Queries.less(1)                                    );
+    check(Queries.less(4),                                   1, 2, 3);
+    check(Queries.less(5),                                   1, 2, 3);
+    check(Queries.less(7),                                   1, 2, 3, 5);
+    check(Queries.less(8),                                   1, 2, 3, 5, 7);
   }
   
   @Test
   public void testLessOrEquals() {
-    check(IndexQueryFactory.lessOrEq(0)                                );
-    check(IndexQueryFactory.lessOrEq(1),                               1);
-    check(IndexQueryFactory.lessOrEq(4),                               1, 2, 3);
-    check(IndexQueryFactory.lessOrEq(5),                               1, 2, 3, 5);
-    check(IndexQueryFactory.lessOrEq(7),                               1, 2, 3, 5, 7);
-    check(IndexQueryFactory.lessOrEq(8),                               1, 2, 3, 5, 7);
+    check(Queries.lessOrEq(0)                                );
+    check(Queries.lessOrEq(1),                               1);
+    check(Queries.lessOrEq(4),                               1, 2, 3);
+    check(Queries.lessOrEq(5),                               1, 2, 3, 5);
+    check(Queries.lessOrEq(7),                               1, 2, 3, 5, 7);
+    check(Queries.lessOrEq(8),                               1, 2, 3, 5, 7);
   }
   
   @Test
   public void testFirstLast() {
-    check(IndexQueryFactory.first(),                                   1);
-    check(IndexQueryFactory.last(),                                    7);    
+    check(Queries.first(),                                   1);
+    check(Queries.last(),                                    7);    
   }
   
   @Test
   public void testNext() {
-    check(IndexQueryFactory.next(0),                                   1);
-    check(IndexQueryFactory.next(1),                                   2);
-    check(IndexQueryFactory.next(4),                                   5);
-    check(IndexQueryFactory.next(5),                                   7);
-    check(IndexQueryFactory.next(7)                                     );
-    check(IndexQueryFactory.next(8)                                     );    
+    check(Queries.next(0),                                   1);
+    check(Queries.next(1),                                   2);
+    check(Queries.next(4),                                   5);
+    check(Queries.next(5),                                   7);
+    check(Queries.next(7)                                     );
+    check(Queries.next(8)                                     );    
   }
   
   @Test
   public void testPrev() {
-    check(IndexQueryFactory.prev(0)                                     );
-    check(IndexQueryFactory.prev(1)                                     );
-    check(IndexQueryFactory.prev(4),                                   3);
-    check(IndexQueryFactory.prev(5),                                   3);
-    check(IndexQueryFactory.prev(7),                                   5);
-    check(IndexQueryFactory.prev(8),                                   7);    
+    check(Queries.prev(0)                                     );
+    check(Queries.prev(1)                                     );
+    check(Queries.prev(4),                                   3);
+    check(Queries.prev(5),                                   3);
+    check(Queries.prev(7),                                   5);
+    check(Queries.prev(8),                                   7);    
   }
   
   @Test
   public void testRange() {
-    check(IndexQueryFactory.range(0, true,  8, true),                   1, 2, 3, 5, 7);
-    check(IndexQueryFactory.range(0, false, 8, false),                  1, 2, 3, 5, 7);
-    check(IndexQueryFactory.range(0, true,  8, true),                   1, 2, 3, 5, 7);
-    check(IndexQueryFactory.range(0, true,  8, true),                   1, 2, 3, 5, 7);
-    check(IndexQueryFactory.range(0, true,  8, true),                   1, 2, 3, 5, 7);
-    check(IndexQueryFactory.range(0, true,  8, true),                   1, 2, 3, 5, 7);
+    check(Queries.range(0, true,  8, true),                   1, 2, 3, 5, 7);
+    check(Queries.range(0, false, 8, false),                  1, 2, 3, 5, 7);
+    check(Queries.range(0, true,  8, true),                   1, 2, 3, 5, 7);
+    check(Queries.range(0, true,  8, true),                   1, 2, 3, 5, 7);
+    check(Queries.range(0, true,  8, true),                   1, 2, 3, 5, 7);
+    check(Queries.range(0, true,  8, true),                   1, 2, 3, 5, 7);
         
   }
   

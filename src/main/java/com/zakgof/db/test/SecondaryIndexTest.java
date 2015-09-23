@@ -15,7 +15,7 @@ import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.impl.link.SecIndexMultiLinkDef;
 import com.zakgof.db.velvet.link.Links;
 import com.zakgof.db.velvet.query.IIndexQuery;
-import com.zakgof.db.velvet.query.IndexQueryFactory;
+import com.zakgof.db.velvet.query.Queries;
 
 public class SecondaryIndexTest extends AVelvetTxnTest {
   
@@ -54,68 +54,68 @@ public class SecondaryIndexTest extends AVelvetTxnTest {
 
   @Test
   public void testGreaterOrEq() {
-    check(IndexQueryFactory.greaterOrEq(-1L),     rOne, "two", "three", rFour, rSix);
-    check(IndexQueryFactory.greaterOrEq(1L),      rOne, "two", "three", rFour, rSix);
-    check(IndexQueryFactory.greaterOrEq(3L),      "three", rFour, rSix);
-    check(IndexQueryFactory.greaterOrEq(4L),      rFour, rSix);
-    check(IndexQueryFactory.greaterOrEq(5L),      rSix);
-    check(IndexQueryFactory.greaterOrEq(6L),      rSix);
-    check(IndexQueryFactory.greaterOrEq(7L)        );
+    check(Queries.greaterOrEq(-1L),     rOne, "two", "three", rFour, rSix);
+    check(Queries.greaterOrEq(1L),      rOne, "two", "three", rFour, rSix);
+    check(Queries.greaterOrEq(3L),      "three", rFour, rSix);
+    check(Queries.greaterOrEq(4L),      rFour, rSix);
+    check(Queries.greaterOrEq(5L),      rSix);
+    check(Queries.greaterOrEq(6L),      rSix);
+    check(Queries.greaterOrEq(7L)        );
   }
   
   @Test
   public void testGreaterOrEqDesc() {
-    check(IndexQueryFactory.<Long>builder().descending().greaterOrEq(-1L).build(),     rSix, rFour, "three", "two", rOne);  
-    check(IndexQueryFactory.<Long>builder().descending().greaterOrEq(1L).build(),      rSix, rFour, "three", "two", rOne);
-    check(IndexQueryFactory.<Long>builder().descending().greaterOrEq(3L).build(),      rSix, rFour, "three");
-    check(IndexQueryFactory.<Long>builder().descending().greaterOrEq(4L).build(),      rSix, rFour);
-    check(IndexQueryFactory.<Long>builder().descending().greaterOrEq(5L).build(),      rSix);
-    check(IndexQueryFactory.<Long>builder().descending().greaterOrEq(6L).build(),      rSix);
-    check(IndexQueryFactory.<Long>builder().descending().greaterOrEq(7L).build()      );
+    check(Queries.<Long>builder().descending().greaterOrEq(-1L).build(),     rSix, rFour, "three", "two", rOne);  
+    check(Queries.<Long>builder().descending().greaterOrEq(1L).build(),      rSix, rFour, "three", "two", rOne);
+    check(Queries.<Long>builder().descending().greaterOrEq(3L).build(),      rSix, rFour, "three");
+    check(Queries.<Long>builder().descending().greaterOrEq(4L).build(),      rSix, rFour);
+    check(Queries.<Long>builder().descending().greaterOrEq(5L).build(),      rSix);
+    check(Queries.<Long>builder().descending().greaterOrEq(6L).build(),      rSix);
+    check(Queries.<Long>builder().descending().greaterOrEq(7L).build()      );
   }
   
   @Test
   public void testEqualsTo() {
-    check(IndexQueryFactory.equalsTo(-1L)      );
-    check(IndexQueryFactory.equalsTo(1L),      rOne);
-    check(IndexQueryFactory.equalsTo(3L),      "three");
-    check(IndexQueryFactory.equalsTo(4L),      rFour);
-    check(IndexQueryFactory.equalsTo(5L)       );
-    check(IndexQueryFactory.equalsTo(6L),      rSix);
-    check(IndexQueryFactory.equalsTo(7L)       );
+    check(Queries.equalsTo(-1L)      );
+    check(Queries.equalsTo(1L),      rOne);
+    check(Queries.equalsTo(3L),      "three");
+    check(Queries.equalsTo(4L),      rFour);
+    check(Queries.equalsTo(5L)       );
+    check(Queries.equalsTo(6L),      rSix);
+    check(Queries.equalsTo(7L)       );
   }
  
   @Test
   public void testGreater() {
-    check(IndexQueryFactory.greater(-1L),     rOne, "two", "three", rFour, rSix);
-    check(IndexQueryFactory.greater(1L),      "two", "three", rFour, rSix);
-    check(IndexQueryFactory.greater(3L),      rFour, rSix);
-    check(IndexQueryFactory.greater(4L),      rSix);
-    check(IndexQueryFactory.greater(5L),      rSix);
-    check(IndexQueryFactory.greater(6L)        );
-    check(IndexQueryFactory.greater(7L)        );
+    check(Queries.greater(-1L),     rOne, "two", "three", rFour, rSix);
+    check(Queries.greater(1L),      "two", "three", rFour, rSix);
+    check(Queries.greater(3L),      rFour, rSix);
+    check(Queries.greater(4L),      rSix);
+    check(Queries.greater(5L),      rSix);
+    check(Queries.greater(6L)        );
+    check(Queries.greater(7L)        );
   }
   
   @Test
   public void testLess() {
-    check(IndexQueryFactory.less(-1L)     );
-    check(IndexQueryFactory.less(1L)      );
-    check(IndexQueryFactory.less(3L),      rOne, "two");
-    check(IndexQueryFactory.less(4L),      rOne, "two", "three");
-    check(IndexQueryFactory.less(5L),      rOne, "two", "three", rFour);
-    check(IndexQueryFactory.less(6L),      rOne, "two", "three", rFour);
-    check(IndexQueryFactory.less(7L),      rOne, "two", "three", rFour, rSix );
+    check(Queries.less(-1L)     );
+    check(Queries.less(1L)      );
+    check(Queries.less(3L),      rOne, "two");
+    check(Queries.less(4L),      rOne, "two", "three");
+    check(Queries.less(5L),      rOne, "two", "three", rFour);
+    check(Queries.less(6L),      rOne, "two", "three", rFour);
+    check(Queries.less(7L),      rOne, "two", "three", rFour, rSix );
   }
   
   @Test
   public void testLessOrEq() {
-    check(IndexQueryFactory.lessOrEq(-1L)     );
-    check(IndexQueryFactory.lessOrEq(1L),      rOne);
-    check(IndexQueryFactory.lessOrEq(3L),      rOne, "two", "three");
-    check(IndexQueryFactory.lessOrEq(4L),      rOne, "two", "three", rFour);
-    check(IndexQueryFactory.lessOrEq(5L),      rOne, "two", "three", rFour);
-    check(IndexQueryFactory.lessOrEq(6L),      rOne, "two", "three", rFour, rSix);
-    check(IndexQueryFactory.lessOrEq(7L),      rOne, "two", "three", rFour, rSix );
+    check(Queries.lessOrEq(-1L)     );
+    check(Queries.lessOrEq(1L),      rOne);
+    check(Queries.lessOrEq(3L),      rOne, "two", "three");
+    check(Queries.lessOrEq(4L),      rOne, "two", "three", rFour);
+    check(Queries.lessOrEq(5L),      rOne, "two", "three", rFour);
+    check(Queries.lessOrEq(6L),      rOne, "two", "three", rFour, rSix);
+    check(Queries.lessOrEq(7L),      rOne, "two", "three", rFour, rSix );
   }
   
 
