@@ -1,7 +1,6 @@
 package com.zakgof.db.velvet.island;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +9,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.link.IBiLinkDef;
 import com.zakgof.db.velvet.link.IMultiLinkDef;
@@ -23,7 +21,7 @@ public class IslandModel {
 
   private final Map<String, FetcherEntity<?, ?>> entities;
 
-  public IslandModel(Map<String, FetcherEntity<?, ?>> entities) {
+  private IslandModel(Map<String, FetcherEntity<?, ?>> entities) {
     this.entities = entities;
   }
 
@@ -125,57 +123,68 @@ public class IslandModel {
   }
 
   public <T> List<DataWrap<T>> fetchAll(IVelvet velvet, IEntityDef<?, T> entityDef) {
-    List<DataWrap<T>> wrap = entityDef.get(velvet).stream().map(node -> this.<T> createWrap(velvet, this.entityOf(node), node, new Context())).collect(Collectors.toList());
+    List<DataWrap<T>> wrap = entityDef.get(velvet).stream().map(node -> this.<T> createWrap(velvet, entityDef, node, new Context())).collect(Collectors.toList());
     return wrap;
   }
 
-  public <T> DataWrap<T> createWrap(IVelvet velvet, T node) {
-    return createWrap(velvet, entityOf(node), node, new Context());
-  }
+//  public <T> DataWrap<T> createWrap(IVelvet velvet, T node) {
+//    return createWrap(velvet, entityOf(node), node, new Context());
+//  }
 
-  @SuppressWarnings("unchecked")
-  private <T> IEntityDef<?, T> entityOf(T node) {
-    return Entities.anno((Class<T>) node.getClass());
-  }
+//  @SuppressWarnings("unchecked")
+//  private <T> IEntityDef<?, T> entityOf(T node) {
+//    return Entities.anno((Class<T>) node.getClass()); // TODO sorted annos !
+//  }
 
   private <T> DataWrap<T> createWrap(IVelvet velvet, IEntityDef<?, T> entityDef, T node, Context context) {
     context.add(node);
     DataWrap.Builder<T> wrapBuilder = new DataWrap.Builder<T>(node);
     @SuppressWarnings("unchecked")
-    FetcherEntity<?, T> entity = (FetcherEntity<?, T>) entities.get(entityOf(node).getKind());
+    FetcherEntity<?, T> entity = (FetcherEntity<?, T>) entities.get(entityDef.getKind());
     if (entity != null) {
       for (Entry<String, ? extends IMultiLinkDef<?, T, ?, ?>> entry : entity.multis.entrySet()) {
-        Stream<?> stream = entry.getValue().multi(velvet, node).stream().filter(l -> l != null);// TODO : check for error
-        List<DataWrap<?>> wrappedLinks = decorateBySort(entity, stream, entry.getValue().getChildEntity().getValueClass()).map(o -> createWrap(velvet, entityOf(o), o, context)).collect(Collectors.toList());
+        IMultiLinkDef<?, T, ?, ?> multiLinkDef = entry.getValue();        
+        List<DataWrap<?>> wrappedLinks = wrapChildren(velvet, context, entity, node, multiLinkDef);
         wrapBuilder.addList(entry.getKey(), wrappedLinks);
       }
-      for (Entry<String, IContextMultiGetter<?>> entry : entity.multiContexts.entrySet()) {
-        IContextMultiGetter<?> getter = entry.getValue();
-        Stream<?> stream = getter.multi(velvet, context);
-        List<DataWrap<?>> wrappedLinks = stream.map(o -> createWrap(velvet, entityOf(o), o, context)).collect(Collectors.toList());
-        wrapBuilder.addList(entry.getKey(), wrappedLinks);
-      }
+//      for (Entry<String, IContextMultiGetter<?>> entry : entity.multiContexts.entrySet()) {
+//        IContextMultiGetter<?> getter = entry.getValue();
+//        Stream<?> stream = getter.multi(velvet, context);
+//        List<DataWrap<?>> wrappedLinks = stream.map(o -> createWrap(velvet, entityOf(o), o, context)).collect(Collectors.toList());
+//        wrapBuilder.addList(entry.getKey(), wrappedLinks);
+//      }
       for (Entry<String, ? extends ISingleLinkDef<?, T, ?, ?>> entry : entity.singles.entrySet()) {
-        Object link = entry.getValue().single(velvet, node);
-        if (link != null) {
-          DataWrap<?> childWrap = createWrap(velvet, entityOf(link), link, context);
-          wrapBuilder.add(entry.getKey(), childWrap);
-        }
+        ISingleLinkDef<?, T, ?, ?> singleLinkDef = entry.getValue();
+        DataWrap<?> wrappedLink = wrapChild(velvet, context, node, singleLinkDef);
+        if (wrappedLink != null)
+          wrapBuilder.add(entry.getKey(), wrappedLink);
       }
-      for (Entry<String, IContextSingleGetter<?>> entry : entity.singleContexts.entrySet()) {
-        Object link = entry.getValue().single(velvet, (IIslandContext) context);
-        if (link != null) {
-          DataWrap<?> childWrap = createWrap(velvet, entityOf(link), link, context);
-          wrapBuilder.add(entry.getKey(), childWrap);
-        }
-      }
+//      for (Entry<String, IContextSingleGetter<?>> entry : entity.singleContexts.entrySet()) {
+//        Object link = entry.getValue().single(velvet, (IIslandContext) context);
+//        if (link != null) {
+//          DataWrap<?> childWrap = createWrap(velvet, entityOf(link), link, context);
+//          wrapBuilder.add(entry.getKey(), childWrap);
+//        }
+//      }
     }
     return wrapBuilder.build();
   }
+  
+  private <T, CK, CV> DataWrap<?> wrapChild(IVelvet velvet, Context context, T node, ISingleLinkDef<?, T, CK, CV> singleLinkDef) {
+    CV childValue  = singleLinkDef.single(velvet, node);
+    if (childValue == null)
+      return null;
+    return createWrap(velvet, singleLinkDef.getChildEntity(), childValue, context);
+  }
+
+  private <T, CK, CV> List<DataWrap<?>> wrapChildren(IVelvet velvet, Context context, FetcherEntity<?, T> entity, T node, IMultiLinkDef<?, T, CK, CV> multiLinkDef) {
+    Stream<CV> stream = multiLinkDef.multi(velvet, node).stream().filter(l -> l != null);// TODO : check for error
+    return decorateBySort(entity, stream, multiLinkDef.getChildEntity().getValueClass()).map(o -> createWrap(velvet, multiLinkDef.getChildEntity(), o, context)).collect(Collectors.toList());
+  }
 
   // Natural sorting
-  @SuppressWarnings("unchecked")
-  private <T> Stream<?> decorateBySort(FetcherEntity<?, T> entity, Stream<?> stream, Class<?> childClass) {
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private <T, V> Stream<V> decorateBySort(FetcherEntity<?, T> entity, Stream<V> stream, Class<?> childClass) {
     IFunction<?, ? extends Comparable<?>> sorter = entity.sorts.get(childClass);
     return (sorter != null) ? stream.sorted(Functions.comparator((IFunction) sorter)) : stream;
   }
@@ -235,11 +244,13 @@ public class IslandModel {
     return createWrap(velvet, entityDef, node, new Context());
   }
 
+
+  /*
   public <T> void save(IVelvet velvet, Collection<DataWrap<T>> data) {
     for (DataWrap<T> wrap : data)
       save(velvet, wrap);
   }
-
+  
   public <T> void save(IVelvet velvet, DataWrap<T> data) {
     T node = data.getNode();
     IEntityDef<?, T> entityDef = entityOf(node);
@@ -268,7 +279,8 @@ public class IslandModel {
       save(velvet, childWrap);
     }
   }
-
+  */
+  
   public interface IIslandContext {
     public <T> T get(Class<T> clazz);
   }
