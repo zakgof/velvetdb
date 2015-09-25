@@ -9,7 +9,7 @@ import org.junit.runners.Suite.SuiteClasses;
 import com.zakgof.db.velvet.IVelvetEnvironment;
 
 @RunWith(Suite.class)
-/*
+
  @SuiteClasses({
    PutGetTest.class,
    SimpleLinkTest.class,
@@ -18,11 +18,12 @@ import com.zakgof.db.velvet.IVelvetEnvironment;
    SecondaryIndexTest.class,
    SortedStoreTest.class,
    PerformanceTest.class,
-   ConcurrentWriteTest.class
+   ConcurrentWriteTest.class,
+   KeylessTest.class
 })
-*/
 
-@SuiteClasses({KeylessTest.class})
+
+// @SuiteClasses({KeylessTest.class})
 
 public abstract class VelvetTestSuite {
   

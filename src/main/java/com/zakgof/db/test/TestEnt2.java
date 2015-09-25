@@ -2,7 +2,7 @@ package com.zakgof.db.test;
 
 import java.io.Serializable;
 
-import com.zakgof.db.velvet.annotation.Key;
+import com.zakgof.db.velvet.annotation.SortedKey;
 
 public class TestEnt2 implements Serializable {
   
@@ -55,7 +55,7 @@ public class TestEnt2 implements Serializable {
     return true;
   }
 
-  @Key
+  @SortedKey
   public int getKey() {
     return key;
   }
