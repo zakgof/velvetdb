@@ -5,19 +5,26 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.annotation.Key;
 import com.zakgof.db.velvet.annotation.SortedKey;
+import com.zakgof.db.velvet.properties.IProperty;
+import com.zakgof.db.velvet.properties.IPropertyAccessor;
 import com.zakgof.tools.generic.Functions;
 
-public class AnnoKeyProvider<K, V> implements Function<V, K> {
+public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<K, V> {
 
-  private final Function<V, K> provider;
-  private final Class<K> keyClass;
+  private Function<V, K> provider;
+  private Class<K> keyClass;
   private boolean sorted;
+  private Map<String, IProperty<?, V>> propMap = new LinkedHashMap<>();
+  private IProperty<K, V> keyProp;
 
   @SuppressWarnings("unchecked")
   public AnnoKeyProvider(Class<V> valueClass) {
@@ -33,10 +40,12 @@ public class AnnoKeyProvider<K, V> implements Function<V, K> {
             throw new VelvetException(e);
           }
         };
-        return;
+        keyProp = new FieldProperty<K, V>(field);
+      } else {
+        propMap.put(field.getName(), new FieldProperty<>(field));
       }
     }
-    for (Method method : valueClass.getDeclaredMethods()) { // TODO: include inherited
+    for (Method method : valueClass.getDeclaredMethods()) { // TODO: include inherited!
       method.setAccessible(true);
       if (method.getAnnotation(Key.class) != null || method.getAnnotation(SortedKey.class) != null) {
         keyClass = (Class<K>) method.getReturnType();
@@ -47,13 +56,19 @@ public class AnnoKeyProvider<K, V> implements Function<V, K> {
           } catch (IllegalAccessException | InvocationTargetException e) {
             throw new VelvetException(e);
           }
-        });
-        return;
+        });   
+        keyProp = new MethodProperty<K, V>(method);
       }
+      
+//      else {
+//        if (method.getParameterCount() == 0 && method.getReturnType() != void.class)
+//          propMap.put(method.getName(), new MethodProperty(field));
+//      }
     }
     throw new VelvetException("No annotation for key found in " + valueClass);
   }
 
+  // TODO skip static and transient ?
   static List<Field> getAllFields(Class<?> type) {
     List<Field> fields = new ArrayList<Field>();
     Field[] declaredFields = type.getDeclaredFields();
@@ -78,4 +93,105 @@ public class AnnoKeyProvider<K, V> implements Function<V, K> {
     return sorted;
   }
 
+  @Override
+  public Collection<String> getProperties() {
+    return propMap.keySet();
+  }
+
+  @Override
+  public IProperty<?, V> get(String property) {
+    return propMap.get(property);
+  }
+
+  @Override
+  public IProperty<K, V> getKey() {
+    return keyProp;
+  }
+  
+  private static class FieldProperty<P, V> implements IProperty<P, V> {
+
+    private Field field;
+
+    public FieldProperty(Field field) {
+      this.field = field;
+    }
+
+    @Override
+    public boolean isSettable() {
+      return true;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public P get(V instance) {
+      try {
+        return (P) field.get(instance);
+      } catch (IllegalArgumentException | IllegalAccessException e) {
+        throw new VelvetException(e);
+      }
+    }
+
+    @Override
+    public void put(V instance, P propValue) {
+      try {
+        field.set(instance, propValue);
+      } catch (IllegalArgumentException | IllegalAccessException e) {
+        throw new VelvetException(e);
+      }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Class<P> getType() {
+      return (Class<P>)field.getType();
+    }
+
+    @Override
+    public String getName() {
+      return field.getName();
+    }
+    
+  }
+  
+  private static class MethodProperty<P, V> implements IProperty<P, V> {
+
+    private Method method;
+
+    public MethodProperty(Method method) {
+      this.method = method;
+    }
+
+    @Override
+    public boolean isSettable() {
+      return false;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public P get(V instance) {
+      try {
+        return (P) method.invoke(instance);
+      } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+        throw new VelvetException(e);
+      }
+    }
+
+    @Override
+    public void put(V instance, P propValue) {      
+      throw new UnsupportedOperationException();      
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Class<P> getType() {
+      return (Class<P>)method.getReturnType();
+    }
+
+    @Override
+    public String getName() {
+      return method.getName();
+    }
+    
+  }
+  
 }
