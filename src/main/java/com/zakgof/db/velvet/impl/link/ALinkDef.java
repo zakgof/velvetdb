@@ -22,7 +22,7 @@ abstract class ALinkDef<HK, HV, CK, CV> implements ILinkDef<HK, HV, CK, CV> {
   }
 
   ALinkDef(Class<HV> hostClass, Class<CV> childClass) {
-    this(Entities.anno(hostClass), Entities.anno(childClass));
+    this(Entities.create(hostClass), Entities.create(childClass));
   }
 
   @Override

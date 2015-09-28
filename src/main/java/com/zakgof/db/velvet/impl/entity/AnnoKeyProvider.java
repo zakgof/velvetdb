@@ -56,16 +56,16 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
           } catch (IllegalAccessException | InvocationTargetException e) {
             throw new VelvetException(e);
           }
-        });   
+        });
         keyProp = new MethodProperty<K, V>(method);
       }
-      
-//      else {
-//        if (method.getParameterCount() == 0 && method.getReturnType() != void.class)
-//          propMap.put(method.getName(), new MethodProperty(field));
-//      }
+
+      // else {
+      // if (method.getParameterCount() == 0 && method.getReturnType() != void.class)
+      // propMap.put(method.getName(), new MethodProperty(field));
+      // }
     }
-    throw new VelvetException("No annotation for key found in " + valueClass);
+    // throw new VelvetException("No annotation for key found in " + valueClass);
   }
 
   // TODO skip static and transient ?
@@ -88,9 +88,13 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
   Class<K> getKeyClass() {
     return keyClass;
   }
-  
+
   public boolean isSorted() {
     return sorted;
+  }
+
+  public boolean hasKey() {
+    return provider != null;
   }
 
   @Override
@@ -107,7 +111,7 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
   public IProperty<K, V> getKey() {
     return keyProp;
   }
-  
+
   private static class FieldProperty<P, V> implements IProperty<P, V> {
 
     private Field field;
@@ -143,16 +147,16 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
     @SuppressWarnings("unchecked")
     @Override
     public Class<P> getType() {
-      return (Class<P>)field.getType();
+      return (Class<P>) field.getType();
     }
 
     @Override
     public String getName() {
       return field.getName();
     }
-    
+
   }
-  
+
   private static class MethodProperty<P, V> implements IProperty<P, V> {
 
     private Method method;
@@ -177,21 +181,22 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
     }
 
     @Override
-    public void put(V instance, P propValue) {      
-      throw new UnsupportedOperationException();      
+    public void put(V instance, P propValue) {
+      throw new UnsupportedOperationException();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Class<P> getType() {
-      return (Class<P>)method.getReturnType();
+      return (Class<P>) method.getReturnType();
     }
 
     @Override
     public String getName() {
       return method.getName();
     }
-    
+
   }
-  
+
+
 }

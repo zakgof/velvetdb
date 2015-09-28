@@ -14,7 +14,7 @@ import com.zakgof.db.velvet.query.Queries;
 
 public class KeylessTest extends AVelvetTxnTest {
 
-  private IKeylessEntityDef<KeylessEnt> ENTITY = Entities.keylessAnno(KeylessEnt.class);
+  private IKeylessEntityDef<KeylessEnt> ENTITY = Entities.keyless(KeylessEnt.class);
 
   @Before
   public void init() {

@@ -24,6 +24,7 @@ public interface IVelvet {
     void delete(K key);
     List<K> keys();
     boolean contains(K key);
+    long size();
   }
   
   public interface ISortedStore<K extends Comparable<K>, V> extends IStore<K, V> {

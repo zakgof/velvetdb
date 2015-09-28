@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.properties.IPropertyAccessor;
 
 public interface IEntityDef<K, V> {
 
@@ -21,10 +22,14 @@ public interface IEntityDef<K, V> {
   public V get(IVelvet velvet, K key);
   
   public List<K> keys(IVelvet velvet);
+  
+  public long size(IVelvet velvet);
 
   public void put(IVelvet velvet, V value);
   
   public void deleteKey(IVelvet velvet, K key);
+  
+  public IPropertyAccessor<K, V> propertyAccessor();
   
   
   public default List<V> get(IVelvet velvet, Collection<K> keys) {

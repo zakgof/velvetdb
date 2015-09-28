@@ -16,7 +16,7 @@ import com.zakgof.db.velvet.query.Queries;
 
 public class SecIndexSortedStoreTest extends AVelvetTxnTest {
 
-  private ISortableEntityDef<Integer, TestEnt2> ENTITY2 = Entities.sortedAnno(TestEnt2.class);
+  private ISortableEntityDef<Integer, TestEnt2> ENTITY2 = Entities.sorted(TestEnt2.class);
 
   public void init() {
     

@@ -6,6 +6,7 @@ import java.util.function.Function;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IStore;
 import com.zakgof.db.velvet.entity.IEntityDef;
+import com.zakgof.db.velvet.properties.IPropertyAccessor;
 
 public class EntityDef<K, V> implements IEntityDef<K, V> {
   
@@ -25,11 +26,9 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     this.kind = kind;
   }
   
-  
   protected void setKeyProvider(Function<V, K> keyProvider) {
     this.keyProvider = keyProvider;
   }
-    
   
   IStore<K, V> store(IVelvet velvet) {
     return velvet.store(getKind(), getKeyClass(), getValueClass());
@@ -63,6 +62,11 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
   public List<K> keys(IVelvet velvet) {
     return store(velvet).keys();
   }
+  
+  @Override
+  public long size(IVelvet velvet) {
+    return store(velvet).size();
+  }
 
   public void put(IVelvet velvet, V value) {
     store(velvet).put(keyOf(value), value);
@@ -72,6 +76,12 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     store(velvet).delete(key);
   }
   
-  
+  @SuppressWarnings("unchecked")
+  @Override
+  public IPropertyAccessor<K, V> propertyAccessor() {
+    if (keyProvider instanceof IPropertyAccessor)
+      return (IPropertyAccessor<K, V> )keyProvider;
+    return null;
+  }
 
 }

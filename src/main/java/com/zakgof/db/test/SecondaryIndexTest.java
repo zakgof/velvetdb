@@ -19,7 +19,7 @@ import com.zakgof.db.velvet.query.Queries;
 
 public class SecondaryIndexTest extends AVelvetTxnTest {
   
-  private IEntityDef<String, TestEnt> ENTITY = Entities.anno(TestEnt.class);
+  private IEntityDef<String, TestEnt> ENTITY = Entities.create(TestEnt.class);
   private IEntityDef<Integer, TestEnt3> ENTITY3 = Entities.create(Integer.class, TestEnt3.class, "realpojo", TestEnt3::getKey);
   private SecIndexMultiLinkDef<String, TestEnt, Integer, TestEnt3, Long> MULTI = Links.sec(ENTITY, ENTITY3, Long.class, TestEnt3::getWeight);
 
