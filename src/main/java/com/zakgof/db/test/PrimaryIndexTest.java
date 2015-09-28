@@ -13,8 +13,8 @@ import com.zakgof.db.velvet.query.Queries;
 
 public class PrimaryIndexTest extends AVelvetTxnTest {
   
-  protected IEntityDef<String, TestEnt> ENTITY = Entities.anno(TestEnt.class);
-  protected IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.anno(TestEnt2.class);
+  protected IEntityDef<String, TestEnt> ENTITY = Entities.create(TestEnt.class);
+  protected IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.create(TestEnt2.class);
   protected PriIndexMultiLinkDef<String, TestEnt, Integer, TestEnt2> MULTI = Links.pri(ENTITY, ENTITY2);
 
   private TestEnt root;

@@ -2,11 +2,15 @@ package com.zakgof.db.velvet.properties;
 
 public interface IProperty<P, V> {
   
-  public boolean isSettable();
+  public default boolean isSettable() {
+    return false;
+  }
   
   public P get(V instance);
   
-  public void put(V instance, P propValue);
+  public default void put(V instance, P propValue) {
+    throw new UnsupportedOperationException();
+  }
   
   public Class<P> getType();
 

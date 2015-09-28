@@ -29,6 +29,10 @@ public class Queries {
   public static <K extends Comparable<K>> IIndexQuery<K> equalsTo(K p) {
     return Queries.<K> builder().greaterOrEq(p).lessOrEq(p).build();
   }
+  
+  public static <K extends Comparable<K>> IIndexQuery<K> range(int offset, int limit) {
+    return Queries.<K> builder().offset(offset).limit(limit).build();
+  }
 
   public static <K extends Comparable<K>> IIndexQuery<K> first(int limit) {
     return Queries.<K> builder().limit(limit).build();
@@ -187,5 +191,6 @@ public class Queries {
     }
 
   }
+
 
 }

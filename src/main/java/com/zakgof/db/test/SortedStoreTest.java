@@ -16,7 +16,7 @@ import com.zakgof.db.velvet.query.Queries;
 
 public class SortedStoreTest extends AVelvetTxnTest {
 
-  private ISortableEntityDef<Integer, TestEnt2> ENTITY2 = Entities.sortedAnno(TestEnt2.class);
+  private ISortableEntityDef<Integer, TestEnt2> ENTITY2 = Entities.sorted(TestEnt2.class);
   private ISortableEntityDef<Integer, TestEnt3> ENTITY_EMPTY = Entities.sorted(Integer.class, TestEnt3.class, "realpojo", TestEnt3::getKey);
 
   @Before
@@ -39,7 +39,7 @@ public class SortedStoreTest extends AVelvetTxnTest {
   
   @Test
   public void testStringOrder() {
-    final ISortableEntityDef<String, TestEnt> ENTITY = Entities.sortedAnno(TestEnt.class);
+    final ISortableEntityDef<String, TestEnt> ENTITY = Entities.sorted(TestEnt.class);
     ENTITY.put(velvet, new TestEnt("Aaa",    7.1f));
     ENTITY.put(velvet, new TestEnt("ab",     9.1f));    
     ENTITY.put(velvet, new TestEnt("",       0.1f));

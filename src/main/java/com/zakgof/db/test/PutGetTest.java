@@ -12,7 +12,7 @@ public class PutGetTest extends AVelvetTxnTest {
 
   private static final int COUNT = 1000;
   private static final int HALFCOUNT = COUNT / 2;
-  private IEntityDef<String, TestEnt> ENTITY = Entities.anno(TestEnt.class);
+  private IEntityDef<String, TestEnt> ENTITY = Entities.create(TestEnt.class);
 
   @Test
   public void testSimplePutGet() {
