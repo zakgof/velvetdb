@@ -23,7 +23,7 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
   private Function<V, K> provider;
   private Class<K> keyClass;
   private boolean sorted;
-  private Map<String, IProperty<?, V>> propMap = new LinkedHashMap<>();
+  Map<String, IProperty<?, V>> propMap = new LinkedHashMap<>();
   private IProperty<K, V> keyProp;
 
   @SuppressWarnings("unchecked")
@@ -40,7 +40,7 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
             throw new VelvetException(e);
           }
         };
-        keyProp = new FieldProperty<K, V>(field);
+        keyProp = new FieldProperty<K, V>(field, false);
       } else {
         propMap.put(field.getName(), new FieldProperty<>(field));
       }
@@ -115,14 +115,20 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
   private static class FieldProperty<P, V> implements IProperty<P, V> {
 
     private Field field;
+    private boolean settable;
 
     public FieldProperty(Field field) {
+      this(field, true);
+    }
+
+    public FieldProperty(Field field, boolean settable) {
       this.field = field;
+      this.settable = settable;
     }
 
     @Override
     public boolean isSettable() {
-      return true;
+      return settable;
     }
 
     @SuppressWarnings("unchecked")
