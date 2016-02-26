@@ -1,5 +1,7 @@
 package com.zakgof.db.txn;
 
+import com.zakgof.db.velvet.VelvetException;
+
 public interface ITransactionalEnvironment<H> {
   
   public void execute(ITransactionCall<H> transaction);
@@ -10,7 +12,7 @@ public interface ITransactionalEnvironment<H> {
     try {
       execute(h -> result[0] = transaction.execute(h));
     } catch (Throwable e) {
-      new RuntimeException(e);
+      new VelvetException(e);
     }
     return (R)result[0];
   }

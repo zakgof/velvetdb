@@ -3,7 +3,7 @@ package com.zakgof.db.velvet;
 @SuppressWarnings("serial")
 public class VelvetException extends RuntimeException {
 
-  public VelvetException(Exception e) {
+  public VelvetException(Throwable e) {
     super(e);
   }
 
