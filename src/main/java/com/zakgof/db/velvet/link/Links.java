@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.impl.link.BiManyToManyLinkDef;
 import com.zakgof.db.velvet.impl.link.BiMultiLinkDef;
@@ -93,7 +94,7 @@ public class Links {
           return null;
         if (links.size() == 1)
           return links.get(0);
-        throw new RuntimeException("Multigetter returns more than 1 entry and cannot be adapted to singlegetter " + links);
+        throw new VelvetException("Multigetter returns more than 1 entry and cannot be adapted to singlegetter " + links);
       }
 
       @Override
@@ -103,7 +104,7 @@ public class Links {
           return null;
         if (linkKeys.size() == 1)
           return linkKeys.get(0);
-        throw new RuntimeException("Multigetter returns more than 1 key and cannot be adapted to singlegetter " + linkKeys);
+        throw new VelvetException("Multigetter returns more than 1 key and cannot be adapted to singlegetter " + linkKeys);
       }
     };
   }
