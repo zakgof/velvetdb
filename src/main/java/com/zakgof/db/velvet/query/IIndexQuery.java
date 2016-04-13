@@ -1,10 +1,10 @@
 package com.zakgof.db.velvet.query;
 
-public interface IIndexQuery<K extends Comparable<K>> {
+public interface IIndexQuery<K, M extends Comparable<? super M>> {
   
-  IQueryAnchor<K> getLowAnchor();
+  IQueryAnchor<K, M> getLowAnchor();
 
-  IQueryAnchor<K> getHighAnchor();
+  IQueryAnchor<K, M> getHighAnchor();
 
   int getLimit();
 

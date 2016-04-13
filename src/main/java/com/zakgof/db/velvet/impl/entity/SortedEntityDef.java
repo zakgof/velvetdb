@@ -10,7 +10,7 @@ import com.zakgof.db.velvet.entity.ISortableEntityDef;
 import com.zakgof.db.velvet.query.IIndexQuery;
 import com.zakgof.db.velvet.query.ISingleReturnIndexQuery;
 
-public class SortedEntityDef<K extends Comparable<K>, V> extends EntityDef<K, V> implements ISortableEntityDef<K, V> {
+public class SortedEntityDef<K extends Comparable<? super K>, V> extends EntityDef<K, V> implements ISortableEntityDef<K, V> {
   
   public SortedEntityDef(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider) {
     super(keyClass, valueClass, kind, keyProvider);
@@ -22,12 +22,12 @@ public class SortedEntityDef<K extends Comparable<K>, V> extends EntityDef<K, V>
   }
 
   @Override
-  public List<K> keys(IVelvet velvet, IIndexQuery<K> query) {
+  public List<K> keys(IVelvet velvet, IIndexQuery<K, K> query) {
     return store(velvet).keys(query);
   }
   
   @Override
-  public K key(IVelvet velvet, ISingleReturnIndexQuery<K> query) {
+  public K key(IVelvet velvet, ISingleReturnIndexQuery<K, K> query) {
     List<K> keys = keys(velvet, query);
     if (keys.size() > 1)
       throw new VelvetException("ISingleReturnIndexQuery returned multiple entries");

@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.impl.link.SecIndexMultiLinkDef;
+import com.zakgof.db.velvet.link.ISecIndexMultiLinkDef;
 import com.zakgof.db.velvet.link.Links;
 import com.zakgof.db.velvet.query.IIndexQuery;
 import com.zakgof.db.velvet.query.Queries;
@@ -21,7 +21,7 @@ public class SecondaryIndexTest extends AVelvetTxnTest {
   
   private IEntityDef<String, TestEnt> ENTITY = Entities.create(TestEnt.class);
   private IEntityDef<Integer, TestEnt3> ENTITY3 = Entities.create(Integer.class, TestEnt3.class, "realpojo", TestEnt3::getKey);
-  private SecIndexMultiLinkDef<String, TestEnt, Integer, TestEnt3, Long> MULTI = Links.sec(ENTITY, ENTITY3, Long.class, TestEnt3::getWeight);
+  private ISecIndexMultiLinkDef<String, TestEnt, Integer, TestEnt3, Long> MULTI = Links.sec(ENTITY, ENTITY3, Long.class, TestEnt3::getWeight);
 
   private TestEnt root;
 
@@ -64,14 +64,40 @@ public class SecondaryIndexTest extends AVelvetTxnTest {
   }
   
   @Test
+  public void testIndexByKeyGreater() {
+    check(Queries.<Integer, Long>builder().greaterKey(54).build(),     "two", "three", rFour, rSix);
+    check(Queries.<Integer, Long>builder().greaterKey(44).build(),     "one-A", "two", "three", rFour, rSix);
+    check(Queries.<Integer, Long>builder().greaterKey(33).build(),     "three", rFour, rSix);
+    check(Queries.<Integer, Long>builder().greaterKey(21).build(),      rFour, rSix);
+    check(Queries.<Integer, Long>builder().greaterKey(34).build(),      r("four-B", "four-C"), rSix);
+    check(Queries.<Integer, Long>builder().greaterKey(47).build(),     "four-C", rSix);
+    check(Queries.<Integer, Long>builder().greaterKey(60).build(),     rSix);
+    check(Queries.<Integer, Long>builder().greaterKey(99).build()       );
+    check(Queries.<Integer, Long>builder().greaterKey(31).build(),     "six-A");
+  }
+  
+  @Test
+  public void testIndexByKeyLess() {
+    check(Queries.<Integer, Long>builder().lessKey(54).build(),     "one-B");
+    check(Queries.<Integer, Long>builder().lessKey(44).build()      );
+    check(Queries.<Integer, Long>builder().lessKey(33).build(),     rOne);
+    check(Queries.<Integer, Long>builder().lessKey(21).build(),     rOne, "two");
+    check(Queries.<Integer, Long>builder().lessKey(34).build(),     rOne, "two", "three");
+    check(Queries.<Integer, Long>builder().lessKey(47).build(),     rOne, "two", "three", "four-A");
+    check(Queries.<Integer, Long>builder().lessKey(60).build(),     rOne, "two", "three", r("four-A", "four-B"));
+    check(Queries.<Integer, Long>builder().lessKey(99).build(),     rOne, "two", "three", rFour, "six-B");
+    check(Queries.<Integer, Long>builder().lessKey(31).build(),     rOne, "two", "three", rFour);
+  }
+  
+  @Test
   public void testGreaterOrEqDesc() {
-    check(Queries.<Long>builder().descending().greaterOrEq(-1L).build(),     rSix, rFour, "three", "two", rOne);  
-    check(Queries.<Long>builder().descending().greaterOrEq(1L).build(),      rSix, rFour, "three", "two", rOne);
-    check(Queries.<Long>builder().descending().greaterOrEq(3L).build(),      rSix, rFour, "three");
-    check(Queries.<Long>builder().descending().greaterOrEq(4L).build(),      rSix, rFour);
-    check(Queries.<Long>builder().descending().greaterOrEq(5L).build(),      rSix);
-    check(Queries.<Long>builder().descending().greaterOrEq(6L).build(),      rSix);
-    check(Queries.<Long>builder().descending().greaterOrEq(7L).build()      );
+    check(Queries.<Integer, Long>builder().descending().greaterOrEq(-1L).build(),     rSix, rFour, "three", "two", rOne);  
+    check(Queries.<Integer, Long>builder().descending().greaterOrEq(1L).build(),      rSix, rFour, "three", "two", rOne);
+    check(Queries.<Integer, Long>builder().descending().greaterOrEq(3L).build(),      rSix, rFour, "three");
+    check(Queries.<Integer, Long>builder().descending().greaterOrEq(4L).build(),      rSix, rFour);
+    check(Queries.<Integer, Long>builder().descending().greaterOrEq(5L).build(),      rSix);
+    check(Queries.<Integer, Long>builder().descending().greaterOrEq(6L).build(),      rSix);
+    check(Queries.<Integer, Long>builder().descending().greaterOrEq(7L).build()      );
   }
   
   @Test
@@ -105,6 +131,28 @@ public class SecondaryIndexTest extends AVelvetTxnTest {
     check(Queries.less(5L),      rOne, "two", "three", rFour);
     check(Queries.less(6L),      rOne, "two", "three", rFour);
     check(Queries.less(7L),      rOne, "two", "three", rFour, rSix );
+  }
+  
+  @Test
+  public void testLessDesc() {
+    check(Queries.<Integer, Long>builder().less(-1L).descending().build());
+    check(Queries.<Integer, Long>builder().less(1L).descending().build());
+    check(Queries.<Integer, Long>builder().less(3L).descending().build(),	"two", rOne);
+    check(Queries.<Integer, Long>builder().less(4L).descending().build(),   "three", "two", rOne);
+    check(Queries.<Integer, Long>builder().less(5L).descending().build(),	rFour, "three", "two", rOne);
+    check(Queries.<Integer, Long>builder().less(6L).descending().build(),	rFour, "three", "two", rOne);
+    check(Queries.<Integer, Long>builder().less(7L).descending().build(), 	rSix, rFour, "three", "two", rOne);
+  }
+  
+  @Test
+  public void testLessOrEqDesc() {
+    check(Queries.<Integer, Long>builder().lessOrEq(-1L).descending().build());
+    check(Queries.<Integer, Long>builder().lessOrEq(1L).descending().build(), 	rOne);
+    check(Queries.<Integer, Long>builder().lessOrEq(3L).descending().build(),	"three", "two", rOne);
+    check(Queries.<Integer, Long>builder().lessOrEq(4L).descending().build(),   rFour, "three", "two", rOne);
+    check(Queries.<Integer, Long>builder().lessOrEq(5L).descending().build(),	rFour, "three", "two", rOne);
+    check(Queries.<Integer, Long>builder().lessOrEq(6L).descending().build(),	rSix, rFour, "three", "two", rOne);
+    check(Queries.<Integer, Long>builder().lessOrEq(7L).descending().build(), 	rSix, rFour, "three", "two", rOne);
   }
   
   @Test
@@ -177,7 +225,7 @@ public class SecondaryIndexTest extends AVelvetTxnTest {
     return s;
   }
   
-  private void check(IIndexQuery<Long> query, Object...ref) {
+  private void check(IIndexQuery<Integer, Long> query, Object...ref) {
     List<String> result = MULTI.indexed(query).multi(velvet, root).stream().map(TestEnt3::getStr).collect(Collectors.toList());
     int i = 0;
     for (Object r : ref) {
