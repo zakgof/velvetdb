@@ -33,8 +33,8 @@ public class SortedStoreTest extends AVelvetTxnTest {
 
   @Test
   public void testGetAll() {
-    check(Queries.<Integer>builder().build(),  1, 2, 3, 5, 7);
-    check(Queries.<Integer>builder().descending().build(), 7, 5, 3, 2, 1);
+    check(Queries.<Integer, Integer>builder().build(),  1, 2, 3, 5, 7);
+    check(Queries.<Integer, Integer>builder().descending().build(), 7, 5, 3, 2, 1);
   }
   
   @Test
@@ -131,7 +131,7 @@ public class SortedStoreTest extends AVelvetTxnTest {
         
   }
   
-  void check(IIndexQuery<Integer> query, Integer... ref) {
+  void check(IIndexQuery<Integer, Integer> query, Integer... ref) {
     List<TestEnt2> result = ENTITY2.get(velvet, query);
     Assert.assertEquals(Arrays.stream(ref).collect(Collectors.toList()), result.stream().map(TestEnt2::getKey).collect(Collectors.toList()));
     List<TestEnt3> resultE = ENTITY_EMPTY.get(velvet, query);

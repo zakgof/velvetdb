@@ -43,4 +43,8 @@ public interface IEntityDef<K, V> {
   public default void deleteValue(IVelvet velvet, V value) {
     deleteKey(velvet, keyOf(value));
   }
+  
+  public default boolean equals(V value1, V value2) {
+    return keyOf(value1).equals(keyOf(value2));
+  }
 }

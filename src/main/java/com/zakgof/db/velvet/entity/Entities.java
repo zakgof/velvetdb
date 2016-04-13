@@ -16,7 +16,7 @@ final public class Entities {
     return new EntityDef<>(keyClass, valueClass, kind, keyProvider);
   }
 
-  public static <K extends Comparable<K>, V> ISortableEntityDef<K, V> sorted(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider) {
+  public static <K extends Comparable<? super K>, V> ISortableEntityDef<K, V> sorted(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider) {
     return new SortedEntityDef<>(keyClass, valueClass, kind, keyProvider);
   }
 

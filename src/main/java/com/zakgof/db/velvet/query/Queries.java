@@ -1,134 +1,158 @@
 package com.zakgof.db.velvet.query;
 
-public class Queries {
+import com.zakgof.db.velvet.link.IIndexedMultiLink;
 
-  public static <K extends Comparable<K>> Builder<K> builder() {
+public class Queries {
+	
+  public static <K, M extends Comparable<? super M>> Builder<K, M> builder(IIndexedMultiLink<?, ?, K, ?, M> link) {
+    return new Builder<>(); // TODO: pass link ?
+  }
+
+  public static <K, M extends Comparable<? super M>> Builder<K, M> builder() {
     return new Builder<>();
   }
 
-  public static <K extends Comparable<K>> IIndexQuery<K> range(K p1, boolean inclusive1, K p2, boolean inclusive2) {
-    return Queries.<K> builder().from(new QueryAnchor<K>(inclusive1, p1)).to(new QueryAnchor<K>(inclusive2, p2)).build();
+  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> range(M p1, boolean inclusive1, M p2, boolean inclusive2) {
+    return Queries.<K, M> builder().from(new QueryAnchor<K, M>(inclusive1, p1)).to(new QueryAnchor<K, M>(inclusive2, p2)).build();
   }
 
-  public static <K extends Comparable<K>> IIndexQuery<K> greater(K p1) {
-    return Queries.<K> builder().greater(p1).build();
+  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> greater(M p1) {
+    return Queries.<K, M> builder().greater(p1).build();
   }
 
-  public static <K extends Comparable<K>> IIndexQuery<K> less(K p2) {
-    return Queries.<K> builder().less(p2).build();
+  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> less(M p2) {
+    return Queries.<K, M> builder().less(p2).build();
   }
 
-  public static <K extends Comparable<K>> IIndexQuery<K> greaterOrEq(K p1) {
-    return Queries.<K> builder().greaterOrEq(p1).build();
+  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> greaterOrEq(M p1) {
+    return Queries.<K, M> builder().greaterOrEq(p1).build();
   }
 
-  public static <K extends Comparable<K>> IIndexQuery<K> lessOrEq(K p2) {
-    return Queries.<K> builder().lessOrEq(p2).build();
+  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> lessOrEq(M p2) {
+    return Queries.<K, M> builder().lessOrEq(p2).build();
   }
 
-  public static <K extends Comparable<K>> IIndexQuery<K> equalsTo(K p) {
-    return Queries.<K> builder().greaterOrEq(p).lessOrEq(p).build();
+  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> equalsTo(M p) {
+    return Queries.<K, M> builder().greaterOrEq(p).lessOrEq(p).build();
   }
   
-  public static <K extends Comparable<K>> IIndexQuery<K> range(int offset, int limit) {
-    return Queries.<K> builder().offset(offset).limit(limit).build();
+  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> range(int offset, int limit) {
+    return Queries.<K, M> builder().offset(offset).limit(limit).build();
   }
 
-  public static <K extends Comparable<K>> IIndexQuery<K> first(int limit) {
-    return Queries.<K> builder().limit(limit).build();
+  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> first(int limit) {
+    return Queries.<K, M> builder().limit(limit).build();
   }
 
-  public static <K extends Comparable<K>> ISingleReturnIndexQuery<K> first() {
-    return Queries.<K> builder().limit(1).buildSingle();
+  public static <K, M extends Comparable<? super M>> ISingleReturnIndexQuery<K, M> first() {
+    return Queries.<K, M> builder().limit(1).buildSingle();
   }
 
-  public static <K extends Comparable<K>> IIndexQuery<K> last(int limit) {
-    return Queries.<K> builder().descending().limit(limit).build();
+  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> last(int limit) {
+    return Queries.<K, M> builder().descending().limit(limit).build();
   }
 
-  public static <K extends Comparable<K>> ISingleReturnIndexQuery<K> last() {
-    return Queries.<K> builder().descending().limit(1).buildSingle();
+  public static <K, M extends Comparable<? super M>> ISingleReturnIndexQuery<K, M> last() {
+    return Queries.<K, M> builder().descending().limit(1).buildSingle();
   }
 
-  public static <K extends Comparable<K>> ISingleReturnIndexQuery<K> prev(K key) {
-    return Queries.<K> builder().less(key).descending().limit(1).buildSingle();
+  public static <K, M extends Comparable<? super M>> ISingleReturnIndexQuery<K, M> prev(M m) {
+    return Queries.<K, M> builder().less(m).descending().limit(1).buildSingle();
   }
 
-  public static <K extends Comparable<K>> ISingleReturnIndexQuery<K> next(K key) {
-    return Queries.<K> builder().greater(key).limit(1).buildSingle();
+  public static <K, M extends Comparable<? super M>> ISingleReturnIndexQuery<K, M> next(M m) {
+    return Queries.<K, M> builder().greater(m).limit(1).buildSingle();
   }
+  
+  public static <K, M extends Comparable<? super M>> ISingleReturnIndexQuery<K, M> prevKey(K key) {
+		return Queries.<K, M>builder().lessKey(key).descending().limit(1).buildSingle();
+	}
 
-  public static class Builder<K extends Comparable<K>> {
+	public static <K, M extends Comparable<? super M>> ISingleReturnIndexQuery<K, M> nextKey(K key) {
+		return Queries.<K, M>builder().greaterKey(key).limit(1).buildSingle();
+	}
+
+  public static class Builder<K, M extends Comparable<? super M>> {
 
     private boolean ascending = true;
     private int offset = 0;
     private int limit = -1;
-    private IQueryAnchor<K> highAnchor;
-    private IQueryAnchor<K> lowAnchor;
-
-    public Builder<K> greater(K value) {
+    private IQueryAnchor<K, M> highAnchor;
+    private IQueryAnchor<K, M> lowAnchor;
+    
+    public Builder<K, M> greater(M value) {
       this.lowAnchor = new QueryAnchor<>(false, value);
       return this;
     }
 
-    public Builder<K> greaterOrEq(K key) {
+    public Builder<K, M> greaterOrEq(M key) {
       this.lowAnchor = new QueryAnchor<>(true, key);
       return this;
     }
 
-    public Builder<K> less(K key) {
+    public Builder<K, M> less(M key) {
       this.highAnchor = new QueryAnchor<>(false, key);
       return this;
     }
 
-    public Builder<K> lessOrEq(K key) {
+    public Builder<K, M> lessOrEq(M key) {
       this.highAnchor = new QueryAnchor<>(true, key);
       return this;
     }
 
-    public Builder<K> from(IQueryAnchor<K> lowAnchor) {
+    public Builder<K, M> from(IQueryAnchor<K, M> lowAnchor) {
       this.lowAnchor = lowAnchor;
       return this;
     }
 
-    public Builder<K> to(IQueryAnchor<K> highAnchor) {
+    public Builder<K, M> to(IQueryAnchor<K, M> highAnchor) {
       this.highAnchor = highAnchor;
       return this;
     }
 
-    public Builder<K> offset(int offset) {
+    public Builder<K, M> offset(int offset) {
       this.offset = offset;
       return this;
     }
 
-    public Builder<K> limit(int limit) {
+    public Builder<K, M> limit(int limit) {
       this.limit = limit;
       return this;
     }
 
-    public Builder<K> descending() {
+    public Builder<K, M> descending() {
       this.ascending = false;
       return this;
     }
+    
+    public Builder<K, M> lessKey(K key) {
+    this.highAnchor = new QueryAnchor<>(key);
+    return this;
+  }
+    
+    public Builder<K, M> greaterKey(K key) {
+    this.lowAnchor = new QueryAnchor<>(key);
+    return this;
+  }
 
-    public IIndexQuery<K> build() {
+    public IIndexQuery<K, M> build() {
       return new Query<>(lowAnchor, highAnchor, limit, offset, ascending);
     }
     
-    private ISingleReturnIndexQuery<K> buildSingle() {
+    public ISingleReturnIndexQuery<K, M> buildSingle() {
       return new SingleReturnQuery<>(lowAnchor, highAnchor, limit, offset, ascending);
     }
   }
 
-  private static class Query<K extends Comparable<K>> implements IIndexQuery<K> {
+  private static class Query<K, M extends Comparable<? super M>> implements IIndexQuery<K, M> {
 
     private final boolean ascending;
     private final int offset;
     private final int limit;
-    private final IQueryAnchor<K> highAnchor;
-    private final IQueryAnchor<K> lowAnchor;
+    private final IQueryAnchor<K, M> highAnchor;
+    private final IQueryAnchor<K, M> lowAnchor;
 
-    public Query(IQueryAnchor<K> lowAnchor, IQueryAnchor<K> highAnchor, int limit, int offset, boolean ascending) {
+    public Query(IQueryAnchor<K, M> lowAnchor, IQueryAnchor<K, M> highAnchor, int limit, int offset, boolean ascending) {
       this.lowAnchor = lowAnchor;
       this.highAnchor = highAnchor;
       this.limit = limit;
@@ -137,12 +161,12 @@ public class Queries {
     }
 
     @Override
-    public IQueryAnchor<K> getLowAnchor() {
+    public IQueryAnchor<K, M> getLowAnchor() {
       return lowAnchor;
     }
 
     @Override
-    public IQueryAnchor<K> getHighAnchor() {
+    public IQueryAnchor<K, M> getHighAnchor() {
       return highAnchor;
     }
 
@@ -163,22 +187,31 @@ public class Queries {
 
   }
   
-  private static class SingleReturnQuery<K extends Comparable<K>> extends Query<K> implements ISingleReturnIndexQuery<K> {
-    public SingleReturnQuery(IQueryAnchor<K> lowAnchor, IQueryAnchor<K> highAnchor, int limit, int offset, boolean ascending) {
+  private static class SingleReturnQuery<K, M extends Comparable<? super M>> extends Query<K, M> implements ISingleReturnIndexQuery<K, M> {
+    public SingleReturnQuery(IQueryAnchor<K, M> lowAnchor, IQueryAnchor<K, M> highAnchor, int limit, int offset, boolean ascending) {
       super(lowAnchor, highAnchor, limit, offset, ascending);
     }    
   }
 
-  private static class QueryAnchor<K extends Comparable<K>> implements IQueryAnchor<K> {
+  private static class QueryAnchor<K, M extends Comparable<? super M>> implements IQueryAnchor<K, M> {
 
     private final boolean including;
 
-    private final K value;
+    private final M value;
 
-    public QueryAnchor(boolean including, K value) {
+	private final K key;
+
+    private QueryAnchor(boolean including, M value) {
       this.including = including;
       this.value = value;
+      this.key = null;
     }
+    
+    private QueryAnchor(K key) {
+        this.including = false;
+        this.value = null;
+        this.key = key;
+      }
 
     @Override
     public boolean isIncluding() {
@@ -186,8 +219,13 @@ public class Queries {
     }
 
     @Override
-    public K getKey() {
+    public M getMetric() {
       return value;
+    }
+    
+    @Override
+    public K getKey() {
+    	return key;
     }
 
   }

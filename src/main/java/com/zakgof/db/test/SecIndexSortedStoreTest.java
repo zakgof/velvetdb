@@ -37,15 +37,15 @@ public class SecIndexSortedStoreTest extends AVelvetTxnTest {
 
   @Test
   public void testGetAll() {
-    check(Queries.<Integer>builder().build(),  r("v1", "1a", "1b"), "v2", r("v3", "3a"), "v5", r("v7", "7a", "7b"));
-    check(Queries.<Integer>builder().descending().build(), r("v7", "7a", "7b"), "v5",  r("v3", "3a"), "2", r("v1", "1a", "1b"));
+    check(Queries.<Integer, Integer>builder().build(),  r("v1", "1a", "1b"), "v2", r("v3", "3a"), "v5", r("v7", "7a", "7b"));
+    check(Queries.<Integer, Integer>builder().descending().build(), r("v7", "7a", "7b"), "v5",  r("v3", "3a"), "2", r("v1", "1a", "1b"));
   }
   
   private Object r(String... s) {
     return s;
   }
 
-  void check(IIndexQuery<Integer> query, Object... ref) {
+  void check(IIndexQuery<Integer, Integer> query, Object... ref) {
     List<TestEnt2> result = ENTITY2.get(velvet, query);
     int i = 0;
     for (Object r : ref) {

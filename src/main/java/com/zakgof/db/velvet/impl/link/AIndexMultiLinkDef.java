@@ -7,31 +7,68 @@ import com.zakgof.db.velvet.IVelvet.IKeyIndexLink;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.link.IIndexedMultiLink;
 import com.zakgof.db.velvet.link.IMultiGetter;
+import com.zakgof.db.velvet.link.ISingleGetter;
 import com.zakgof.db.velvet.query.IIndexQuery;
+import com.zakgof.db.velvet.query.ISingleReturnIndexQuery;
 
-abstract class AIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<M>> extends MultiLinkDef<HK, HV, CK, CV> implements IIndexedMultiLink<HK, HV, CK, CV, M> {
+abstract class AIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M>> extends MultiLinkDef<HK, HV, CK, CV>
+		implements IIndexedMultiLink<HK, HV, CK, CV, M> {
 
-  public AIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
-    super(hostEntity, childEntity);
-  }
+	public AIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
+		super(hostEntity, childEntity);
+	}
 
-  abstract protected IKeyIndexLink<CK, M> index(IVelvet velvet, HK akey);
+	abstract protected IKeyIndexLink<CK, M> index(IVelvet velvet, HK akey);
 
-  @Override
-  public IMultiGetter<HK, HV, CK, CV> indexed(IIndexQuery<M> indexQuery) {
+	@Override
+	public IMultiGetter<HK, HV, CK, CV> indexed(IIndexQuery<CK, M> indexQuery) {
 
-    return new IMultiGetter<HK, HV, CK, CV>() {
+		return new IMultiGetter<HK, HV, CK, CV>() {
 
-      @Override
-      public List<CV> multi(IVelvet velvet, HV node) {
-        return getChildEntity().get(velvet, multiKeys(velvet, getHostEntity().keyOf(node)));
-      }
+			@Override
+			public List<CV> multi(IVelvet velvet, HV node) {
+				return getChildEntity().get(velvet, multiKeys(velvet, getHostEntity().keyOf(node)));
+			}
 
-      @Override
-      public List<CK> multiKeys(IVelvet velvet, HK akey) {
-        return index(velvet, akey).keys(getChildEntity().getKeyClass(), indexQuery);
-      }
-    };
-  }
+			@Override
+			public List<CK> multiKeys(IVelvet velvet, HK akey) {
+				return index(velvet, akey).keys(getChildEntity().getKeyClass(), indexQuery);
+			}
 
+			@Override
+			public IEntityDef<HK, HV> getHostEntity() {
+				return AIndexMultiLinkDef.this.getHostEntity();
+			}
+
+			@Override
+			public IEntityDef<CK, CV> getChildEntity() {
+				return AIndexMultiLinkDef.this.getChildEntity();
+			}
+		};
+	}
+
+	@Override
+	public ISingleGetter<HK, HV, CK, CV> indexedSingle(ISingleReturnIndexQuery<CK, M> indexQuery) {
+		return new ISingleGetter<HK, HV, CK, CV>() {
+			@Override
+			public CV single(IVelvet velvet, HV node) {
+				return getChildEntity().get(velvet, singleKey(velvet, getHostEntity().keyOf(node)));
+			}
+
+			@Override
+			public CK singleKey(IVelvet velvet, HK akey) {
+				return index(velvet, akey).key(getChildEntity().getKeyClass(), indexQuery);
+			}
+
+			@Override
+			public IEntityDef<HK, HV> getHostEntity() {
+				return AIndexMultiLinkDef.this.getHostEntity();
+			}
+
+			@Override
+			public IEntityDef<CK, CV> getChildEntity() {
+				return AIndexMultiLinkDef.this.getChildEntity();
+			}
+		};
+	}
 }

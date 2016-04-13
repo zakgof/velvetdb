@@ -9,6 +9,7 @@ import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.impl.link.BiManyToManyLinkDef;
 import com.zakgof.db.velvet.impl.link.BiMultiLinkDef;
+import com.zakgof.db.velvet.impl.link.BiSecIndexMultiLinkDef;
 import com.zakgof.db.velvet.impl.link.BiSingleLinkDef;
 import com.zakgof.db.velvet.impl.link.MultiLinkDef;
 import com.zakgof.db.velvet.impl.link.PriIndexMultiLinkDef;
@@ -80,12 +81,22 @@ public class Links {
         public List<CK> multiKeys(IVelvet velvet, HK key) {
           return Arrays.asList(single.singleKey(velvet, key));
         }
+
+		@Override
+		public IEntityDef<HK, HV> getHostEntity() {
+			return linkDef.getHostEntity();
+		}
+
+		@Override
+		public IEntityDef<CK, CV> getChildEntity() {
+			return linkDef.getChildEntity();
+		}
       };
     }
     return null;
   }
   
-  public static <HK, HV, CK, CV> ISingleGetter<HK, HV, CK, CV> toSingleGetter(final IMultiLinkDef<HK, HV, CK, CV> multi) {
+  public static <HK, HV, CK, CV> ISingleGetter<HK, HV, CK, CV> toSingleGetter(final IMultiGetter<HK, HV, CK, CV> multi) {
     return new ISingleGetter<HK, HV, CK, CV>() {
       @Override
       public CV single(IVelvet velvet, HV node) {
@@ -106,6 +117,16 @@ public class Links {
           return linkKeys.get(0);
         throw new VelvetException("Multigetter returns more than 1 key and cannot be adapted to singlegetter " + linkKeys);
       }
+
+	@Override
+	public IEntityDef<HK, HV> getHostEntity() {
+		return multi.getHostEntity();
+	}
+
+	@Override
+	public IEntityDef<CK, CV> getChildEntity() {
+		return multi.getChildEntity();
+	}
     };
   }
 
@@ -113,8 +134,12 @@ public class Links {
     return new PriIndexMultiLinkDef<>(hostEntity, childEntity);
   }
   
-  public static <HK, HV, CK, CV, M extends Comparable<M>> SecIndexMultiLinkDef<HK, HV, CK, CV, M> sec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
-    return new SecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric);
+  public static <HK, HV, CK, CV, M extends Comparable<? super M>> ISecIndexMultiLinkDef<HK, HV, CK, CV, M> sec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
+    return new SecIndexMultiLinkDef<HK, HV, CK, CV, M>(hostEntity, childEntity, mclazz, metric);
   }
+  
+	public static <HK, HV, CK, CV, M extends Comparable<? super M>> BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> biSec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
+		return BiSecIndexMultiLinkDef.create(hostEntity, childEntity, mclazz, metric);
+	}
 
 }
