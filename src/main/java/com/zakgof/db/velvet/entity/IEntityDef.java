@@ -47,4 +47,5 @@ public interface IEntityDef<K, V> {
   public default boolean equals(V value1, V value2) {
     return keyOf(value1).equals(keyOf(value2));
   }
+
 }

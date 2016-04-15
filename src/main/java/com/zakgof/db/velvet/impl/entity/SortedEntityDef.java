@@ -16,10 +16,10 @@ public class SortedEntityDef<K extends Comparable<? super K>, V> extends EntityD
     super(keyClass, valueClass, kind, keyProvider);
   }
 
-  @Override
-  ISortedStore<K, V> store(IVelvet velvet) {
-    return velvet.sortedStore(getKind(), getKeyClass(), getValueClass());
-  }
+	@Override
+	public ISortedStore<K, V> store(IVelvet velvet) {
+		return velvet.sortedStore(getKind(), getKeyClass(), getValueClass());
+	}
 
   @Override
   public List<K> keys(IVelvet velvet, IIndexQuery<K, K> query) {

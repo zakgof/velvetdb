@@ -5,6 +5,7 @@ import java.util.function.Function;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IKeyIndexLink;
 import com.zakgof.db.velvet.entity.IEntityDef;
+import com.zakgof.db.velvet.impl.entity.EntityDef;
 import com.zakgof.db.velvet.link.ISecIndexMultiLinkDef;
 
 public class SecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M>> extends AIndexMultiLinkDef<HK, HV, CK, CV, M> implements ISecIndexMultiLinkDef<HK, HV, CK, CV, M> {
@@ -19,7 +20,7 @@ public class SecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M
   }
   
   protected IKeyIndexLink<CK, M> index(IVelvet velvet, HK akey) {
-    return velvet.<CK, CV, M> secondaryKeyIndex(akey, getKind(), getChildEntity().getValueClass(), getChildEntity().getKind(), metric, mclazz, getChildEntity().getKeyClass());
+    return velvet.<CK, CV, M> secondaryKeyIndex(akey, getKind(), metric, mclazz, getChildEntity().getKeyClass(), ((EntityDef<CK, CV>)getChildEntity()).store(velvet));
   }
   
   public Function<CV, M> getMetric() {

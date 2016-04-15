@@ -52,7 +52,8 @@ abstract class AIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M
 		return new ISingleGetter<HK, HV, CK, CV>() {
 			@Override
 			public CV single(IVelvet velvet, HV node) {
-				return getChildEntity().get(velvet, singleKey(velvet, getHostEntity().keyOf(node)));
+				CK singleKey = singleKey(velvet, getHostEntity().keyOf(node));
+				return singleKey == null ? null : getChildEntity().get(velvet, singleKey);
 			}
 
 			@Override
