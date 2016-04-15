@@ -16,12 +16,12 @@ public interface IVelvet {
 
   public <K extends Comparable<? super K>, T> IKeyIndexLink<K, K> primaryKeyIndex(Object key1, String edgekind);
   
-  public <K, T, M extends Comparable<? super M>> IKeyIndexLink<K, M> secondaryKeyIndex(Object key1, String edgekind, Class<T> nodeClazz, String nodekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<K> keyClass);
-  
+  public <K, T, M extends Comparable<? super M>> IKeyIndexLink<K, M> secondaryKeyIndex(Object key1, String edgekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<K> keyClazz, IStore<K, T> childStore);
+    
   public interface IStore<K, V> {
     V get(K key);
     void put(K key, V value);    
-    K put(V value);    
+    K put(V value); 
     void delete(K key);
     List<K> keys();
     boolean contains(K key);

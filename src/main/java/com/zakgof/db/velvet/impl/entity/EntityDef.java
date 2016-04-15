@@ -30,7 +30,7 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     this.keyProvider = keyProvider;
   }
   
-  IStore<K, V> store(IVelvet velvet) {
+  public IStore<K, V> store(IVelvet velvet) {
     return velvet.store(getKind(), getKeyClass(), getValueClass());
   }
 

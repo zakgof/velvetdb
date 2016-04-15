@@ -1,6 +1,7 @@
 package com.zakgof.db.velvet.link;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -79,7 +80,8 @@ public class Links {
 
         @Override
         public List<CK> multiKeys(IVelvet velvet, HK key) {
-          return Arrays.asList(single.singleKey(velvet, key));
+          CK singleKey = single.singleKey(velvet, key);
+          return singleKey == null ? Collections.emptyList() : Arrays.asList(singleKey);
         }
 
 		@Override
