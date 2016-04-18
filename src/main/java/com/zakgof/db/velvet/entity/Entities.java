@@ -2,6 +2,7 @@ package com.zakgof.db.velvet.entity;
 
 import java.util.function.Function;
 
+import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.impl.entity.AnnoEntityDef;
 import com.zakgof.db.velvet.impl.entity.AnnoKeyProvider;
@@ -25,7 +26,7 @@ final public class Entities {
   }
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static <K, V> IEntityDef<K, V> create(Class<V> valueClass) {
+  public static <K, V> IEntityDef<K, V> create(Class<V> valueClass, IStoreIndexDef<?, V>... indexes) {
     AnnoKeyProvider<K, V> annoKeyProvider = new AnnoKeyProvider<K, V>(valueClass);
     if (!annoKeyProvider.hasKey())
       return (IEntityDef<K, V>) new KeylessEntityDef<V>(valueClass, AnnoEntityDef.kindOf(valueClass));

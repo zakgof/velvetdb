@@ -1,4 +1,4 @@
-package com.zakgof.db.test;
+package com.zakgof.db.velvet.test;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.IVelvet.IStoreIndex;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
 
 public interface IEntityDef<K, V> {
@@ -31,7 +32,8 @@ public interface IEntityDef<K, V> {
   
   public IPropertyAccessor<K, V> propertyAccessor();
   
-  
+  public <M extends Comparable<? super M>> IStoreIndex<K, M> index(String name);
+    
   public default List<V> get(IVelvet velvet, Collection<K> keys) {
     return keys.stream().map(key -> get(velvet, key)).collect(Collectors.toList());
   }
