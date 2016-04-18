@@ -1,4 +1,4 @@
-package com.zakgof.db.test;
+package com.zakgof.db.velvet.test;
 
 import java.util.Arrays;
 import java.util.List;

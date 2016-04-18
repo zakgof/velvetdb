@@ -7,7 +7,7 @@ import com.zakgof.db.velvet.annotation.Kind;
 import com.zakgof.db.velvet.properties.IProperty;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
 
-public class AnnoEntityDef<K, V> extends EntityDef<K, V>implements IPropertyAccessor<K, V> {
+public class AnnoEntityDef<K, V> extends EntityDef<K, V> implements IPropertyAccessor<K, V> {
 
   private AnnoKeyProvider<K, V> annoKeyProvider;
 

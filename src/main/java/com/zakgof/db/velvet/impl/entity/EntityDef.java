@@ -5,6 +5,8 @@ import java.util.function.Function;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IStore;
+import com.zakgof.db.velvet.IVelvet.IStoreIndex;
+import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
 
@@ -14,6 +16,12 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
   private final Class<K> keyClass;
   private final String kind;
   private Function<V, K> keyProvider;
+  private List<IStoreIndexDef<?, V>> indexes;
+  
+  public EntityDef(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider, List<IStoreIndexDef<?, V>> indexes) {
+	  this(keyClass, valueClass, kind, keyProvider);
+	  this.indexes = indexes;
+  }
 
   public EntityDef(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider) {
     this(keyClass, valueClass, kind);
@@ -31,7 +39,7 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
   }
   
   public IStore<K, V> store(IVelvet velvet) {
-    return velvet.store(getKind(), getKeyClass(), getValueClass());
+    return velvet.store(getKind(), getKeyClass(), getValueClass(), indexes);
   }
 
   @Override
@@ -83,5 +91,11 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
       return (IPropertyAccessor<K, V> )keyProvider;
     return null;
   }
+
+	@Override
+	public <M extends Comparable<? super M>> IStoreIndex<K, M> index(String name) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }
