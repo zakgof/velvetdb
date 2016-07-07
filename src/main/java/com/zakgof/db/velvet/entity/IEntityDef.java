@@ -32,7 +32,7 @@ public interface IEntityDef<K, V> {
   
   public IPropertyAccessor<K, V> propertyAccessor();
   
-  public <M extends Comparable<? super M>> IStoreIndex<K, M> index(String name);
+  public <M extends Comparable<? super M>> IStoreIndex<K, M> index(IVelvet velvet, String name);
     
   public default List<V> get(IVelvet velvet, Collection<K> keys) {
     return keys.stream().map(key -> get(velvet, key)).collect(Collectors.toList());

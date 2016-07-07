@@ -1,8 +1,10 @@
 package com.zakgof.db.velvet.impl.entity;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 
+import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
 import com.zakgof.db.velvet.annotation.Kind;
 import com.zakgof.db.velvet.properties.IProperty;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
@@ -11,8 +13,8 @@ public class AnnoEntityDef<K, V> extends EntityDef<K, V> implements IPropertyAcc
 
   private AnnoKeyProvider<K, V> annoKeyProvider;
 
-  public AnnoEntityDef(Class<V> valueClass, AnnoKeyProvider<K, V> annoKeyProvider) {
-    super(annoKeyProvider.getKeyClass(), valueClass, kindOf(valueClass), annoKeyProvider);
+  public AnnoEntityDef(Class<V> valueClass, AnnoKeyProvider<K, V> annoKeyProvider, List<IStoreIndexDef<?, V>> indexes) {
+    super(annoKeyProvider.getKeyClass(), valueClass, kindOf(valueClass), annoKeyProvider, indexes);
     this.annoKeyProvider = annoKeyProvider;
   }
 

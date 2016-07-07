@@ -6,9 +6,9 @@ import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IKeyIndexLink;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.impl.entity.EntityDef;
-import com.zakgof.db.velvet.link.ISecIndexMultiLinkDef;
+import com.zakgof.db.velvet.link.ISecSortedMultiLinkDef;
 
-public class SecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M>> extends AIndexMultiLinkDef<HK, HV, CK, CV, M> implements ISecIndexMultiLinkDef<HK, HV, CK, CV, M> {
+public class SecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M>> extends AIndexMultiLinkDef<HK, HV, CK, CV, M> implements ISecSortedMultiLinkDef<HK, HV, CK, CV, M> {
 
   private final Function<CV, M> metric;
   private Class<M> mclazz;

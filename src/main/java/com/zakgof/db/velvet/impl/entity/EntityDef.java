@@ -1,5 +1,6 @@
 package com.zakgof.db.velvet.impl.entity;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -16,22 +17,22 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
   private final Class<K> keyClass;
   private final String kind;
   private Function<V, K> keyProvider;
-  private List<IStoreIndexDef<?, V>> indexes;
+  protected final List<IStoreIndexDef<?, V>> indexes;
   
   public EntityDef(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider, List<IStoreIndexDef<?, V>> indexes) {
-	  this(keyClass, valueClass, kind, keyProvider);
-	  this.indexes = indexes;
+	  this(keyClass, valueClass, kind, indexes);
+	  this.keyProvider = keyProvider;
   }
 
   public EntityDef(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider) {
-    this(keyClass, valueClass, kind);
-    this.keyProvider = keyProvider;
+    this(keyClass, valueClass, kind, keyProvider, Collections.emptyList());
   }
   
-  public EntityDef(Class<K> keyClass, Class<V> valueClass, String kind) {
+  public EntityDef(Class<K> keyClass, Class<V> valueClass, String kind, List<IStoreIndexDef<?, V>> indexes) {
     this.valueClass = valueClass;
     this.keyClass = keyClass;
     this.kind = kind;
+    this.indexes = indexes;
   }
   
   protected void setKeyProvider(Function<V, K> keyProvider) {
@@ -93,9 +94,8 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
   }
 
 	@Override
-	public <M extends Comparable<? super M>> IStoreIndex<K, M> index(String name) {
-		// TODO Auto-generated method stub
-		return null;
+	public <M extends Comparable<? super M>> IStoreIndex<K, M> index(IVelvet velvet, String name) {
+		return store(velvet).index(name);
 	}
 
 }

@@ -11,11 +11,12 @@ import com.zakgof.db.velvet.IVelvetEnvironment;
 @RunWith(Suite.class)
 
  @SuiteClasses({
+   StoreIndexesTest.class,
    PutGetTest.class,
    SimpleLinkTest.class,
-   PrimaryIndexTest.class,
-   PrimaryIndexTest2.class,
-   SecondaryIndexTest.class,
+   PrimarySortedLinkTest.class,
+   PrimarySortedLinkTest2.class,
+   SecondarySortedLinkTest.class,
    SortedStoreTest.class,
    PerformanceTest.class,
    ConcurrentWriteTest.class,

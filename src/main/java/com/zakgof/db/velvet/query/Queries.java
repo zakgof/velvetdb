@@ -1,10 +1,10 @@
 package com.zakgof.db.velvet.query;
 
-import com.zakgof.db.velvet.link.IIndexedMultiLink;
+import com.zakgof.db.velvet.link.ISortedMultiLink;
 
 public class Queries {
 	
-  public static <K, M extends Comparable<? super M>> Builder<K, M> builder(IIndexedMultiLink<?, ?, K, ?, M> link) {
+  public static <K, M extends Comparable<? super M>> Builder<K, M> builder(ISortedMultiLink<?, ?, K, ?, M> link) {
     return new Builder<>(); // TODO: pass link ?
   }
 
@@ -12,63 +12,63 @@ public class Queries {
     return new Builder<>();
   }
 
-  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> range(M p1, boolean inclusive1, M p2, boolean inclusive2) {
+  public static <K, M extends Comparable<? super M>> IRangeQuery<K, M> range(M p1, boolean inclusive1, M p2, boolean inclusive2) {
     return Queries.<K, M> builder().from(new QueryAnchor<K, M>(inclusive1, p1)).to(new QueryAnchor<K, M>(inclusive2, p2)).build();
   }
 
-  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> greater(M p1) {
+  public static <K, M extends Comparable<? super M>> IRangeQuery<K, M> greater(M p1) {
     return Queries.<K, M> builder().greater(p1).build();
   }
 
-  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> less(M p2) {
+  public static <K, M extends Comparable<? super M>> IRangeQuery<K, M> less(M p2) {
     return Queries.<K, M> builder().less(p2).build();
   }
 
-  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> greaterOrEq(M p1) {
+  public static <K, M extends Comparable<? super M>> IRangeQuery<K, M> greaterOrEq(M p1) {
     return Queries.<K, M> builder().greaterOrEq(p1).build();
   }
 
-  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> lessOrEq(M p2) {
+  public static <K, M extends Comparable<? super M>> IRangeQuery<K, M> lessOrEq(M p2) {
     return Queries.<K, M> builder().lessOrEq(p2).build();
   }
 
-  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> equalsTo(M p) {
+  public static <K, M extends Comparable<? super M>> IRangeQuery<K, M> equalsTo(M p) {
     return Queries.<K, M> builder().greaterOrEq(p).lessOrEq(p).build();
   }
   
-  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> range(int offset, int limit) {
+  public static <K, M extends Comparable<? super M>> IRangeQuery<K, M> range(int offset, int limit) {
     return Queries.<K, M> builder().offset(offset).limit(limit).build();
   }
 
-  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> first(int limit) {
+  public static <K, M extends Comparable<? super M>> IRangeQuery<K, M> first(int limit) {
     return Queries.<K, M> builder().limit(limit).build();
   }
 
-  public static <K, M extends Comparable<? super M>> ISingleReturnIndexQuery<K, M> first() {
+  public static <K, M extends Comparable<? super M>> ISingleReturnRangeQuery<K, M> first() {
     return Queries.<K, M> builder().limit(1).buildSingle();
   }
 
-  public static <K, M extends Comparable<? super M>> IIndexQuery<K, M> last(int limit) {
+  public static <K, M extends Comparable<? super M>> IRangeQuery<K, M> last(int limit) {
     return Queries.<K, M> builder().descending().limit(limit).build();
   }
 
-  public static <K, M extends Comparable<? super M>> ISingleReturnIndexQuery<K, M> last() {
+  public static <K, M extends Comparable<? super M>> ISingleReturnRangeQuery<K, M> last() {
     return Queries.<K, M> builder().descending().limit(1).buildSingle();
   }
 
-  public static <K, M extends Comparable<? super M>> ISingleReturnIndexQuery<K, M> prev(M m) {
+  public static <K, M extends Comparable<? super M>> ISingleReturnRangeQuery<K, M> prev(M m) {
     return Queries.<K, M> builder().less(m).descending().limit(1).buildSingle();
   }
 
-  public static <K, M extends Comparable<? super M>> ISingleReturnIndexQuery<K, M> next(M m) {
+  public static <K, M extends Comparable<? super M>> ISingleReturnRangeQuery<K, M> next(M m) {
     return Queries.<K, M> builder().greater(m).limit(1).buildSingle();
   }
   
-  public static <K, M extends Comparable<? super M>> ISingleReturnIndexQuery<K, M> prevKey(K key) {
+  public static <K, M extends Comparable<? super M>> ISingleReturnRangeQuery<K, M> prevKey(K key) {
 		return Queries.<K, M>builder().lessKey(key).descending().limit(1).buildSingle();
 	}
 
-	public static <K, M extends Comparable<? super M>> ISingleReturnIndexQuery<K, M> nextKey(K key) {
+	public static <K, M extends Comparable<? super M>> ISingleReturnRangeQuery<K, M> nextKey(K key) {
 		return Queries.<K, M>builder().greaterKey(key).limit(1).buildSingle();
 	}
 
@@ -135,16 +135,16 @@ public class Queries {
     return this;
   }
 
-    public IIndexQuery<K, M> build() {
+    public IRangeQuery<K, M> build() {
       return new Query<>(lowAnchor, highAnchor, limit, offset, ascending);
     }
     
-    public ISingleReturnIndexQuery<K, M> buildSingle() {
+    public ISingleReturnRangeQuery<K, M> buildSingle() {
       return new SingleReturnQuery<>(lowAnchor, highAnchor, limit, offset, ascending);
     }
   }
 
-  private static class Query<K, M extends Comparable<? super M>> implements IIndexQuery<K, M> {
+  private static class Query<K, M extends Comparable<? super M>> implements IRangeQuery<K, M> {
 
     private final boolean ascending;
     private final int offset;
@@ -187,7 +187,7 @@ public class Queries {
 
   }
   
-  private static class SingleReturnQuery<K, M extends Comparable<? super M>> extends Query<K, M> implements ISingleReturnIndexQuery<K, M> {
+  private static class SingleReturnQuery<K, M extends Comparable<? super M>> extends Query<K, M> implements ISingleReturnRangeQuery<K, M> {
     public SingleReturnQuery(IQueryAnchor<K, M> lowAnchor, IQueryAnchor<K, M> highAnchor, int limit, int offset, boolean ascending) {
       super(lowAnchor, highAnchor, limit, offset, ascending);
     }    

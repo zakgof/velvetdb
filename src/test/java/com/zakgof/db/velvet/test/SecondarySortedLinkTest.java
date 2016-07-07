@@ -12,16 +12,16 @@ import org.junit.Test;
 
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.link.ISecIndexMultiLinkDef;
+import com.zakgof.db.velvet.link.ISecSortedMultiLinkDef;
 import com.zakgof.db.velvet.link.Links;
-import com.zakgof.db.velvet.query.IIndexQuery;
+import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.db.velvet.query.Queries;
 
-public class SecondaryIndexTest extends AVelvetTxnTest {
+public class SecondarySortedLinkTest extends AVelvetTxnTest {
   
   private IEntityDef<String, TestEnt> ENTITY = Entities.create(TestEnt.class);
   private IEntityDef<Integer, TestEnt3> ENTITY3 = Entities.create(Integer.class, TestEnt3.class, "realpojo", TestEnt3::getKey);
-  private ISecIndexMultiLinkDef<String, TestEnt, Integer, TestEnt3, Long> MULTI = Links.sec(ENTITY, ENTITY3, Long.class, TestEnt3::getWeight);
+  private ISecSortedMultiLinkDef<String, TestEnt, Integer, TestEnt3, Long> MULTI = Links.sec(ENTITY, ENTITY3, Long.class, TestEnt3::getWeight);
 
   private TestEnt root;
 
@@ -225,7 +225,7 @@ public class SecondaryIndexTest extends AVelvetTxnTest {
     return s;
   }
   
-  private void check(IIndexQuery<Integer, Long> query, Object...ref) {
+  private void check(IRangeQuery<Integer, Long> query, Object...ref) {
     List<String> result = MULTI.indexed(query).multi(velvet, root).stream().map(TestEnt3::getStr).collect(Collectors.toList());
     int i = 0;
     for (Object r : ref) {

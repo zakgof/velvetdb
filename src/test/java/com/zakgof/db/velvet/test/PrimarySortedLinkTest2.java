@@ -8,20 +8,19 @@ import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.impl.link.PriIndexMultiLinkDef;
 import com.zakgof.db.velvet.link.Links;
-import com.zakgof.db.velvet.query.IIndexQuery;
+import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.db.velvet.query.Queries;
 
-public class PrimaryIndexTest extends AVelvetTxnTest {
+public class PrimarySortedLinkTest2 extends AVelvetTxnTest {
   
-  protected IEntityDef<String, TestEnt> ENTITY = Entities.create(TestEnt.class);
-  protected IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.create(TestEnt2.class);
-  protected PriIndexMultiLinkDef<String, TestEnt, Integer, TestEnt2> MULTI = Links.pri(ENTITY, ENTITY2);
+  private IEntityDef<String, TestEnt> ENTITY = Entities.create(TestEnt.class);
+  private IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.create(TestEnt2.class);
+  private PriIndexMultiLinkDef<String, TestEnt, Integer, TestEnt2> MULTI = Links.pri(ENTITY, ENTITY2);
 
   private TestEnt root;
 
   @Before
   public void init() {
-    
     Integer[] keys = new Integer[] {7, 2, 9, 1, 4, 8, 3, 6};
     root = new TestEnt("root", 1.0f);
     ENTITY.put(velvet, root);
@@ -31,7 +30,6 @@ public class PrimaryIndexTest extends AVelvetTxnTest {
       ENTITY2.put(velvet, e2);
       MULTI.connect(velvet, root, e2);
     }
-    
   }
 
   @Test
@@ -46,12 +44,12 @@ public class PrimaryIndexTest extends AVelvetTxnTest {
   
   @Test
   public void testGreaterOrEqDesc() {
-    check(Queries.<Integer,Integer>builder().descending().greaterOrEq(-1).build(),     9, 8, 7, 6, 4, 3, 2, 1);
-    check(Queries.<Integer,Integer>builder().descending().greaterOrEq(1).build(),      9, 8, 7, 6, 4, 3, 2, 1);
-    check(Queries.<Integer,Integer>builder().descending().greaterOrEq(5).build(),      9, 8, 7, 6);
-    check(Queries.<Integer,Integer>builder().descending().greaterOrEq(6).build(),      9, 8, 7, 6);
-    check(Queries.<Integer,Integer>builder().descending().greaterOrEq(9).build(),      9);
-    check(Queries.<Integer,Integer>builder().descending().greaterOrEq(10).build()      );
+    check(Queries.<Integer, Integer>builder().descending().greaterOrEq(-1).build(),     9, 8, 7, 6, 4, 3, 2, 1);
+    check(Queries.<Integer, Integer>builder().descending().greaterOrEq(1).build(),      9, 8, 7, 6, 4, 3, 2, 1);
+    check(Queries.<Integer, Integer>builder().descending().greaterOrEq(5).build(),      9, 8, 7, 6);
+    check(Queries.<Integer, Integer>builder().descending().greaterOrEq(6).build(),      9, 8, 7, 6);
+    check(Queries.<Integer, Integer>builder().descending().greaterOrEq(9).build(),      9);
+    check(Queries.<Integer, Integer>builder().descending().greaterOrEq(10).build()      );
   }
   
   
@@ -128,33 +126,30 @@ public class PrimaryIndexTest extends AVelvetTxnTest {
   
   @Test
   public void testRangeDesc() {
-    check(Queries.<Integer,Integer>builder().descending().greaterOrEq(2).less(8).build(),   7, 6, 4, 3, 2);     
-    check(Queries.<Integer,Integer>builder().descending().greaterOrEq(8).less(8).build());
-    check(Queries.<Integer,Integer>builder().descending().greater(0).less(3).build(),   2, 1);
-    check(Queries.<Integer,Integer>builder().lessOrEq(7).descending().greater(5).build(),  7, 6);
-    check(Queries.<Integer,Integer>builder().less(10).descending().greaterOrEq(5).build(),  9, 8, 7, 6);
-    check(Queries.<Integer,Integer>builder().lessOrEq(10).descending().greaterOrEq(5).build(),  9, 8, 7, 6);
-    check(Queries.<Integer,Integer>builder().less(9).descending().greaterOrEq(5).build(), 8, 7, 6);
-    check(Queries.<Integer,Integer>builder().lessOrEq(9).descending().greaterOrEq(5).build(), 9, 8, 7, 6);
+    check(Queries.<Integer, Integer>builder().descending().greaterOrEq(2).less(8).build(),   7, 6, 4, 3, 2);     
+    check(Queries.<Integer, Integer>builder().descending().greaterOrEq(8).less(8).build());
+    check(Queries.<Integer, Integer>builder().descending().greater(0).less(3).build(),   2, 1);
+    check(Queries.<Integer, Integer>builder().lessOrEq(7).descending().greater(5).build(),  7, 6);
+    check(Queries.<Integer, Integer>builder().less(10).descending().greaterOrEq(5).build(),  9, 8, 7, 6);
   }
   
   @Test
   public void testLimitOffset() {
-    check(Queries.<Integer,Integer>builder().greaterOrEq(2).less(8).limit(2).build(),        2, 3);
-    check(Queries.<Integer,Integer>builder().greaterOrEq(2).less(8).limit(10).build(),       2, 3, 4, 6, 7);
-    check(Queries.<Integer,Integer>builder().greaterOrEq(2).less(8).limit(10).offset(2).build(),  4, 6, 7);
-    check(Queries.<Integer,Integer>builder().greaterOrEq(2).less(8).limit(2).offset(2).build(),  4, 6);
-    check(Queries.<Integer,Integer>builder().greaterOrEq(2).less(8).limit(1).offset(10).build());    
-    check(Queries.<Integer,Integer>builder().greaterOrEq(2).less(8).limit(1).descending().offset(1).build(),     6);
-    check(Queries.<Integer,Integer>builder().greaterOrEq(2).less(8).limit(10).descending().offset(1).build(),     6, 4, 3, 2);
-    check(Queries.<Integer,Integer>builder().greaterOrEq(2).less(8).limit(1).descending().offset(4).build(),      2);
-    check(Queries.<Integer,Integer>builder().limit(4).build(),                     1, 2, 3, 4);
-    check(Queries.<Integer,Integer>builder().limit(4).descending().build(),        9, 8, 7, 6);
-    check(Queries.<Integer,Integer>builder().limit(4).offset(2).build(),                    3, 4, 6, 7);
-    check(Queries.<Integer,Integer>builder().limit(4).descending().offset(5).build(),       3, 2, 1);
+    check(Queries.<Integer, Integer>builder().greaterOrEq(2).less(8).limit(2).build(),        2, 3);
+    check(Queries.<Integer, Integer>builder().greaterOrEq(2).less(8).limit(10).build(),       2, 3, 4, 6, 7);
+    check(Queries.<Integer, Integer>builder().greaterOrEq(2).less(8).limit(10).offset(2).build(),  4, 6, 7);
+    check(Queries.<Integer, Integer>builder().greaterOrEq(2).less(8).limit(2).offset(2).build(),  4, 6);
+    check(Queries.<Integer, Integer>builder().greaterOrEq(2).less(8).limit(1).offset(10).build());    
+    check(Queries.<Integer, Integer>builder().greaterOrEq(2).less(8).limit(1).descending().offset(1).build(),     6);
+    check(Queries.<Integer, Integer>builder().greaterOrEq(2).less(8).limit(10).descending().offset(1).build(),     6, 4, 3, 2);
+    check(Queries.<Integer, Integer>builder().greaterOrEq(2).less(8).limit(1).descending().offset(4).build(),      2);
+    check(Queries.<Integer, Integer>builder().limit(4).build(),                     1, 2, 3, 4);
+    check(Queries.<Integer, Integer>builder().limit(4).descending().build(),        9, 8, 7, 6);
+    check(Queries.<Integer, Integer>builder().limit(4).offset(2).build(),                    3, 4, 6, 7);
+    check(Queries.<Integer, Integer>builder().limit(4).descending().offset(5).build(),       3, 2, 1);
   }
   
-  private void check(IIndexQuery<Integer, Integer> query, int...v) {
+  private void check(IRangeQuery<Integer, Integer> query, int...v) {
     int[] keys = MULTI.indexed(query).multi(velvet, root).stream().mapToInt(TestEnt2::getKey).toArray();
     Assert.assertArrayEquals(v, keys);
   }
