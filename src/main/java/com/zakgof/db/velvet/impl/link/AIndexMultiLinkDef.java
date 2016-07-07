@@ -5,14 +5,14 @@ import java.util.List;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IKeyIndexLink;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.link.IIndexedMultiLink;
+import com.zakgof.db.velvet.link.ISortedMultiLink;
 import com.zakgof.db.velvet.link.IMultiGetter;
 import com.zakgof.db.velvet.link.ISingleGetter;
-import com.zakgof.db.velvet.query.IIndexQuery;
-import com.zakgof.db.velvet.query.ISingleReturnIndexQuery;
+import com.zakgof.db.velvet.query.IRangeQuery;
+import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
 
 abstract class AIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M>> extends MultiLinkDef<HK, HV, CK, CV>
-		implements IIndexedMultiLink<HK, HV, CK, CV, M> {
+		implements ISortedMultiLink<HK, HV, CK, CV, M> {
 
 	public AIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
 		super(hostEntity, childEntity);
@@ -21,7 +21,7 @@ abstract class AIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M
 	abstract protected IKeyIndexLink<CK, M> index(IVelvet velvet, HK akey);
 
 	@Override
-	public IMultiGetter<HK, HV, CK, CV> indexed(IIndexQuery<CK, M> indexQuery) {
+	public IMultiGetter<HK, HV, CK, CV> indexed(IRangeQuery<CK, M> indexQuery) {
 
 		return new IMultiGetter<HK, HV, CK, CV>() {
 
@@ -48,7 +48,7 @@ abstract class AIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M
 	}
 
 	@Override
-	public ISingleGetter<HK, HV, CK, CV> indexedSingle(ISingleReturnIndexQuery<CK, M> indexQuery) {
+	public ISingleGetter<HK, HV, CK, CV> indexedSingle(ISingleReturnRangeQuery<CK, M> indexQuery) {
 		return new ISingleGetter<HK, HV, CK, CV>() {
 			@Override
 			public CV single(IVelvet velvet, HV node) {

@@ -12,13 +12,13 @@ import java.util.stream.Stream;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.link.IBiLinkDef;
-import com.zakgof.db.velvet.link.IIndexedMultiLink;
+import com.zakgof.db.velvet.link.ISortedMultiLink;
 import com.zakgof.db.velvet.link.IMultiGetter;
 import com.zakgof.db.velvet.link.IMultiLinkDef;
 import com.zakgof.db.velvet.link.ISingleGetter;
 import com.zakgof.db.velvet.link.ISingleLinkDef;
 import com.zakgof.db.velvet.link.Links;
-import com.zakgof.db.velvet.query.IIndexQuery;
+import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.tools.generic.Functions;
 import com.zakgof.tools.generic.IFunction;
 
@@ -68,7 +68,7 @@ public class IslandModel {
         return this;
       }
       
-      public <CK, CV, M extends Comparable<? super M>> FetcherEntityBuilder<K, V> include(IIndexedMultiLink<K, V, CK, CV, M> indexed, IIndexQuery<CK, M> query) {
+      public <CK, CV, M extends Comparable<? super M>> FetcherEntityBuilder<K, V> include(ISortedMultiLink<K, V, CK, CV, M> indexed, IRangeQuery<CK, M> query) {
           multis.put(indexed.getKind(), new MultiGetterConnector<K, V, CK, CV>(indexed.indexed(query)));
           return this;
         }

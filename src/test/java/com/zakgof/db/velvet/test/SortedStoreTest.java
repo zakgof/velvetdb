@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.ISortableEntityDef;
-import com.zakgof.db.velvet.query.IIndexQuery;
+import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.db.velvet.query.Queries;
 
 public class SortedStoreTest extends AVelvetTxnTest {
@@ -23,7 +23,7 @@ public class SortedStoreTest extends AVelvetTxnTest {
   public void init() {
     
     // v1 v2 v3 v5 v7    
-    ENTITY2.put(velvet, new TestEnt2(7));    
+    ENTITY2.put(velvet, new TestEnt2(7));
     ENTITY2.put(velvet, new TestEnt2(5)); 
     ENTITY2.put(velvet, new TestEnt2(2));
     ENTITY2.put(velvet, new TestEnt2(3));
@@ -131,7 +131,7 @@ public class SortedStoreTest extends AVelvetTxnTest {
         
   }
   
-  void check(IIndexQuery<Integer, Integer> query, Integer... ref) {
+  void check(IRangeQuery<Integer, Integer> query, Integer... ref) {
     List<TestEnt2> result = ENTITY2.get(velvet, query);
     Assert.assertEquals(Arrays.stream(ref).collect(Collectors.toList()), result.stream().map(TestEnt2::getKey).collect(Collectors.toList()));
     List<TestEnt3> resultE = ENTITY_EMPTY.get(velvet, query);

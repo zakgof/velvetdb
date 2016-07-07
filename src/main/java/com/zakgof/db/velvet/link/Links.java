@@ -136,7 +136,7 @@ public class Links {
     return new PriIndexMultiLinkDef<>(hostEntity, childEntity);
   }
   
-  public static <HK, HV, CK, CV, M extends Comparable<? super M>> ISecIndexMultiLinkDef<HK, HV, CK, CV, M> sec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
+  public static <HK, HV, CK, CV, M extends Comparable<? super M>> ISecSortedMultiLinkDef<HK, HV, CK, CV, M> sec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
     return new SecIndexMultiLinkDef<HK, HV, CK, CV, M>(hostEntity, childEntity, mclazz, metric);
   }
   

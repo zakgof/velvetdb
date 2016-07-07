@@ -8,12 +8,12 @@ import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.link.IBiMultiLinkDef;
 import com.zakgof.db.velvet.link.IBiParentLinkDef;
 import com.zakgof.db.velvet.link.IMultiGetter;
-import com.zakgof.db.velvet.link.ISecIndexMultiLinkDef;
+import com.zakgof.db.velvet.link.ISecSortedMultiLinkDef;
 import com.zakgof.db.velvet.link.ISingleGetter;
-import com.zakgof.db.velvet.query.IIndexQuery;
-import com.zakgof.db.velvet.query.ISingleReturnIndexQuery;
+import com.zakgof.db.velvet.query.IRangeQuery;
+import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
 
-public class BiSecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M>> extends ABiLinkDef<HK, HV, CK, CV, SecIndexMultiLinkDef<HK, HV, CK, CV, M>, IBiParentLinkDef<CK, CV, HK, HV>> implements IBiMultiLinkDef<HK, HV, CK, CV>, ISecIndexMultiLinkDef<HK, HV, CK, CV, M> {
+public class BiSecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M>> extends ABiLinkDef<HK, HV, CK, CV, SecIndexMultiLinkDef<HK, HV, CK, CV, M>, IBiParentLinkDef<CK, CV, HK, HV>> implements IBiMultiLinkDef<HK, HV, CK, CV>, ISecSortedMultiLinkDef<HK, HV, CK, CV, M> {
 
   private BiSecIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
     super(new SecIndexMultiLinkDef<HK, HV, CK, CV, M>(hostEntity, childEntity, mclazz, metric));
@@ -38,12 +38,12 @@ public class BiSecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super
   }
 
 	@Override
-	public IMultiGetter<HK, HV, CK, CV> indexed(IIndexQuery<CK, M> indexQuery) {
+	public IMultiGetter<HK, HV, CK, CV> indexed(IRangeQuery<CK, M> indexQuery) {
 		return oneWay.indexed(indexQuery);
 	}
 
 	@Override
-	public ISingleGetter<HK, HV, CK, CV> indexedSingle(ISingleReturnIndexQuery<CK, M> indexQuery) {
+	public ISingleGetter<HK, HV, CK, CV> indexedSingle(ISingleReturnRangeQuery<CK, M> indexQuery) {
 		return oneWay.indexedSingle(indexQuery);
 	}
 	
