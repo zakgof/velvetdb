@@ -165,10 +165,32 @@ public class SecondarySortedLinkTest extends AVelvetTxnTest {
     check(Queries.lessOrEq(6L),      rOne, "two", "three", rFour, rSix);
     check(Queries.lessOrEq(7L),      rOne, "two", "three", rFour, rSix );
   }
-  
 
+  @Test
+  public void testGreaterKey() {
+    check(Queries. <Integer, Long>builder().greaterKey(21).build(),  rFour, rSix );
+    check(Queries. <Integer, Long>builder().greaterKey(33).build(),  "three", rFour, rSix);
+  }
+
+  @Test
+  public void testGreaterEqKey() {
+    check(Queries. <Integer, Long>builder().greaterOrEqKey(21).build(), "three", rFour, rSix );
+    check(Queries. <Integer, Long>builder().greaterOrEqKey(33).build(), "two", "three", rFour, rSix );
+  }
+
+  @Test
+  public void testLessKey() {
+    check(Queries. <Integer, Long>builder().lessKey(21).build(),  rOne, "two");
+    check(Queries. <Integer, Long>builder().lessKey(33).build(),  rOne);
+  }
   
-   
+  @Test
+  public void testLessOrEqKey() {
+    check(Queries. <Integer, Long>builder().lessOrEqKey(21).build(),  rOne, "two", "three");
+    check(Queries. <Integer, Long>builder().lessOrEqKey(33).build(),  rOne, "two");
+  }
+
+
   /*
    
   @Test
@@ -220,13 +242,63 @@ public class SecondarySortedLinkTest extends AVelvetTxnTest {
   }
   */
   
-  
+  @Test
+  public void testDelete() {
+    check(Queries.<Integer, Long>builder().build(),     rOne, "two", "three", rFour, rSix);
+    MULTI.disconnectKeys(velvet, root.getKey(), 33);
+    check(Queries.<Integer, Long>builder().build(),     rOne, "three", rFour, rSix);
+    MULTI.disconnectKeys(velvet, root.getKey(), 31);
+    check(Queries.<Integer, Long>builder().build(),     rOne, "three", rFour, "six-A");
+    MULTI.disconnectKeys(velvet, root.getKey(), 54);
+    check(Queries.<Integer, Long>builder().build(),     "one-B", "three", rFour, "six-A");
+    MULTI.disconnectKeys(velvet, root.getKey(), 44);
+    check(Queries.<Integer, Long>builder().build(),     "three", rFour, "six-A");
+    MULTI.disconnectKeys(velvet, root.getKey(), 47);
+    check(Queries.<Integer, Long>builder().build(),     "three", r("four-A", "four-C"), "six-A");
+    MULTI.disconnectKeys(velvet, root.getKey(), 34);
+    check(Queries.<Integer, Long>builder().build(),     "three", "four-C", "six-A");
+    MULTI.disconnectKeys(velvet, root.getKey(), 21);
+    check(Queries.<Integer, Long>builder().build(),     "four-C", "six-A");
+    MULTI.disconnectKeys(velvet, root.getKey(), 99);
+    check(Queries.<Integer, Long>builder().build(),     "four-C");
+    MULTI.disconnectKeys(velvet, root.getKey(), 60);
+    check(Queries.<Integer, Long>builder().build());
+  }
+
+  @Test
+  public void testContains() {
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 33));
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 31));
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 54));
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 44));
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 47));
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 34));
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 21));
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 99));
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 60));
+    
+    Assert.assertFalse(MULTI.isConnectedKeys(velvet, root.getKey(), 39));
+    Assert.assertFalse(MULTI.isConnectedKeys(velvet, root.getKey(), 38));
+    Assert.assertFalse(MULTI.isConnectedKeys(velvet, root.getKey(), 20));
+    Assert.assertFalse(MULTI.isConnectedKeys(velvet, root.getKey(), 100));
+  }
+
+  @Test
+  public void testAllKeys() {
+    List<String> result = MULTI.multi(velvet, root).stream().map(TestEnt3::getStr).collect(Collectors.toList());
+    checkData(result, new Object[]{rOne, "two", "three", rFour, rSix});
+  }
+
   private static Object r(String... s) {
     return s;
   }
   
   private void check(IRangeQuery<Integer, Long> query, Object...ref) {
     List<String> result = MULTI.indexed(query).multi(velvet, root).stream().map(TestEnt3::getStr).collect(Collectors.toList());
+    checkData(result, ref);
+  }
+
+  private void checkData(List<String> result, Object... ref) {
     int i = 0;
     for (Object r : ref) {
       if (r instanceof String) {

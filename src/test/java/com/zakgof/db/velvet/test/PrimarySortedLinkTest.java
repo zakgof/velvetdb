@@ -25,13 +25,13 @@ public class PrimarySortedLinkTest extends AVelvetTxnTest {
     Integer[] keys = new Integer[] {7, 2, 9, 1, 4, 8, 3, 6};
     root = new TestEnt("root", 1.0f);
     ENTITY.put(velvet, root);
-    
+
     for (Integer key : keys) {
       TestEnt2 e2 = new TestEnt2(key);
       ENTITY2.put(velvet, e2);
       MULTI.connect(velvet, root, e2);
     }
-    
+
   }
 
   @Test
@@ -153,7 +153,54 @@ public class PrimarySortedLinkTest extends AVelvetTxnTest {
     check(Queries.<Integer,Integer>builder().limit(4).offset(2).build(),                    3, 4, 6, 7);
     check(Queries.<Integer,Integer>builder().limit(4).descending().offset(5).build(),       3, 2, 1);
   }
-  
+
+  @Test
+  public void testDelete() {
+    check(Queries.<Integer,Integer>builder().build(),     1, 2, 3, 4, 6, 7, 8, 9);
+    MULTI.disconnectKeys(velvet, root.getKey(), 3);
+    check(Queries.<Integer,Integer>builder().build(),     1, 2, 4, 6, 7, 8, 9);
+    MULTI.disconnectKeys(velvet, root.getKey(), 1);
+    check(Queries.<Integer,Integer>builder().build(),     2, 4, 6, 7, 8, 9);
+    MULTI.disconnectKeys(velvet, root.getKey(), 9);
+    check(Queries.<Integer,Integer>builder().build(),     2, 4, 6, 7, 8);
+    MULTI.disconnectKeys(velvet, root.getKey(), 4);
+    check(Queries.<Integer,Integer>builder().build(),     2, 6, 7, 8);
+    MULTI.disconnectKeys(velvet, root.getKey(), 1); // NOOP
+    check(Queries.<Integer,Integer>builder().build(),     2, 6, 7, 8);
+    MULTI.disconnectKeys(velvet, root.getKey(), 7);
+    check(Queries.<Integer,Integer>builder().build(),     2, 6, 8);
+    MULTI.disconnectKeys(velvet, root.getKey(), 2);
+    check(Queries.<Integer,Integer>builder().build(),     6, 8);
+    MULTI.disconnectKeys(velvet, root.getKey(), 8);
+    check(Queries.<Integer,Integer>builder().build(),     6);
+    MULTI.disconnectKeys(velvet, root.getKey(), 6);
+    check(Queries.<Integer,Integer>builder().build());
+  }
+
+  @Test
+  public void testAllKeys() {
+    int[] keys = MULTI.multi(velvet, root).stream().mapToInt(TestEnt2::getKey).toArray();
+    Assert.assertArrayEquals(new int[]{1, 2, 3, 4, 6, 7, 8, 9}, keys);
+  }
+
+  @Test
+  public void testIsConnected() {
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 1));
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 2));
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 3));
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 4));
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 6));
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 7));
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 8));
+    Assert.assertTrue(MULTI.isConnectedKeys(velvet, root.getKey(), 9));
+    
+    Assert.assertFalse(MULTI.isConnectedKeys(velvet, root.getKey(), 0));
+    Assert.assertFalse(MULTI.isConnectedKeys(velvet, root.getKey(), 5));
+    Assert.assertFalse(MULTI.isConnectedKeys(velvet, root.getKey(), -1));
+    Assert.assertFalse(MULTI.isConnectedKeys(velvet, root.getKey(), 10));
+    Assert.assertFalse(MULTI.isConnectedKeys(velvet, root.getKey(), 11));
+  }
+
   private void check(IRangeQuery<Integer, Integer> query, int...v) {
     int[] keys = MULTI.indexed(query).multi(velvet, root).stream().mapToInt(TestEnt2::getKey).toArray();
     Assert.assertArrayEquals(v, keys);

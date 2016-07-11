@@ -20,6 +20,7 @@ public class StoreIndexesTest extends AVelvetTxnTest {
       Indexes.create("str", TestEnt3::getStr),
       Indexes.create("weight", TestEnt3::getWeight)
   );
+  private TestEnt3 value7;
 
   @Before
   public void init() {
@@ -29,7 +30,8 @@ public class StoreIndexesTest extends AVelvetTxnTest {
     ENTITY3.put(velvet, new TestEnt3(4,  800L, "h"));
     ENTITY3.put(velvet, new TestEnt3(5,  300L, "e"));
     ENTITY3.put(velvet, new TestEnt3(6, 1200L, "f"));
-    ENTITY3.put(velvet, new TestEnt3(7,  400L, "c"));
+    value7 = new TestEnt3(7,  400L, "c");
+    ENTITY3.put(velvet, value7);
     ENTITY3.put(velvet, new TestEnt3(8, 1100L, "k"));
     ENTITY3.put(velvet, new TestEnt3(9,  200L, "g"));
     ENTITY3.put(velvet, new TestEnt3(10, 600L, "a"));
@@ -43,6 +45,14 @@ public class StoreIndexesTest extends AVelvetTxnTest {
     check("key", Queries.<Integer, Integer>builder().build(), "limhefckgabdj");
     check("weight", Queries.<Integer, Integer>builder().build(), "lgecjabhmikfd");
     check("str", Queries.<Integer, Integer>builder().build(), "abcdefghijklm");
+  }
+
+  @Test
+  public void testRemove() {
+    ENTITY3.deleteValue(velvet, value7);
+    check("key", Queries.<Integer, Integer>builder().build(), "limhefkgabdj");
+    check("weight", Queries.<Integer, Integer>builder().build(), "lgejabhmikfd");
+    check("str", Queries.<Integer, Integer>builder().build(), "abdefghijklm");
   }
   
   private <K, M extends Comparable<? super M>> void check(String name, IRangeQuery<Integer, M> query, String ref) {
