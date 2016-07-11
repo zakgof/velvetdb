@@ -103,4 +103,19 @@ public class PutGetTest extends AVelvetTxnTest {
     Assert.assertEquals("k", ENTITY.keyOf(new TestEnt("k", 1.3f)));
   }
 
+  @Test
+  public void testContains() {
+    for (int d = 0; d < COUNT; d++) {
+      TestEnt e = new TestEnt("key" + d, d * 0.001f);
+      ENTITY.put(velvet, e);
+    }
+    for (int d = 0; d < COUNT; d++) {
+      boolean testYes = ENTITY.containsKey(velvet, "key" + d);
+      Assert.assertTrue(testYes);
+      boolean testNo = ENTITY.containsKey(velvet, "nokey" + d);
+      Assert.assertFalse(testNo);
+    }
+    Assert.assertEquals(COUNT, ENTITY.size(velvet));
+  }
+
 }

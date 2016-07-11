@@ -84,6 +84,11 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
   public void deleteKey(IVelvet velvet, K key) {
     store(velvet).delete(key);
   }
+
+  @Override
+  public boolean containsKey(IVelvet velvet, K key) {
+    return store(velvet).contains(key);
+  }
   
   @SuppressWarnings("unchecked")
   @Override

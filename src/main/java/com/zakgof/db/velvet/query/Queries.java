@@ -124,16 +124,26 @@ public class Queries {
       this.ascending = false;
       return this;
     }
-    
+
     public Builder<K, M> lessKey(K key) {
-    this.highAnchor = new QueryAnchor<>(key);
-    return this;
-  }
-    
+      this.highAnchor = QueryAnchor.byKey(key, false);
+      return this;
+    }
+
+    public Builder<K, M> lessOrEqKey(K key) {
+      this.highAnchor = QueryAnchor.byKey(key, true);
+      return this;
+    }
+
     public Builder<K, M> greaterKey(K key) {
-    this.lowAnchor = new QueryAnchor<>(key);
-    return this;
-  }
+      this.lowAnchor = QueryAnchor.byKey(key, false);
+      return this;
+    }
+
+    public Builder<K, M> greaterOrEqKey(K key) {
+      this.lowAnchor = QueryAnchor.byKey(key, true);
+      return this;
+    }
 
     public IRangeQuery<K, M> build() {
       return new Query<>(lowAnchor, highAnchor, limit, offset, ascending);
@@ -200,18 +210,22 @@ public class Queries {
     private final M value;
 
 	private final K key;
+	
+	private static <K, M extends Comparable<? super M>> QueryAnchor<K, M> byKey(K key, boolean including) {
+	  return new QueryAnchor<>(including, null, key);
+	}
+	
+	private QueryAnchor(boolean including, M value, K key) {
+	  this.including = including;
+    this.key = key;
+    this.value = value;
+	}
 
     private QueryAnchor(boolean including, M value) {
       this.including = including;
       this.value = value;
       this.key = null;
     }
-    
-    private QueryAnchor(K key) {
-        this.including = false;
-        this.value = null;
-        this.key = key;
-      }
 
     @Override
     public boolean isIncluding() {
