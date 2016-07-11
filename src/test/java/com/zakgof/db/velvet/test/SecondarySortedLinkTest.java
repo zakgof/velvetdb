@@ -190,6 +190,18 @@ public class SecondarySortedLinkTest extends AVelvetTxnTest {
     check(Queries. <Integer, Long>builder().lessOrEqKey(33).build(),  rOne, "two");
   }
 
+  @Test
+  public void testLessKeyDesc() {
+    check(Queries. <Integer, Long>builder().lessKey(21).descending().build(),  "two", rOne);
+    check(Queries. <Integer, Long>builder().lessKey(33).descending().build(),  rOne);
+  }
+  
+  @Test
+  public void testLessOrEqKeyDesc() {
+    check(Queries. <Integer, Long>builder().lessOrEqKey(21).descending().build(),  "three", "two", rOne);
+    check(Queries. <Integer, Long>builder().lessOrEqKey(33).descending().build(),  "two", rOne);
+  }
+
 
   /*
    
