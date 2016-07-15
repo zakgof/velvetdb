@@ -1,8 +1,7 @@
-/bin
-/proguard
-/gen
-/.settings
+.project
+.classpath
+.settings
 /target
 /db
-*.iml
+
 
