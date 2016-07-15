@@ -1,6 +1,0 @@
-data safety
------------
-
-remove link when source deleted (need to store all outbound links)
-remove link when destination deleted (need to store all inbound links)
-update sec index when value updated (need to store all outbound sec-index links)
