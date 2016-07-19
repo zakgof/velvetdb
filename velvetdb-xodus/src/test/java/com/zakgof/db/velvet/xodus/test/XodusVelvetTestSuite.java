@@ -12,7 +12,7 @@ import com.zakgof.db.velvet.xodus.XodusVelvetEnv;
 public class XodusVelvetTestSuite extends VelvetTestSuite {
 
   private static XodusVelvetEnv env;
-  private static File PATH = new File("D:/Pr/lab/xodustest");
+  private static File PATH = new File("D:/Pr/lab/xodustest"); // TODO !!!
 
   @BeforeClass 
   public static void setUpClass() {
@@ -30,6 +30,8 @@ public class XodusVelvetTestSuite extends VelvetTestSuite {
   private static IVelvetEnvironment createVelvet() {
     tearDownClass();
     env = new XodusVelvetEnv(PATH);
+    // env.setSerializer(() -> new KryoSerializer());
+    // env.setSerializer(() -> new ElsaVelvetSerializer());
     return env;
   }
 }
