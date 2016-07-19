@@ -5,6 +5,7 @@
 	<packaging>pom</packaging>
 	<version>0.0.1-SNAPSHOT</version>
 	<modules>
+	  <module>tools</module>
   	<module>velvetdb-core</module>
   	<module>velvetdb-serializer-elsa</module>
     <module>velvetdb-serializer-kryo</module>
