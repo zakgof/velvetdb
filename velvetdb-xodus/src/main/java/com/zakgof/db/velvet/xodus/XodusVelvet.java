@@ -69,15 +69,17 @@ class XodusVelvet implements IVelvet {
     private Class<V> valueClass;
     private Map<String, StoreIndexProcessor<K, V, ?>> indexes;
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public SimpleStore(String kind, Class<K> keyClass, Class<V> valueClass, List<IStoreIndexDef<?, V>> indexes) {
       this.kind = kind;
       this.valueMap = store(kind);
       this.keyClass = keyClass;
       this.valueClass = valueClass;
-      this.indexes = indexes.stream().collect(Collectors.toMap(IStoreIndexDef::name, indexDef -> createStoreReq(kind, keyClass, indexDef)));
+      this.indexes = indexes.stream()
+          .collect(Collectors.toMap(IStoreIndexDef::name, indexDef -> createStoreReq((IStoreIndexDef)indexDef)));
     }
 
-    private <M extends Comparable<? super M>> StoreIndexProcessor<K, V, M> createStoreReq(String kind, Class<K> keyClass, IStoreIndexDef<M, V> indexDef) {
+    private <M extends Comparable<? super M>> StoreIndexProcessor<K, V, M> createStoreReq(IStoreIndexDef<M, V> indexDef) {
       return new StoreIndexProcessor<K, V, M>(keyClass, indexDef.metric(), keyMetric(indexDef), "#s" + kind + "/" + indexDef.name());
     }
 
