@@ -759,12 +759,12 @@ class XodusVelvet implements IVelvet {
     }
 
     private void debug(Store store) {
-      System.err.println("STORE-----------------------------");
-      try (Cursor c = store.openCursor(tx)) {
-        while (c.getNext()) {
-          System.err.println(c.getKey() + " --> " + c.getValue());
-        }
-      }
+//      System.err.println("STORE-----------------------------");
+//      try (Cursor c = store.openCursor(tx)) {
+//        while (c.getNext()) {
+//          System.err.println(c.getKey() + " --> " + c.getValue());
+//        }
+//      }
     }
 
  }
