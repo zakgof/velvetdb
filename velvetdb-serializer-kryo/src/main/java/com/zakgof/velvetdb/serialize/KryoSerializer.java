@@ -23,6 +23,7 @@ public class KryoSerializer implements ISerializer {
     ByteArrayOutputStream bas = new ByteArrayOutputStream();
     Output output = new Output(bas);
     kryo.writeObject(output, object);
+    output.flush();
     return bas.toByteArray();
   }
 
