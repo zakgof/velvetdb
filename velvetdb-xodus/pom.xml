@@ -44,16 +44,6 @@
 			<version>1.10.19</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>com.zakgof</groupId>
-			<artifactId>velvetdb-serializer-kryo</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.zakgof</groupId>
-			<artifactId>velvetdb-serializer-elsa</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
