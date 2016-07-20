@@ -2,32 +2,35 @@ package com.zakgof.db.velvet;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
+import java.util.ServiceLoader;
+import java.util.stream.Collectors;
+
+import com.zakgof.tools.generic.Functions;
+
 
 public class VelvetFactory {
-  
-  private static ConcurrentHashMap<String, IVelvetInitializer> backends = new ConcurrentHashMap<>();
 
   public static IVelvetEnvironment open(String url) {
     try {
       URI u = new URI(url);
       if (!u.getScheme().equals("velvetdb"))
-        throw new VelvetException("Invalid url protocol");
-      
+        throw new VelvetException("Url protocol should be velvetdb://");
       String name = u.getHost();
-      IVelvetInitializer initializer = backends.get(name);
-      if (initializer == null)
-        throw new VelvetException("Velvetdb backend not registered: " + name); 
 
-      return initializer.open(u.getPath());
-      
+      ServiceLoader<IVelvetProvider> serviceLoader = ServiceLoader.load(IVelvetProvider.class);
+      IVelvetProvider provider = Functions.stream(serviceLoader.iterator())
+          .filter(reg -> reg.name().equals(name))
+          .findFirst()
+          .orElseThrow(() -> new VelvetException("Velvetdb backend not registered: " + name)); 
+      return provider.open(u.getPath());
     } catch (URISyntaxException e) {
       throw new VelvetException(e);
     }
   }
 
-  public static void register(String name, IVelvetInitializer initializer) {
-    backends.put(name, initializer);
+  public static List<IVelvetProvider> getProviders() {
+      ServiceLoader<IVelvetProvider> serviceLoader = ServiceLoader.load(IVelvetProvider.class);
+      return Functions.stream(serviceLoader.iterator()).collect(Collectors.toList());
   }
-
 }

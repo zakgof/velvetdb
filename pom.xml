@@ -10,5 +10,6 @@
   	<module>velvetdb-serializer-elsa</module>
     <module>velvetdb-serializer-kryo</module>
   	<module>velvetdb-xodus</module>
+  	<module>velvetdb-mapdb</module>
   </modules>
 </project>
