@@ -87,6 +87,11 @@ final public class Entities {
             return this;
         }
 
+        public  <K> IEntityDef<K, V> make(Class<K> keyClass, Function<V, K> keyFunction) {
+            String kind = AnnoEntityDef.kindOf(clazz);
+            return new EntityDef<>(keyClass, clazz, kind, keyFunction, indexes);
+        }
+
         public <K> IEntityDef<K, V> make() {
             AnnoKeyProvider<K, V> annoKeyProvider = new AnnoKeyProvider<K, V>(clazz);
             return new AnnoEntityDef<>(clazz, annoKeyProvider, indexes);
@@ -105,5 +110,6 @@ final public class Entities {
             AnnoKeyProvider<K, V> annoKeyProvider = new AnnoKeyProvider<K, V>(clazz);
             return new SortedAnnoEntityDef<K, V>(clazz, annoKeyProvider, indexes);
         }
+
     }
 }

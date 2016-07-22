@@ -18,7 +18,7 @@ public class StoreIndexesTest extends AVelvetTxnTest {
           .index("key", TestEnt3::getKey)
           .index("str", TestEnt3::getStr)
           .index("weight", TestEnt3::getWeight)
-          .make();
+          .make(Integer.class, TestEnt3::getKey);
   
   private TestEnt3 value7;
 
