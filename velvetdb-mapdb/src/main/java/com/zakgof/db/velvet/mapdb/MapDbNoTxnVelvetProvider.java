@@ -9,12 +9,12 @@ public class MapDbNoTxnVelvetProvider implements IVelvetProvider {
 
     @Override
     public IVelvetEnvironment open(String path) {
-        return new MapDbVelvetEnv(new File(path));
+        return new MapDbNoTxnEnv(new File(path));
     }
 
     @Override
     public String name() {
-        return "mapdb";
+        return "mapdb-notxn";
     }
 
 }
