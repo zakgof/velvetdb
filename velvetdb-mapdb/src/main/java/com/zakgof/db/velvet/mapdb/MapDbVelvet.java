@@ -4,10 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.NavigableSet;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -21,16 +22,19 @@ import org.mapdb.Fun;
 import org.mapdb.HTreeMap;
 
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.query.IQueryAnchor;
 import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.serialize.ISerializer;
 
 /**
- * normal store: #k/kind1 sorted store: treemap #n/kind : [key] -> [value]
+ * normal store: #k/kind1 
+ * sorted store: treemap #n/kind : [key] -> [value]
  * 
  * single link: hash map: [key1] -> [key2] 
- * multi link : tree set: [key1, key2] 
- * pri-multilink: set [key1, key2(index)]
+ * store index: treeset [metric1, key1]
+ * multi link : treeset: [key1, key2] 
+ * pri-multilink: treeset [key1, key2]
  * sec-multilink: treeset [key1, metric2, key2]
  *
  */
@@ -60,6 +64,7 @@ public class MapDbVelvet implements IVelvet {
 
         MAP valueMap;
         private String kind;
+        private Map<String, TreeSet<Object[]>> indexes = new HashMap<>();
 
         abstract MAP createMap(String kind);
 
@@ -106,6 +111,142 @@ public class MapDbVelvet implements IVelvet {
         public long size() {
             return valueMap.size();
         }
+
+        @Override
+        public <M extends Comparable<? super M>> IStoreIndex<K, M> index(String name) {
+            TreeSet<Object[]> indexSet = indexes.get(name);
+            return new StoreIndex<>(indexSet);
+        }
+    }
+
+    private abstract class ARangeQueryProcessor<K, M extends Comparable<? super M>, CURSOR> {
+        
+        CURSOR cursor;
+        protected NavigableSet<CURSOR> set;
+
+        public ARangeQueryProcessor(NavigableSet<CURSOR> set) {
+            this.set = set;
+        }
+
+        List<K> go(IRangeQuery<K, M> query) {
+    
+            List<K> result = new ArrayList<>();
+    
+            if (query.isAscending()) {
+                IQueryAnchor<K, M> lowAnchor = query.getLowAnchor();
+                gotoLowElement(lowAnchor);
+                int[] i = new int[] { 0 };
+                forwardWhile(() -> (i[0] < query.getOffset()), () -> i[0]++);
+                forwardWhile(
+                        () -> (isBelow(query.getHighAnchor(), true) && (query.getLimit() < 0 || result.size() < query.getLimit())),
+                        () -> result.add(cursorResult()));
+                
+                if (check() && query.getHighAnchor() != null && query.getHighAnchor().isIncluding() && cursorResult()!=null && cursorResult().equals(query.getHighAnchor().getKey()))
+                    result.add(cursorResult());
+            } else {
+                IQueryAnchor<K, M> highAnchor = query.getHighAnchor();
+                gotoHighElement(highAnchor);
+                int[] i = new int[] { 0 };
+                backwardWhile(() -> (i[0] < query.getOffset()), () -> i[0]++);
+                backwardWhile(
+                        () -> (isBelow(query.getLowAnchor(), false)
+                                && (query.getLimit() < 0 || result.size() < query.getLimit())),
+                        () -> result.add(cursorResult()));
+                if (check() && query.getLowAnchor() != null && query.getLowAnchor().isIncluding() && cursorResult()!=null && cursorResult().equals(query.getLowAnchor().getKey()))
+                    result.add(cursorResult());
+            }
+            return result;
+        }
+    
+        void forwardWhile(Supplier<Boolean> condition, Runnable action) {
+            while (check() && condition.get()) {
+                action.run();
+                CURSOR next = set.higher(cursor);
+                if (next == null)
+                    break;
+                cursor = next;
+            }
+        }
+    
+        void backwardWhile(Supplier<Boolean> condition, Runnable action) {
+            while (check() && condition.get()) {
+                action.run();
+                CURSOR prev = set.lower(cursor);
+                if (prev == null)
+                    break;
+                cursor = prev;
+            }
+        }
+    
+        boolean isBelow(IQueryAnchor<K, M> anchor, boolean below) {
+            if (anchor == null)
+                return true;
+            else {
+                M anchorValue = anchor.getMetric();
+                if (anchorValue == null) {
+                    return !cursorResult().equals(anchor.getKey());
+                }
+                int compare = cursorMetric().compareTo(anchorValue);
+                if (compare == 0 && anchor.isIncluding())
+                    return true;
+                return compare < 0 && below || compare > 0 && !below; // TODO // XOR
+            }
+        }
+    
+        void gotoLowElement(IQueryAnchor<K, M> anchor) {
+            if (anchor == null) {
+                cursor = set.isEmpty() ? null : set.first();
+            } else {
+                M metric = anchor.getMetric();
+                if (metric == null) {
+                    CURSOR keyEl = cursorAtKey(anchor.getKey());
+                    cursor = anchor.isIncluding() ? set.ceiling(keyEl) : set.higher(keyEl);
+                } else {
+                    CURSOR anchorEl = cursorAfterMetric(metric);
+                    cursor = set.higher(anchorEl);
+                    if (anchor.isIncluding()) {
+                        CURSOR good = cursor;
+                        for (;;) {
+                            cursor = cursor == null ? (set.isEmpty() ? null : set.last()) : set.lower(cursor);
+                            if (check() && cursorMetric().equals(metric))
+                                good = cursor;
+                            else
+                                break;
+                        }
+                        cursor = good;
+                    }
+                }
+            }
+        }
+    
+        void gotoHighElement(IQueryAnchor<K, M> anchor) {
+            if (anchor == null) {
+                cursor = set.isEmpty() ? null : set.last();
+            } else {
+                M metric = anchor.getMetric();
+                if (metric == null) {
+                    CURSOR keyEl = cursorAtKey(anchor.getKey());
+                    cursor = anchor.isIncluding() ? set.floor(keyEl) : set.lower(keyEl);
+                } else {
+                    CURSOR anchorEl = cursorAfterMetric(metric);
+                    cursor = set.floor(anchorEl);
+                    if (!anchor.isIncluding())
+                        while(check() && cursorMetric().equals(metric))
+                            cursor = set.lower(cursor);
+                }
+                
+            }
+        }
+    
+        abstract CURSOR cursorAtKey(K key);
+    
+        abstract CURSOR cursorAfterMetric(M metric);
+    
+        abstract M cursorMetric();
+    
+        abstract K cursorResult();
+    
+        abstract boolean check();
     }
 
     /*
@@ -120,12 +261,6 @@ public class MapDbVelvet implements IVelvet {
         @Override
         HTreeMap<K, V> createMap(String kind) {
             return db.hashMap("#n/" + kind);
-        }
-
-        @Override
-        public <M extends Comparable<? super M>> IStoreIndex<K, M> index(String name) {
-            // TODO
-            return null;
         }
     }
 
@@ -146,24 +281,36 @@ public class MapDbVelvet implements IVelvet {
 
         @Override
         public List<K> keys(IRangeQuery<K, K> query) {
-            return new SortedStoreRequest().go(query);
+            return new SortedStoreRequest(valueMap).go(query);
         }
 
         /**
-         * treemap [key (index)] -> [value]
+         * treemap [key] -> [value]
          */
-        private class SortedStoreRequest extends AIndexedRequest<K, K> {
+        private class SortedStoreRequest extends ARangeQueryProcessor<K, K, K> {
 
-            Entry<K, ?> cursor;
-
-            @Override
-            K indexValue() {
-                return cursor.getKey();
+            public SortedStoreRequest(BTreeMap<K, V> valueMap) {
+                super(valueMap.keySet());
             }
 
             @Override
-            K get() {
-                return cursor.getKey();
+            K cursorAtKey(K key) {
+                throw new VelvetException("TODO");
+            }
+
+            @Override
+            K cursorAfterMetric(K metric) {
+                return metric;
+            }
+
+            @Override
+            K cursorMetric() {
+                return cursor;
+            }
+
+            @Override
+            K cursorResult() {
+                return cursor;
             }
 
             @Override
@@ -171,51 +318,60 @@ public class MapDbVelvet implements IVelvet {
                 return cursor != null;
             }
 
-            @Override
-            void gotoLowElement(IQueryAnchor<K, K> anchor) {
-                if (anchor == null) {
-                    cursor = valueMap.firstEntry();
-                } else {
-                    cursor = anchor.isIncluding() ? valueMap.ceilingEntry(anchor.getMetric())
-                            : valueMap.higherEntry(anchor.getMetric());
-                }
-            }
-
-            @Override
-            void gotoHighElement(IQueryAnchor<K, K> anchor) {
-                if (anchor == null) {
-                    cursor = valueMap.lastEntry();
-                } else {
-                    cursor = anchor.isIncluding() ? valueMap.floorEntry(anchor.getMetric())
-                            : valueMap.lowerEntry(anchor.getMetric());
-                }
-            }
-
-            @Override
-            boolean next() {
-                Entry<K, ?> newCursor = valueMap.higherEntry(cursor.getKey());
-                if (newCursor != null)
-                    cursor = newCursor;
-                return newCursor != null;
-            }
-
-            @Override
-            boolean prev() {
-                Entry<K, ?> newCursor = valueMap.lowerEntry(cursor.getKey());
-                if (newCursor != null)
-                    cursor = newCursor;
-                return newCursor != null;
-            }
-
-        }
-
-        @Override
-        public <M extends Comparable<? super M>> IStoreIndex<K, M> index(String name) {
-            // TODO
-            return null;
         }
     }
 
+    private class StoreIndex<K, M extends Comparable<? super M>> implements IStoreIndex<K, M> {
+
+        private TreeSet<Object[]> indexSet;
+
+        StoreIndex(TreeSet<Object[]> indexSet) {
+            this.indexSet = indexSet;
+        }
+
+        @Override
+        public List<K> keys(IRangeQuery<K, M> query) {
+            return new StoreIndexProcessor<K, M>(indexSet).go(query);
+        }
+
+    }
+
+    /**
+     * store index: treeset [metric1, key1]
+     */
+    private class StoreIndexProcessor<K, M extends Comparable<? super M>> extends ARangeQueryProcessor<K, M, Object[]> {
+        
+        public StoreIndexProcessor(NavigableSet<Object[]> set) {
+            super(set);
+        }
+
+        @Override
+        Object[] cursorAtKey(K key) {
+            throw new VelvetException("TODO");
+        }
+
+        @Override
+        Object[] cursorAfterMetric(M metric) {
+            return new Object[] { metric, null };
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        M cursorMetric() {
+            return (M) cursor[0];
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        K cursorResult() {
+            return (K) cursor[1];
+        }
+
+        @Override
+        boolean check() {
+            return cursor != null;
+        }
+    }    
     //
     //
     //
@@ -264,85 +420,6 @@ public class MapDbVelvet implements IVelvet {
     public <K, V, M extends Comparable<? super M>> IKeyIndexLink<K, M> secondaryKeyIndex(Object key1, String edgekind,
             Function<V, M> nodeMetric, Class<M> mclazz, Class<K> keyClazz, IStore<K, V> childStore) {
         return new SecMultiLink<K, V, M>(key1, edgekind, nodeMetric, keyClazz, childStore);
-    }
-
-    private abstract class AIndexedRequest<K, M extends Comparable<? super M>> {
-
-        List<K> go(IRangeQuery<K, M> query) {
-
-            List<K> result = new ArrayList<>();
-
-            if (query.isAscending()) {
-                IQueryAnchor<K, M> lowAnchor = query.getLowAnchor();
-                gotoLowElement(lowAnchor);
-                int[] i = new int[] { 0 };
-                forwardWhile(() -> (i[0] < query.getOffset()), () -> i[0]++);
-                forwardWhile(
-                        () -> (isBelow(query.getHighAnchor(), true) && (query.getLimit() < 0 || result.size() < query.getLimit())),
-                        () -> result.add(get()));
-                
-                if (check() && query.getHighAnchor() != null && query.getHighAnchor().isIncluding() && get()!=null && get().equals(query.getHighAnchor().getKey()))
-                    result.add(get());
-            } else {
-                IQueryAnchor<K, M> highAnchor = query.getHighAnchor();
-                gotoHighElement(highAnchor);
-                int[] i = new int[] { 0 };
-                backwardWhile(() -> (i[0] < query.getOffset()), () -> i[0]++);
-                backwardWhile(
-                        () -> (isBelow(query.getLowAnchor(), false)
-                                && (query.getLimit() < 0 || result.size() < query.getLimit())),
-                        () -> result.add(get()));
-                if (check() && query.getLowAnchor() != null && query.getLowAnchor().isIncluding() && get()!=null && get().equals(query.getLowAnchor().getKey()))
-                    result.add(get());
-            }
-
-            return result;
-        }
-
-        void forwardWhile(Supplier<Boolean> condition, Runnable action) {
-            while (check() && condition.get()) {
-                action.run();
-                if (!next())
-                    break;
-            }
-        }
-
-        void backwardWhile(Supplier<Boolean> condition, Runnable action) {
-            while (check() && condition.get()) {
-                action.run();
-                if (!prev())
-                    break;
-            }
-        }
-
-        boolean isBelow(IQueryAnchor<K, M> anchor, boolean below) {
-            if (anchor == null)
-                return true;
-            else {
-                M anchorValue = anchor.getMetric();
-                if (anchorValue == null) {
-                    return !get().equals(anchor.getKey());
-                }
-                int compare = indexValue().compareTo(anchorValue);
-                if (compare == 0 && anchor.isIncluding())
-                    return true;
-                return compare < 0 && below || compare > 0 && !below; // TODO // XOR
-            }
-        }
-
-        abstract M indexValue();
-
-        abstract K get();
-
-        abstract boolean check();
-
-        abstract void gotoLowElement(IQueryAnchor<K, M> lowAnchor);
-
-        abstract void gotoHighElement(IQueryAnchor<K, M> highAnchor);
-
-        abstract boolean next();
-
-        abstract boolean prev();
     }
 
     /**
@@ -409,89 +486,7 @@ public class MapDbVelvet implements IVelvet {
             return connectSet.contains(el(key2));
         }
 
-        abstract class ALinkRequest<M extends Comparable<? super M>> extends AIndexedRequest<K, M> {
-
-            Object[] cursor;
-
-            abstract Object[] anchorElement(M key);
-
-            @SuppressWarnings("unchecked")
-            @Override
-            M indexValue() {
-                return (M) cursor[1];
-            }
-
-            @Override
-            boolean check() {
-                return cursor != null && cursor[0].equals(key1);
-            }
-
-            @Override
-            void gotoLowElement(IQueryAnchor<K, M> anchor) {
-                if (anchor == null) {
-                    cursor = connectSet.isEmpty() ? null : connectSet.first();
-                } else {
-                    M metric = anchor.getMetric();
-                    if (metric == null) {
-                        Object[] keyEl = el(anchor.getKey());
-                        cursor = anchor.isIncluding() ? connectSet.ceiling(keyEl) : connectSet.higher(keyEl);
-                    } else {
-                        Object[] anchorEl = anchorElement(metric);
-                        cursor = connectSet.higher(anchorEl);
-                        if (anchor.isIncluding()) {
-                            Object[] good = cursor;
-                            for(;;) {
-                              cursor = cursor == null ? connectSet.last() : connectSet.lower(cursor);
-                              if (check() && indexValue().equals(metric))
-                                  good = cursor;
-                              else
-                                  break;
-                            }
-                            cursor = good;
-                        }
-                    }
-                }
-            }
-
-            @Override
-            void gotoHighElement(IQueryAnchor<K, M> anchor) {
-                if (anchor == null) {
-                    cursor = connectSet.last();
-                } else {
-                    M metric = anchor.getMetric();
-                    if (metric == null) {
-                        Object[] keyEl = el(anchor.getKey());
-                        cursor = anchor.isIncluding() ? connectSet.floor(keyEl) : connectSet.lower(keyEl);
-                    } else {
-                        Object[] anchorEl = anchorElement(metric);
-                        cursor = connectSet.floor(anchorEl);
-                        if (!anchor.isIncluding())
-                            while(check() && indexValue().equals(metric))
-                                cursor = connectSet.lower(cursor);
-                    }
-                    
-                }
-            }
-
-            @Override
-            boolean next() {
-                Object[] newCursor = connectSet.higher(cursor);
-                if (newCursor != null)
-                    cursor = newCursor;
-                return newCursor != null;
-            }
-
-            @Override
-            boolean prev() {
-                Object[] newCursor = connectSet.lower(cursor);
-                if (newCursor != null)
-                    cursor = newCursor;
-                return newCursor != null;
-            }
-        }
-
     }
-
     /**
      * tree set [key1, key2]
      */
@@ -521,7 +516,7 @@ public class MapDbVelvet implements IVelvet {
     }
 
     /**
-     * set [key1, key2(index)]
+     * set [key1, key2]
      */
     private class PriMultiLink<K extends Comparable<? super K>> extends MultiLink<K> implements IKeyIndexLink<K, K> {
 
@@ -539,22 +534,45 @@ public class MapDbVelvet implements IVelvet {
             return new PriIndexRequest().go(query);
         }
 
-        private class PriIndexRequest extends ALinkRequest<K> {
+        private class PriIndexRequest extends ARangeQueryProcessor<K, K, Object[]> {
 
-            @Override
-            K get() {
-                return indexValue();
+            public PriIndexRequest() {
+                super(connectSet);
             }
 
             @Override
-            Object[] anchorElement(K key) {
-                return el(key);
+            Object[] cursorAtKey(K key) {
+                throw new VelvetException("TODO");
             }
+
+            @Override
+            Object[] cursorAfterMetric(K metric) {
+                return new Object[] {key1, metric};
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            K cursorMetric() {
+                return (K) cursor[1];
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            K cursorResult() {
+                return (K) cursor[1];
+            }
+
+            @Override
+            boolean check() {
+                return cursor != null && key1.equals(cursor[0]);
+            }
+
+           
         }
     }
 
     /**
-     * treeset [key1, index, key2]
+     * treeset [key1, metric2, key2]
      */
     private class SecMultiLink<K, V, M extends Comparable<? super M>> extends AMultiLink<K>
             implements IKeyIndexLink<K, M> {
@@ -564,7 +582,6 @@ public class MapDbVelvet implements IVelvet {
         public SecMultiLink(Object key1, String edgeKind, Function<V, M> nodeMetric, Class<K> keyClass,
                 IStore<K, V> childStore) {
             super(key1, edgeKind);
-            // TODO: which store ?? store compatibility.
             this.keyMetric = key -> {
                 V v = childStore.get(key);
                 return v == null ? null : nodeMetric.apply(v);
@@ -597,18 +614,39 @@ public class MapDbVelvet implements IVelvet {
             return new SecIndexRequest().go(query);
         }
 
-        private class SecIndexRequest extends ALinkRequest<M> {
+        private class SecIndexRequest extends ARangeQueryProcessor<K, M, Object[]> {
+
+            public SecIndexRequest() {
+                super(connectSet);
+            }
+
+            @Override
+            Object[] cursorAtKey(K key) {
+                return new Object[] {key1, keyMetric.apply(key), key};
+            }
+
+            @Override
+            Object[] cursorAfterMetric(M metric) {
+                return new Object[] {key1, metric, null};
+            }
 
             @SuppressWarnings("unchecked")
             @Override
-            K get() {
+            M cursorMetric() {
+                return (M) cursor[1];
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            K cursorResult() {
                 return (K) cursor[2];
             }
 
             @Override
-            Object[] anchorElement(M val) {
-                return new Object[] { key1, val, null };
+            boolean check() {
+                return cursor != null && key1.equals(cursor[0]);
             }
+
         }
 
     }
