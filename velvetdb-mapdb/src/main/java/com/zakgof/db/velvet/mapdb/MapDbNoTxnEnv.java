@@ -14,30 +14,31 @@ import com.zakgof.serialize.ISerializer;
 
 public class MapDbNoTxnEnv implements IVelvetEnvironment {
 
-  private DB db;
-  private Supplier<ISerializer> serializerSupplier;
+    private DB db;
+    private Supplier<ISerializer> serializerSupplier;
 
-  public MapDbNoTxnEnv(File file) {
-	  db = DBMaker.fileDB(file.getAbsoluteFile()).closeOnJvmShutdown().make();
-  }
-
-  @Override
-  public void execute(ITransactionCall<IVelvet> transaction) {
-    try {
-      transaction.execute(new MapDbVelvet(db, serializerSupplier));
-    } catch (Throwable e) {
-      throw new VelvetException(e);
+    public MapDbNoTxnEnv(File dir) {
+        File file = new File(dir, "velvet");
+        db = DBMaker.fileDB(file.getAbsoluteFile()).closeOnJvmShutdown().make();
     }
-  }
 
-  @Override
-  public void close() {
-    db.close();
-  }
+    @Override
+    public void execute(ITransactionCall<IVelvet> transaction) {
+        try {
+            transaction.execute(new MapDbVelvet(db, serializerSupplier));
+        } catch (Throwable e) {
+            throw new VelvetException(e);
+        }
+    }
 
-  @Override
-  public void setSerializer(Supplier<ISerializer> serializer) {
-    this.serializerSupplier = serializer;
-  }
+    @Override
+    public void close() {
+        db.close();
+    }
+
+    @Override
+    public void setSerializer(Supplier<ISerializer> serializer) {
+        this.serializerSupplier = serializer;
+    }
 
 }
