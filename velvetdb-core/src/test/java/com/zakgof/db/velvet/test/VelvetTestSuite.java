@@ -14,9 +14,9 @@ import com.zakgof.db.velvet.VelvetFactory;
 @RunWith(Suite.class)
 
  @SuiteClasses({
+   StoreIndexesTest.class,
    SecondarySortedLinkTest.class,
    SortedStoreTest.class,
-   StoreIndexesTest.class,
    PutGetTest.class,
    SimpleLinkTest.class,
    PrimarySortedLinkTest.class,

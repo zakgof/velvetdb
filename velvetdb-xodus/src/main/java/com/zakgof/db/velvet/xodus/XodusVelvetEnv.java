@@ -40,7 +40,7 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
       }
     });
     if (exs[0] != null)
-      throw new VelvetException(exs[0]);
+      throw (exs[0] instanceof RuntimeException) ? (RuntimeException)exs[0] : new VelvetException(exs[0]);
   }
 
   @Override
