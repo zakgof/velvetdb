@@ -437,7 +437,7 @@ public class MapDbVelvet implements IVelvet {
                         cursor = anchor.isIncluding() ? connectSet.ceiling(keyEl) : connectSet.higher(keyEl);
                     } else {
                         Object[] anchorEl = anchorElement(metric);
-                        cursor = connectSet.ceiling(anchorEl);
+                        cursor = connectSet.higher(anchorEl);
                         if (anchor.isIncluding()) {
                             Object[] good = cursor;
                             for(;;) {
