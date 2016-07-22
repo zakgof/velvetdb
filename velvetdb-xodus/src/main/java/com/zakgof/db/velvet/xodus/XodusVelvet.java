@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.query.IQueryAnchor;
 import com.zakgof.db.velvet.query.IRangeQuery;
@@ -53,11 +55,11 @@ class XodusVelvet implements IVelvet {
   }
   
   @Override
-  public <K, V> IStore<K, V> store(String kind, Class<K> keyClass, Class<V> valueClass, List<IStoreIndexDef<?, V>> indexes) {
+  public <K, V> IStore<K, V> store(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes) {
     return new SimpleStore<>(kind, keyClass, valueClass, indexes);
   }
   
-  public <K extends Comparable<? super K>, V> ISortedStore<K, V> sortedStore(String kind, Class<K> keyClass, Class<V> valueClass, List<IStoreIndexDef<?, V>> indexes) {
+  public <K extends Comparable<? super K>, V> ISortedStore<K, V> sortedStore(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes) {
     return new SortedStore<>(kind, keyClass, valueClass, indexes);
   }
   
@@ -70,7 +72,7 @@ class XodusVelvet implements IVelvet {
     private Map<String, StoreIndexProcessor<K, V, ?>> indexes;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public SimpleStore(String kind, Class<K> keyClass, Class<V> valueClass, List<IStoreIndexDef<?, V>> indexes) {
+    public SimpleStore(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes) {
       this.kind = kind;
       this.valueMap = store(kind);
       this.keyClass = keyClass;
@@ -173,7 +175,7 @@ class XodusVelvet implements IVelvet {
 
   private class SortedStore<K extends Comparable<? super K>, V> extends SimpleStore<K, V>implements ISortedStore<K, V> {
 
-    public SortedStore(String kind, Class<K> keyClass, Class<V> valueClass, List<IStoreIndexDef<?, V>> indexes) {
+    public SortedStore(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes) {
       super(kind, keyClass, valueClass, indexes);
     }
 
