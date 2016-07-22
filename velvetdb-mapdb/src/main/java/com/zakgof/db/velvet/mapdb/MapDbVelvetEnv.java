@@ -16,43 +16,44 @@ import com.zakgof.serialize.ISerializer;
 
 public class MapDbVelvetEnv implements IVelvetEnvironment {
 
-  private TxMaker txMaker;
-  private Supplier<ISerializer> serializerSupplier;
+    private TxMaker txMaker;
+    private Supplier<ISerializer> serializerSupplier;
 
-  public MapDbVelvetEnv(File file) {
-    txMaker = DBMaker.fileDB(file.getAbsoluteFile()).closeOnJvmShutdown().makeTxMaker();
-  }
-  
-  public MapDbVelvetEnv(Maker maker) {
-	this(maker.makeTxMaker());
-  }
-  
-  public MapDbVelvetEnv(TxMaker txMaker) {
-    this.txMaker = txMaker;
-  }
-
-  @Override
-  public void execute(ITransactionCall<IVelvet> transaction) {
-    DB db = txMaker.makeTx();
-    try {
-      transaction.execute(new MapDbVelvet(db, serializerSupplier));
-      db.commit();
-    } catch (Throwable e) {
-      db.rollback();
-      throw new VelvetException(e);
-    } finally {
-    	db.close();
+    public MapDbVelvetEnv(File dir) {
+        File file = new File(dir, "velvet");
+        txMaker = DBMaker.fileDB(file.getAbsoluteFile()).closeOnJvmShutdown().makeTxMaker();
     }
-  }
 
-  @Override
-  public void close() {
-    txMaker.close();
-  }
-  
-  @Override
-  public void setSerializer(Supplier<ISerializer> serializer) {
-    this.serializerSupplier = serializer;
-  }
+    public MapDbVelvetEnv(Maker maker) {
+        this(maker.makeTxMaker());
+    }
+
+    public MapDbVelvetEnv(TxMaker txMaker) {
+        this.txMaker = txMaker;
+    }
+
+    @Override
+    public void execute(ITransactionCall<IVelvet> transaction) {
+        DB db = txMaker.makeTx();
+        try {
+            transaction.execute(new MapDbVelvet(db, serializerSupplier));
+            db.commit();
+        } catch (Throwable e) {
+            db.rollback();
+            throw new VelvetException(e);
+        } finally {
+            db.close();
+        }
+    }
+
+    @Override
+    public void close() {
+        txMaker.close();
+    }
+
+    @Override
+    public void setSerializer(Supplier<ISerializer> serializer) {
+        this.serializerSupplier = serializer;
+    }
 
 }

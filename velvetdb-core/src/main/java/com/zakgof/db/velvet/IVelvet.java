@@ -1,5 +1,6 @@
 package com.zakgof.db.velvet;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
@@ -8,9 +9,9 @@ import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
 
 public interface IVelvet {
 
-  public <K, V> IStore<K, V> store(String kind, Class<K> keyClass, Class<V> valueClass, List<IStoreIndexDef<?, V>> stores);
+  public <K, V> IStore<K, V> store(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> stores);
   
-  public <K extends Comparable<? super K>, V> ISortedStore<K, V> sortedStore(String kind, Class<K> keyClass, Class<V> valueClass, List<IStoreIndexDef<?, V>> indexes);
+  public <K extends Comparable<? super K>, V> ISortedStore<K, V> sortedStore(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes);
   
   public <K> ILink<K> simpleIndex(Object key1, String edgekind, LinkType type);
 

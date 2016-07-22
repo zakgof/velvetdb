@@ -1,5 +1,6 @@
 package com.zakgof.db.velvet.impl.entity;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
@@ -13,7 +14,7 @@ import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
 
 public class SortedEntityDef<K extends Comparable<? super K>, V> extends EntityDef<K, V> implements ISortableEntityDef<K, V> {
   
-  public SortedEntityDef(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider, List<IStoreIndexDef<?, V>> indexes) {
+  public SortedEntityDef(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider, Collection<IStoreIndexDef<?, V>> indexes) {
     super(keyClass, valueClass, kind, keyProvider, indexes);
   }
 

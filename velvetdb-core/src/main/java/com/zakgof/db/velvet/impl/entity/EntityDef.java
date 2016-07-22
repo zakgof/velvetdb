@@ -1,5 +1,6 @@
 package com.zakgof.db.velvet.impl.entity;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
@@ -17,9 +18,9 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
   private final Class<K> keyClass;
   private final String kind;
   private Function<V, K> keyProvider;
-  protected final List<IStoreIndexDef<?, V>> indexes;
+  protected final Collection<IStoreIndexDef<?, V>> indexes;
   
-  public EntityDef(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider, List<IStoreIndexDef<?, V>> indexes) {
+  public EntityDef(Class<K> keyClass, Class<V> valueClass, String kind, Function<V, K> keyProvider, Collection<IStoreIndexDef<?, V>> indexes) {
 	  this(keyClass, valueClass, kind, indexes);
 	  this.keyProvider = keyProvider;
   }
@@ -28,7 +29,7 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     this(keyClass, valueClass, kind, keyProvider, Collections.emptyList());
   }
   
-  public EntityDef(Class<K> keyClass, Class<V> valueClass, String kind, List<IStoreIndexDef<?, V>> indexes) {
+  public EntityDef(Class<K> keyClass, Class<V> valueClass, String kind, Collection<IStoreIndexDef<?, V>> indexes) {
     this.valueClass = valueClass;
     this.keyClass = keyClass;
     this.kind = kind;

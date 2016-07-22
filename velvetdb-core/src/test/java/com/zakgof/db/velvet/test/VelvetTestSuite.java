@@ -14,13 +14,13 @@ import com.zakgof.db.velvet.VelvetFactory;
 @RunWith(Suite.class)
 
  @SuiteClasses({
+   SecondarySortedLinkTest.class,
+   SortedStoreTest.class,
    StoreIndexesTest.class,
    PutGetTest.class,
    SimpleLinkTest.class,
    PrimarySortedLinkTest.class,
    PrimarySortedLinkTest2.class,
-   SecondarySortedLinkTest.class,
-   SortedStoreTest.class,
    PerformanceTest.class,
    ConcurrentWriteTest.class,
    KeylessTest.class
@@ -30,7 +30,7 @@ public abstract class VelvetTestSuite {
 
     protected static Supplier<IVelvetEnvironment> velvetProvider;
     private static IVelvetEnvironment env;
-    private static String PATH = "D:/Pr/lab/xodustest"; // TODO
+    private static String PATH = "D:/Pr/lab/xodustest/"; // TODO
 
     protected static void setup(String providerName) {
         velvetProvider = () -> createVelvet(providerName);
@@ -38,6 +38,7 @@ public abstract class VelvetTestSuite {
 
     private static IVelvetEnvironment createVelvet(String providerName) {
         tearDownClass();
+        new File(PATH).mkdirs();
         env = VelvetFactory.open("velvetdb://" + providerName + "/" + PATH);
         // env.setSerializer(() -> new KryoSerializer());
         // env.setSerializer(() -> new ElsaVelvetSerializer());
