@@ -9,17 +9,17 @@ import org.junit.Test;
 
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.entity.Indexes;
 import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.db.velvet.query.Queries;
 
 public class StoreIndexesTest extends AVelvetTxnTest {
 
-  private IEntityDef<Integer, TestEnt3> ENTITY3 = Entities.create(TestEnt3.class,
-      Indexes.create("key", TestEnt3::getKey),
-      Indexes.create("str", TestEnt3::getStr),
-      Indexes.create("weight", TestEnt3::getWeight)
-  );
+  private IEntityDef<Integer, TestEnt3> ENTITY3 = Entities.from(TestEnt3.class)
+          .index("key", TestEnt3::getKey)
+          .index("str", TestEnt3::getStr)
+          .index("weight", TestEnt3::getWeight)
+          .make();
+  
   private TestEnt3 value7;
 
   @Before

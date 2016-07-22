@@ -1,8 +1,10 @@
 package com.zakgof.db.velvet.entity;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.function.Function;
 
 import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
@@ -65,5 +67,43 @@ final public class Entities {
     @SafeVarargs
     public static <V> IKeylessEntityDef<V> keyless(Class<V> valueClass, IStoreIndexDef<?, V>... indexes) {
         return new KeylessEntityDef<V>(valueClass, AnnoEntityDef.kindOf(valueClass), Arrays.asList(indexes));
+    }
+
+    public static <V> Builder<V> from(Class<V> clazz) {
+        return new Builder<V>(clazz);
+    }
+
+    public static class Builder<V> {
+
+        private Class<V> clazz;
+        private List<IStoreIndexDef<?, V>> indexes = new ArrayList<>();
+
+        private Builder (Class<V> clazz) {
+            this.clazz = clazz;
+        }
+
+        public <M extends Comparable<? super M>> Builder<V> index(String name, Function<V, M> metric) {
+            indexes.add(Indexes.create(name, metric));
+            return this;
+        }
+
+        public <K> IEntityDef<K, V> make() {
+            AnnoKeyProvider<K, V> annoKeyProvider = new AnnoKeyProvider<K, V>(clazz);
+            return new AnnoEntityDef<>(clazz, annoKeyProvider, indexes);
+        }
+
+        public IKeylessEntityDef<V> makeKeyless(String kind) {
+            return new KeylessEntityDef<>(clazz, kind, indexes);
+        }
+
+        public IKeylessEntityDef<V> makeKeyless() {
+            String kind = AnnoEntityDef.kindOf(clazz);
+            return new KeylessEntityDef<>(clazz, kind, indexes);
+        }
+
+        public <K extends Comparable<? super K>> ISortableEntityDef<K, V> makeSorted() {
+            AnnoKeyProvider<K, V> annoKeyProvider = new AnnoKeyProvider<K, V>(clazz);
+            return new SortedAnnoEntityDef<K, V>(clazz, annoKeyProvider, indexes);
+        }
     }
 }

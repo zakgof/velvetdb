@@ -8,7 +8,7 @@ import com.zakgof.db.velvet.entity.ISortableEntityDef;
 import com.zakgof.db.velvet.properties.IProperty;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
 
-public class SortedAnnoEntityDef<K extends Comparable<K>, V> extends SortedEntityDef<K, V>
+public class SortedAnnoEntityDef<K extends Comparable<? super K>, V> extends SortedEntityDef<K, V>
 		implements ISortableEntityDef<K, V>, IPropertyAccessor<K, V> {
 
 	private AnnoKeyProvider<K, V> annoKeyProvider;
