@@ -40,7 +40,7 @@ public class MapDbVelvetEnv implements IVelvetEnvironment {
             db.commit();
         } catch (Throwable e) {
             db.rollback();
-            throw new VelvetException(e);
+            throw (e instanceof RuntimeException) ? (RuntimeException)e : new VelvetException(e);
         } finally {
             db.close();
         }

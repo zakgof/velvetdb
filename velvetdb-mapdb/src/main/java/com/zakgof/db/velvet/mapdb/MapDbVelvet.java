@@ -4,11 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -49,28 +47,28 @@ public class MapDbVelvet implements IVelvet {
     }
 
     @Override
-    public <K, V> IStore<K, V> store(String kind, Class<K> keyClass, Class<V> valueClass,
-            Collection<IStoreIndexDef<?, V>> stores) {
-        return new SimpleStore<>(kind); // TODO: indexes
+    public <K, V> IStore<K, V> store(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes) {
+        return new SimpleStore<>(kind, indexes);
     }
 
     @Override
     public <K extends Comparable<? super K>, V> ISortedStore<K, V> sortedStore(String kind, Class<K> keyClass,
             Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes) {
-        return new SortedStore<>(kind); // TODO: indexes
+        return new SortedStore<>(kind, indexes);
     }
 
     abstract class AStore<K, V, MAP extends Map<K, V>> implements IStore<K, V> {
 
         MAP valueMap;
         private String kind;
-        private Map<String, TreeSet<Object[]>> indexes = new HashMap<>();
+        private Map<String, StoreIndex<K, ?, V>> indexes;
 
         abstract MAP createMap(String kind);
 
-        public AStore(String kind) {
+        public AStore(String kind, Collection<IStoreIndexDef<?, V>> indexes) {
             this.valueMap = createMap(kind);
             this.kind = kind;
+            this.indexes = indexes.stream().collect(Collectors.toMap(IStoreIndexDef::name, index -> new StoreIndex<>(kind, index)));
         }
 
         @Override
@@ -80,7 +78,14 @@ public class MapDbVelvet implements IVelvet {
 
         @Override
         public void put(K key, V value) {
+            V oldValue = valueMap.get(key);
             valueMap.put(key, value);
+            // remove indexes
+            if (oldValue != null) {
+                indexes.values().stream().forEach(req -> req.remove(key, oldValue));
+            }
+            // update indexes
+            indexes.values().stream().forEach(req -> req.add(key, value));
         }
 
         @SuppressWarnings("unchecked")
@@ -94,6 +99,10 @@ public class MapDbVelvet implements IVelvet {
 
         @Override
         public void delete(K key) {
+            V oldValue = valueMap.get(key);
+            if (oldValue != null) {
+              indexes.values().stream().forEach(req -> req.remove(key, oldValue));
+            }
             valueMap.remove(key);
         }
 
@@ -112,10 +121,10 @@ public class MapDbVelvet implements IVelvet {
             return valueMap.size();
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public <M extends Comparable<? super M>> IStoreIndex<K, M> index(String name) {
-            TreeSet<Object[]> indexSet = indexes.get(name);
-            return new StoreIndex<>(indexSet);
+            return (IStoreIndex<K, M>) indexes.get(name);
         }
     }
 
@@ -254,8 +263,8 @@ public class MapDbVelvet implements IVelvet {
      */
     private class SimpleStore<K, V> extends AStore<K, V, HTreeMap<K, V>> {
 
-        public SimpleStore(String kind) {
-            super(kind);
+        public SimpleStore(String kind, Collection<IStoreIndexDef<?, V>> indexes) {
+            super(kind, indexes);
         }
 
         @Override
@@ -270,8 +279,8 @@ public class MapDbVelvet implements IVelvet {
     private class SortedStore<K extends Comparable<? super K>, V> extends AStore<K, V, BTreeMap<K, V>>
             implements ISortedStore<K, V> {
 
-        public SortedStore(String kind) {
-            super(kind);
+        public SortedStore(String kind, Collection<IStoreIndexDef<?, V>> indexes) {
+            super(kind, indexes);
         }
 
         @Override
@@ -321,12 +330,23 @@ public class MapDbVelvet implements IVelvet {
         }
     }
 
-    private class StoreIndex<K, M extends Comparable<? super M>> implements IStoreIndex<K, M> {
+    private class StoreIndex<K, M extends Comparable<? super M>, V> implements IStoreIndex<K, M> {
 
-        private TreeSet<Object[]> indexSet;
+        private NavigableSet<Object[]> indexSet;
+        private Function<V, M> metric;
 
-        StoreIndex(TreeSet<Object[]> indexSet) {
-            this.indexSet = indexSet;
+        public StoreIndex(String kind, IStoreIndexDef<M, V> index) {
+            
+            metric = index.metric();
+            indexSet = db.treeSet("#s/" + kind + "/" + index.name(), BTreeKeySerializer.ARRAY2);
+        }
+
+        public void add(K key, V value) {
+            indexSet.add(new Object[] {metric.apply(value), key});
+        }
+
+        public void remove(K key, V value) {
+            indexSet.remove(new Object[] {metric.apply(value), key});
         }
 
         @Override
@@ -531,12 +551,12 @@ public class MapDbVelvet implements IVelvet {
 
         @Override
         public List<K> keys(Class<K> clazz, IRangeQuery<K, K> query) {
-            return new PriIndexRequest().go(query);
+            return new PriLinkProcessor().go(query);
         }
 
-        private class PriIndexRequest extends ARangeQueryProcessor<K, K, Object[]> {
+        private class PriLinkProcessor extends ARangeQueryProcessor<K, K, Object[]> {
 
-            public PriIndexRequest() {
+            public PriLinkProcessor() {
                 super(connectSet);
             }
 
@@ -611,12 +631,12 @@ public class MapDbVelvet implements IVelvet {
 
         @Override
         public List<K> keys(Class<K> clazz, IRangeQuery<K, M> query) {
-            return new SecIndexRequest().go(query);
+            return new SecLinkProcessor().go(query);
         }
 
-        private class SecIndexRequest extends ARangeQueryProcessor<K, M, Object[]> {
+        private class SecLinkProcessor extends ARangeQueryProcessor<K, M, Object[]> {
 
-            public SecIndexRequest() {
+            public SecLinkProcessor() {
                 super(connectSet);
             }
 
