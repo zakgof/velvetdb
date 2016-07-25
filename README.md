@@ -18,8 +18,8 @@ velvetdb is a general purpose embedded data storage
 ```xml
 <repositories>
     <repository>
-        <id>thirdparty</id>
-        <url>http://velvetdb.tk/:8081/nexus/content/repositories/snapshots</url>
+        <id>velvetdb</id>
+        <url>http://velvetdb.tk:8081/nexus/content/repositories/snapshots</url>
     </repository>
 </repositories>
 ```
