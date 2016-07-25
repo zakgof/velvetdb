@@ -1,0 +1,7 @@
+  <servers>
+      <server>
+          <id>diet</id>
+          <username>${env.DIET_NEXUS_USERNAME}</username>
+          <password>${env.DIET_NEXUS_PASSWORD}</password>
+      </server>
+  </servers>
