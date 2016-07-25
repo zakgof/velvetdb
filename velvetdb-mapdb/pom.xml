@@ -48,7 +48,7 @@
 				<version>2.19.1</version>
 				<configuration>
 					<includes>
-						<include>**/*TestSuite.class</include>
+						<include>**/MapDbVelvetTestSuite.class</include>
 					</includes>
 				</configuration>
 			</plugin>
