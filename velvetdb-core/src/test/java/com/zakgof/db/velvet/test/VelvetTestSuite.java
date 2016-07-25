@@ -24,9 +24,10 @@ import com.zakgof.db.velvet.VelvetFactory;
    SimpleLinkTest.class,
    PrimarySortedLinkTest.class,
    PrimarySortedLinkTest2.class,
-   PerformanceTest.class,
-   ConcurrentWriteTest.class,
    KeylessTest.class
+   // PerformanceTest.class,
+   // ConcurrentWriteTest.class,
+   
 })
 
 public abstract class VelvetTestSuite {
