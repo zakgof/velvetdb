@@ -65,10 +65,11 @@ public class MapDbVelvet implements IVelvet {
 
         abstract MAP createMap(String kind);
 
+        @SuppressWarnings({ "rawtypes", "unchecked" })
         public AStore(String kind, Collection<IStoreIndexDef<?, V>> indexes) {
             this.valueMap = createMap(kind);
             this.kind = kind;
-            this.indexes = indexes.stream().collect(Collectors.toMap(IStoreIndexDef::name, index -> new StoreIndex<>(kind, index)));
+            this.indexes = indexes.stream().collect(Collectors.toMap(IStoreIndexDef::name, index -> new StoreIndex(kind, index)));
         }
 
         @Override
