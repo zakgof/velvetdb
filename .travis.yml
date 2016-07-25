@@ -2,4 +2,4 @@ language: java
 jdk:
   - oraclejdk8
 after_success:
-  - mvn deploy --altDeploymentRepository diet::default::http://dieta-atkinsa.ru:8081/nexus/content/repositories/snapshots/ --settings travis-settings.xml -DskipTests=true -B
+  - mvn deploy --altDeploymentRepository diet::default::http://dieta-atkinsa.ru:8081/nexus/content/repositories/snapshots/ --settings travis-settings.xml -DskipTests -B
