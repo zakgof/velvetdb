@@ -83,7 +83,7 @@ final public class Entities {
         }
 
         public <M extends Comparable<? super M>> Builder<V> index(String name, Function<V, M> metric) {
-            indexes.add(Indexes.create(name, metric));
+            indexes.add(Indexes.<M, V>create(name, metric));
             return this;
         }
 
