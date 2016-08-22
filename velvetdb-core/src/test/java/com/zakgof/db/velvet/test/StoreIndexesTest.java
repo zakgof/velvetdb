@@ -56,7 +56,7 @@ public class StoreIndexesTest extends AVelvetTxnTest {
   }
   
   private <K, M extends Comparable<? super M>> void check(String name, IRangeQuery<Integer, M> query, String ref) {
-    List<Integer> keys = ENTITY3.<M>index(velvet, name).keys(query);
+    List<Integer> keys = ENTITY3.<M>indexKeys(velvet, name, query);
     List<TestEnt3> values = ENTITY3.get(velvet, keys);
     String result = values.stream().map(TestEnt3::getStr).collect(Collectors.joining(""));
     Assert.assertEquals(result, ref);
