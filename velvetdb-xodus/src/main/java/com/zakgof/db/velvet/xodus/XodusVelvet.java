@@ -13,7 +13,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.query.IQueryAnchor;
 import com.zakgof.db.velvet.query.IRangeQuery;
@@ -761,12 +760,12 @@ class XodusVelvet implements IVelvet {
     }
 
     private void debug(Store store) {
-      System.err.println("STORE-----------------------------");
-      try (Cursor c = store.openCursor(tx)) {
-        while (c.getNext()) {
-          System.err.println(c.getKey() + " --> " + c.getValue());
-        }
-      }
+//      System.err.println("STORE-----------------------------");
+//      try (Cursor c = store.openCursor(tx)) {
+//        while (c.getNext()) {
+//          System.err.println(c.getKey() + " --> " + c.getValue());
+//        }
+//      }
     }
 
  }
