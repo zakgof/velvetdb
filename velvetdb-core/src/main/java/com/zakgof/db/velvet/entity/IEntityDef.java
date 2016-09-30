@@ -26,7 +26,9 @@ public interface IEntityDef<K, V> {
 
     public long size(IVelvet velvet);
 
-    public void put(IVelvet velvet, V value);
+    public K put(IVelvet velvet, V value);
+
+    public K put(IVelvet velvet, K key, V value);
 
     public boolean containsKey(IVelvet velvet, K key);
 
