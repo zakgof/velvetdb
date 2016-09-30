@@ -1,11 +1,11 @@
 package com.zakgof.db.velvet.mapdb;
 
 import java.io.File;
-import java.util.function.Supplier;
 
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
+import com.annimon.stream.function.Supplier;
 import com.zakgof.db.txn.ITransactionCall;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvetEnvironment;

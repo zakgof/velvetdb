@@ -8,10 +8,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
+import com.annimon.stream.Collectors;
+import com.annimon.stream.Stream;
+import com.annimon.stream.function.Function;
+import com.annimon.stream.function.Supplier;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.query.IQueryAnchor;
@@ -76,7 +77,7 @@ class XodusVelvet implements IVelvet {
       this.valueMap = store(kind);
       this.keyClass = keyClass;
       this.valueClass = valueClass;
-      this.indexes = indexes.stream()
+      this.indexes = Stream.of(indexes)
           .collect(Collectors.toMap(IStoreIndexDef::name, indexDef -> createStoreReq((IStoreIndexDef)indexDef)));
     }
 
@@ -117,10 +118,10 @@ class XodusVelvet implements IVelvet {
       // remove indexes
       if (oldValueBi != null) {
         V oldValue = XodusVelvet.this.toObj(valueClass, oldValueBi);
-        indexes.values().stream().forEach(req -> req.remove(oldValue, key)); // TODO: mutables in cache !!!
+        Stream.of(indexes.values()).forEach(req -> req.remove(oldValue, key)); // TODO: mutables in cache !!!
       }
       // update indexes
-      indexes.values().stream().forEach(req -> req.add( value, key));
+      Stream.of(indexes.values()).forEach(req -> req.add( value, key));
     }
     
     @Override
@@ -135,7 +136,7 @@ class XodusVelvet implements IVelvet {
       ByteIterable oldValueBi = valueMap.get(tx, keyBi);
       if (oldValueBi != null) {
         V oldValue = XodusVelvet.this.toObj(valueClass, oldValueBi);
-        indexes.values().stream().forEach(req -> req.remove(oldValue, key)); // TODO: mutables in cache !!!
+        Stream.of(indexes.values()).forEach(req -> req.remove(oldValue, key)); // TODO: mutables in cache !!!
       }
 
       valueMap.delete(tx, keyBi);

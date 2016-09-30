@@ -2,8 +2,8 @@ package com.zakgof.db.velvet;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 
+import com.annimon.stream.function.Function;
 import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
 

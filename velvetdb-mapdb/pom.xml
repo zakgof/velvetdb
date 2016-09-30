@@ -20,6 +20,7 @@
 			<groupId>com.zakgof</groupId>
 			<artifactId>velvetdb</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
+			<classifier>android</classifier>
 		</dependency>
 		<dependency>
 			<groupId>com.zakgof</groupId>
@@ -52,6 +53,21 @@
 					</includes>
 				</configuration>
 			</plugin>
+			<plugin>
+		        <artifactId>maven-jar-plugin</artifactId>
+		        <executions>
+		            <execution>
+		                <id>default-jar</id>
+		                <phase>package</phase>
+		                <goals>
+		                    <goal>jar</goal>
+		                </goals>
+		                <configuration>
+		                    <classifier>android</classifier>
+		                </configuration>
+		            </execution>
+		        </executions>
+		    </plugin>
 		</plugins>
 	</build>
 </project>

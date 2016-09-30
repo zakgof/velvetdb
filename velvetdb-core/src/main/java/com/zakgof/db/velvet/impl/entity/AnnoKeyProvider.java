@@ -10,8 +10,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
+import com.annimon.stream.function.Function;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.annotation.Key;
 import com.zakgof.db.velvet.annotation.SortedKey;

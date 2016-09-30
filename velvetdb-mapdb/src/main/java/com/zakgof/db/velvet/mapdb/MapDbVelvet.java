@@ -7,10 +7,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import org.mapdb.Atomic;
 import org.mapdb.BTreeKeySerializer;
@@ -19,6 +15,10 @@ import org.mapdb.DB;
 import org.mapdb.Fun;
 import org.mapdb.HTreeMap;
 
+import com.annimon.stream.Collectors;
+import com.annimon.stream.Stream;
+import com.annimon.stream.function.Function;
+import com.annimon.stream.function.Supplier;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.query.IQueryAnchor;
@@ -69,7 +69,7 @@ public class MapDbVelvet implements IVelvet {
         public AStore(String kind, Collection<IStoreIndexDef<?, V>> indexes) {
             this.valueMap = createMap(kind);
             this.kind = kind;
-            this.indexes = indexes.stream().collect(Collectors.toMap(IStoreIndexDef::name, index -> new StoreIndex(kind, index)));
+            this.indexes = Stream.of(indexes).collect(Collectors.toMap(IStoreIndexDef::name, index -> new StoreIndex(kind, index)));
         }
 
         @Override
@@ -530,7 +530,7 @@ public class MapDbVelvet implements IVelvet {
         @Override
         public List<K> keys(Class<K> clazz) {
             @SuppressWarnings("unchecked")
-            List<K> keys = StreamSupport.stream(Fun.filter(connectSet, key1).spliterator(), false).map(v -> (K) v[1])
+            List<K> keys = Stream.of(Fun.filter(connectSet, key1)).map(v -> (K) v[1])
                     .collect(Collectors.toList());
             return keys;
         }
@@ -617,7 +617,7 @@ public class MapDbVelvet implements IVelvet {
         @SuppressWarnings("unchecked")
         @Override
         public List<K> keys(Class<K> clazz) {
-            return connectSet.stream().map(el -> (K) el[2]).collect(Collectors.toList());
+            return Stream.of(connectSet).map(el -> (K) el[2]).collect(Collectors.toList());
         }
 
         @Override

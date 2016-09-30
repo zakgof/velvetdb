@@ -17,6 +17,7 @@
 			<groupId>com.zakgof</groupId>
 			<artifactId>tools</artifactId>
 			<version>0.0.2-SNAPSHOT</version>
+			<classifier>android</classifier>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -41,9 +42,14 @@
 				<version>3.0.2</version>
 				<executions>
 					<execution>
+						<id>default-jar</id>
 						<goals>
+							<goal>jar</goal>
 							<goal>test-jar</goal>
 						</goals>
+						<configuration>
+		                    <classifier>android</classifier>
+		                </configuration>
 					</execution>
 				</executions>
 			</plugin>

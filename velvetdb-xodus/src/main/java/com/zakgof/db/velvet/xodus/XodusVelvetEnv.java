@@ -1,8 +1,8 @@
 package com.zakgof.db.velvet.xodus;
 
 import java.io.File;
-import java.util.function.Supplier;
 
+import com.annimon.stream.function.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.zakgof.db.txn.ITransactionCall;
 import com.zakgof.db.velvet.IVelvet;

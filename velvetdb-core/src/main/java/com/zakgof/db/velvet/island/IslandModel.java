@@ -6,17 +6,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+import com.annimon.stream.Collectors;
+import com.annimon.stream.Stream;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.link.IBiLinkDef;
-import com.zakgof.db.velvet.link.ISortedMultiLink;
 import com.zakgof.db.velvet.link.IMultiGetter;
 import com.zakgof.db.velvet.link.IMultiLinkDef;
 import com.zakgof.db.velvet.link.ISingleGetter;
 import com.zakgof.db.velvet.link.ISingleLinkDef;
+import com.zakgof.db.velvet.link.ISortedMultiLink;
 import com.zakgof.db.velvet.link.Links;
 import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.tools.generic.Functions;
@@ -145,7 +145,7 @@ public class IslandModel {
   }
 
   public <T> List<DataWrap<T>> fetchAll(IVelvet velvet, IEntityDef<?, T> entityDef) {
-    List<DataWrap<T>> wrap = entityDef.get(velvet).stream().map(node -> this.<T> createWrap(velvet, entityDef.getKind(), node, new Context())).collect(Collectors.toList());
+    List<DataWrap<T>> wrap = Stream.of(entityDef.get(velvet)).map(node -> this.<T> createWrap(velvet, entityDef.getKind(), node, new Context())).collect(Collectors.toList());
     return wrap;
   }
 
@@ -205,7 +205,7 @@ private <T> DataWrap<?> wrapChild(IVelvet velvet, Context context, T node, ISing
   }
 
   private <T, CK, CV> List<DataWrap<?>> wrapChildren(IVelvet velvet, Context context, FetcherEntity<?, T> entity, T node, IMultiConnector<?, T, CK, CV> multiConn) {
-    Stream<CV> stream = multiConn.getter().multi(velvet, node).stream().filter(l -> l != null);// TODO : check for error
+    Stream<CV> stream = Stream.of(multiConn.getter().multi(velvet, node)).filter(l -> l != null);// TODO : check for error
     return decorateBySort(entity, stream, multiConn.getter().getChildEntity().getValueClass()).map(o -> createWrap(velvet, multiConn.getter().getChildEntity().getKind(), o, context)).collect(Collectors.toList());
   }
 
@@ -260,7 +260,7 @@ private <T> DataWrap<?> wrapChild(IVelvet velvet, Context context, T node, ISing
   }
 
   public static <K, V> List<DataWrap<V>> rawRetchAll(IVelvet velvet, IEntityDef<K, V> entityDef) {
-    List<DataWrap<V>> nodes = entityDef.get(velvet).stream().map(node -> new DataWrap<V>(node)).collect(Collectors.toList());
+    List<DataWrap<V>> nodes = Stream.of(entityDef.get(velvet)).map(node -> new DataWrap<V>(node)).collect(Collectors.toList());
     return nodes;
   }
 

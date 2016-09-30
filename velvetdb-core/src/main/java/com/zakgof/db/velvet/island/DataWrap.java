@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.annimon.stream.Stream;
 import com.zakgof.db.velvet.link.IMultiLinkDef;
 import com.zakgof.db.velvet.link.ISingleLinkDef;
 
@@ -88,8 +89,8 @@ public class DataWrap<T> {
   @Override
   public String toString() {
     return " " + node + " " +
-        singles.entrySet().stream().reduce("", (s, e) -> s + e.getKey() + " [" + valueString(e.getValue()) + " ]" , (s1, s2) -> s1 + s2) +
-        multis.entrySet().stream().reduce("", (s, e) -> s + e.getKey() + " [" + e.getValue().size() + " ]" , (s1, s2) -> s1 + s2);
+        Stream.of(singles.entrySet()).reduce("", (s, e) -> s + e.getKey() + " [" + valueString(e.getValue()) + " ]") +
+        Stream.of(multis.entrySet()).reduce("", (s, e) -> s + e.getKey() + " [" + e.getValue().size() + " ]");
   }
   
   private String valueString(DataWrap<?> wrap) {

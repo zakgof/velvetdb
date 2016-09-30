@@ -2,8 +2,8 @@ package com.zakgof.db.velvet.impl.entity;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 
+import com.annimon.stream.function.Function;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.ISortedStore;
 import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;

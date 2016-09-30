@@ -2,8 +2,9 @@ package com.zakgof.db.velvet.entity;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import com.annimon.stream.Collectors;
+import com.annimon.stream.Stream;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
 import com.zakgof.db.velvet.query.IRangeQuery;
@@ -44,7 +45,7 @@ public interface IEntityDef<K, V> {
     public <M extends Comparable<? super M>> List<K> indexKeys(IVelvet velvet, String indexName, IRangeQuery<K, M> query);
 
     public default List<V> get(IVelvet velvet, Collection<K> keys) {
-        return keys.stream().map(key -> get(velvet, key)).collect(Collectors.toList());
+        return Stream.of(keys).map(key -> get(velvet, key)).collect(Collectors.toList());
     }
 
     public default List<V> get(IVelvet velvet) {
