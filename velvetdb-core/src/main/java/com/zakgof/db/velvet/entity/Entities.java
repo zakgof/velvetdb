@@ -53,15 +53,20 @@ final public class Entities {
 
     @SuppressWarnings("unchecked")
     @SafeVarargs
-    public static <K extends Comparable<K>, V> ISortableEntityDef<K, V> sorted(Class<V> valueClass, IStoreIndexDef<?, V>... indexes) {
+    public static <K extends Comparable<K>, V> ISortableEntityDef<K, V> sorted(Class<V> valueClass, String kind, IStoreIndexDef<?, V>... indexes) {
         AnnoKeyProvider<K, V> annoKeyProvider = new AnnoKeyProvider<K, V>(valueClass);
         if (!annoKeyProvider.hasKey()) {
-            return (ISortableEntityDef<K, V>) new KeylessEntityDef<V>(valueClass, AnnoEntityDef.kindOf(valueClass), Arrays.asList(indexes));
+            return (ISortableEntityDef<K, V>) new KeylessEntityDef<V>(valueClass, kind, Arrays.asList(indexes));
         } else if (annoKeyProvider.isSorted()) {
-            return new SortedAnnoEntityDef<>(valueClass, annoKeyProvider, Arrays.asList(indexes));
+            return new SortedAnnoEntityDef<>(valueClass, annoKeyProvider, kind, Arrays.asList(indexes));
         } else {
             throw new VelvetException("Key not sorted, use @SortedKey");
         }
+    }
+
+    @SafeVarargs
+    public static <K extends Comparable<K>, V> ISortableEntityDef<K, V> sorted(Class<V> valueClass, IStoreIndexDef<?, V>... indexes) {
+        return sorted(valueClass, AnnoEntityDef.kindOf(valueClass), indexes);
     }
 
     @SafeVarargs

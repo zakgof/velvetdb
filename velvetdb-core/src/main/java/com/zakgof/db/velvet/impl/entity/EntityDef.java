@@ -77,8 +77,13 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
         return store(velvet).size();
     }
 
-    public void put(IVelvet velvet, V value) {
-        store(velvet).put(keyOf(value), value);
+    public K put(IVelvet velvet, V value) {
+        return put(velvet, keyOf(value), value);
+    }
+   
+    public K put(IVelvet velvet, K key, V value) {
+        store(velvet).put(key, value);
+        return key;
     }
 
     public void deleteKey(IVelvet velvet, K key) {

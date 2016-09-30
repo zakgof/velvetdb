@@ -8,7 +8,7 @@ public interface IProperty<P, V> {
   
   public P get(V instance);
   
-  public default void put(V instance, P propValue) {
+  public default V put(V instance, P propValue) {
     throw new UnsupportedOperationException();
   }
   

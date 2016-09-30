@@ -3,6 +3,7 @@ package com.zakgof.db.velvet.xodus;
 import java.io.File;
 import java.util.function.Supplier;
 
+import com.google.common.collect.ImmutableMap;
 import com.zakgof.db.txn.ITransactionCall;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvetEnvironment;
@@ -22,7 +23,7 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
   public XodusVelvetEnv(File file) {
     env = Environments.newInstance(file.getAbsolutePath());
     keyGen = new IKeyGen();
-    serializerSupplier = () -> new ZeSerializer();
+    serializerSupplier = () -> new ZeSerializer(ImmutableMap.of(ZeSerializer.USE_OBJENESIS, true));
   }
 
   @Override

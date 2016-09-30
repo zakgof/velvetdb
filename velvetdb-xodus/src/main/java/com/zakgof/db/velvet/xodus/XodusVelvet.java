@@ -103,6 +103,7 @@ class XodusVelvet implements IVelvet {
     @Override
     public V get(K key) {
       ByteIterable keyBi = toBi(key);
+      debug(valueMap);
       ByteIterable valueBi = valueMap.get(tx, keyBi);
       return valueBi == null ? null : XodusVelvet.this.toObj(valueClass, valueBi);
     }
@@ -760,12 +761,12 @@ class XodusVelvet implements IVelvet {
     }
 
     private void debug(Store store) {
-//      System.err.println("STORE-----------------------------");
-//      try (Cursor c = store.openCursor(tx)) {
-//        while (c.getNext()) {
-//          System.err.println(c.getKey() + " --> " + c.getValue());
-//        }
-//      }
+      System.err.println("STORE-----------------------------");
+      try (Cursor c = store.openCursor(tx)) {
+        while (c.getNext()) {
+          System.err.println(c.getKey() + " --> " + c.getValue());
+        }
+      }
     }
 
  }
