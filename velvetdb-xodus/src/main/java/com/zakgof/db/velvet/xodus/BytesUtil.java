@@ -1,13 +1,8 @@
 package com.zakgof.db.velvet.xodus;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoField;
-import java.util.Date;
-
 import com.google.common.primitives.Primitives;
+
+import java.util.Date;
 
 import jetbrains.exodus.ArrayByteIterable;
 import jetbrains.exodus.ByteIterable;
@@ -73,11 +68,6 @@ public class BytesUtil {
       return StringBinding.stringToEntry((String)obj);
     else if (obj instanceof Date)
       return keyToBi(((Date)obj).getTime());
-    else if (obj instanceof LocalDate)
-        return keyToBi(((LocalDate)obj).getLong(ChronoField.EPOCH_DAY));
-    else if (obj instanceof LocalDateTime)
-        return keyToBi(((LocalDateTime)obj).toInstant(ZoneOffset.UTC).toEpochMilli());
-    
     throw new UnsupportedOperationException("Unsupported key type: " + obj.getClass());
   }
 
@@ -99,12 +89,7 @@ public class BytesUtil {
       return clazz.cast(StringBinding.entryToString(bi));
     } else if (clazz == Date.class) {
       return clazz.cast(new Date(LongBinding.entryToLong(bi)));
-    } else if (clazz == LocalDate.class) {
-      return clazz.cast(LocalDate.ofEpochDay(LongBinding.entryToLong(bi)));
-    } else if (clazz == LocalDateTime.class) {
-       return clazz.cast(LocalDateTime.ofInstant(Instant.ofEpochMilli(LongBinding.entryToLong(bi)), ZoneOffset.UTC));
     }
-    
     throw new UnsupportedOperationException("Unsupported key type: " + clazz);
   }
   

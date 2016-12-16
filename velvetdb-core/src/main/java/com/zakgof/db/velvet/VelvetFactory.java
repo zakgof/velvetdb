@@ -18,7 +18,7 @@ public class VelvetFactory {
             String name = u.getHost();
 
             ServiceLoader<IVelvetProvider> serviceLoader = ServiceLoader.load(IVelvetProvider.class);
-            IVelvetProvider provider = Functions.stream(serviceLoader.iterator())
+            IVelvetProvider provider = Functions.iterstream(serviceLoader.iterator())
               .filter(reg -> reg.name().equals(name))
               .findFirst()
               .orElseThrow(() -> new VelvetException("Velvetdb backend not registered: " + name)); 
@@ -30,6 +30,6 @@ public class VelvetFactory {
 
     public static List<IVelvetProvider> getProviders() {
         ServiceLoader<IVelvetProvider> serviceLoader = ServiceLoader.load(IVelvetProvider.class);
-        return Functions.stream(serviceLoader.iterator()).collect(Collectors.toList());
+        return Functions.iterstream(serviceLoader.iterator()).collect(Collectors.toList());
     }
 }
