@@ -44,20 +44,12 @@ public interface IEntityDef<K, V> {
     public <M extends Comparable<? super M>> List<V> index(IVelvet velvet, String indexName, IRangeQuery<K, M> query);
     public <M extends Comparable<? super M>> List<K> indexKeys(IVelvet velvet, String indexName, IRangeQuery<K, M> query);
 
-    public default List<V> get(IVelvet velvet, Collection<K> keys) {
-        return Stream.of(keys).map(key -> get(velvet, key)).collect(Collectors.toList());
-    }
+    public List<V> get(IVelvet velvet, Collection<K> keys);
 
-    public default List<V> get(IVelvet velvet) {
-        return get(velvet, keys(velvet));
-    }
+    public List<V> get(IVelvet velvet);
 
-    public default void deleteValue(IVelvet velvet, V value) {
-        deleteKey(velvet, keyOf(value));
-    }
+    public void deleteValue(IVelvet velvet, V value);
 
-    public default boolean equals(V value1, V value2) {
-        return keyOf(value1).equals(keyOf(value2));
-    }
+    public boolean equals(V value1, V value2);
 
 }

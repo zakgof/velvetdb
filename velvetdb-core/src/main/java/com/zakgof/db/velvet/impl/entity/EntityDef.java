@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.annimon.stream.Collectors;
+import com.annimon.stream.Stream;
 import com.annimon.stream.function.Function;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IStore;
@@ -80,7 +82,7 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     public K put(IVelvet velvet, V value) {
         return put(velvet, keyOf(value), value);
     }
-   
+
     public K put(IVelvet velvet, K key, V value) {
         store(velvet).put(key, value);
         return key;
@@ -112,5 +114,25 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     @Override
     public <M extends Comparable<? super M>> List<K> indexKeys(IVelvet velvet, String indexName, IRangeQuery<K, M> query) {
         return store(velvet).<M>index(indexName).keys(query);
+    }
+
+    @Override
+    public List<V> get(IVelvet velvet, Collection<K> keys) {
+        return Stream.of(keys).map(key -> get(velvet, key)).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<V> get(IVelvet velvet) {
+        return get(velvet, keys(velvet));
+    }
+
+    @Override
+    public void deleteValue(IVelvet velvet, V value) {
+        deleteKey(velvet, keyOf(value));
+    }
+
+    @Override
+    public boolean equals(V value1, V value2) {
+        return keyOf(value1).equals(keyOf(value2));
     }
 }

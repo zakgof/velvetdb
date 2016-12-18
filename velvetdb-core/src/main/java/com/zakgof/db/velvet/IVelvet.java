@@ -64,15 +64,7 @@ public interface IVelvet {
 
         List<K> keys(Class<K> clazz, IRangeQuery<K, M> query);
 
-        default K key(Class<K> clazz, ISingleReturnRangeQuery<K, M> query) {
-            // TODO
-            List<K> keys = keys(clazz, query);
-            if (keys.isEmpty())
-                return null;
-            if (keys.size() > 1)
-                throw new VelvetException("");
-            return keys.get(0);
-        }
+        K key(Class<K> clazz, ISingleReturnRangeQuery<K, M> query);
     }
 
     public enum LinkType {

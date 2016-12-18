@@ -7,6 +7,7 @@ import java.util.WeakHashMap;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
 import com.zakgof.db.velvet.entity.IKeylessEntityDef;
+import com.zakgof.db.velvet.properties.AReadOnlyProperty;
 import com.zakgof.db.velvet.properties.IProperty;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
 
@@ -72,7 +73,7 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
 
         public KeylessPropertyProvider(Class<V> valueClass) {
             super(valueClass);
-            this.keyProperty = new IProperty<Long, V>() {
+            this.keyProperty = new AReadOnlyProperty<Long, V>() {
 
                 @Override
                 public Long get(V instance) {
@@ -104,7 +105,7 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
         private IProperty<Long, V> keyProperty;
 
         public MonolythicPropertyProvider(Class<V> valueClass) {
-            this.keyProperty = new IProperty<Long, V>() {
+            this.keyProperty = new AReadOnlyProperty<Long, V>() {
 
                 @Override
                 public Long get(V instance) {
@@ -141,6 +142,11 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
                 @Override
                 public String getName() {
                     return "value";
+                }
+
+                @Override
+                public boolean isSettable() {
+                    return true;
                 }
             };
         }

@@ -15,6 +15,7 @@ import com.annimon.stream.function.Function;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.annotation.Key;
 import com.zakgof.db.velvet.annotation.SortedKey;
+import com.zakgof.db.velvet.properties.AReadOnlyProperty;
 import com.zakgof.db.velvet.properties.IProperty;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
 import com.zakgof.tools.generic.Functions;
@@ -54,7 +55,9 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
                 provider = (value -> {
                     try {
                         return (K) method.invoke(value);
-                    } catch (IllegalAccessException | InvocationTargetException e) {
+                    } catch (IllegalAccessException e) {
+                        throw new VelvetException(e);
+                    } catch (InvocationTargetException e) {
                         throw new VelvetException(e);
                     }
                 });
@@ -168,9 +171,9 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
 
     }
 
-    private static class MethodProperty<P, V> implements IProperty<P, V> {
+    private static class MethodProperty<P, V> extends AReadOnlyProperty<P, V> {
 
-        private Method method;
+        private final Method method;
 
         public MethodProperty(Method method) {
             this.method = method;

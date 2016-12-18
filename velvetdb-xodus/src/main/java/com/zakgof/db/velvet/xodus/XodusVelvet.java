@@ -1,5 +1,6 @@
 package com.zakgof.db.velvet.xodus;
 
+import com.annimon.stream.Collector;
 import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
 import com.annimon.stream.function.Function;
@@ -8,6 +9,7 @@ import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.query.IQueryAnchor;
 import com.zakgof.db.velvet.query.IRangeQuery;
+import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
 import com.zakgof.db.velvet.query.Queries;
 import com.zakgof.serialize.ISerializer;
 
@@ -77,8 +79,9 @@ class XodusVelvet implements IVelvet {
             this.valueMap = store(kind);
             this.keyClass = keyClass;
             this.valueClass = valueClass;
+            Collector<IStoreIndexDef, ?, Map<String, StoreIndexProcessor<K, V, ?>>> collector = Collectors.toMap(IStoreIndexDef::name, indexDef -> createStoreReq((IStoreIndexDef) indexDef));
             this.indexes = Stream.of(indexes)
-                    .collect(Collectors.<IStoreIndexDef<?, V>, String, StoreIndexProcessor<K, V, ?>>toMap(sid -> sid.name(), indexDef -> createStoreReq((IStoreIndexDef) indexDef)));
+                    .collect(collector);
         }
 
         private <M extends Comparable<? super M>> StoreIndexProcessor<K, V, M> createStoreReq(IStoreIndexDef<M, V> indexDef) {
@@ -652,11 +655,23 @@ class XodusVelvet implements IVelvet {
         }
     }
 
+    private abstract class AIndexMultiLink<K, M extends Comparable<? super M>> implements IKeyIndexLink<K, M> {
+        public K key(Class<K> clazz, ISingleReturnRangeQuery<K, M> query) {
+            // TODO
+            List<K> keys = keys(clazz, query);
+            if (keys.isEmpty())
+                return null;
+            if (keys.size() > 1)
+                throw new VelvetException("");
+            return keys.get(0);
+        }
+    }
+
 
     /**
      * key: [key1][key2], value: empty
      */
-    private class PriIndexMultiLink<K extends Comparable<? super K>> implements IKeyIndexLink<K, K> {
+    private class PriIndexMultiLink<K extends Comparable<? super K>> extends AIndexMultiLink<K, K> {
 
         private Store connectMap;
         private ByteIterable key1Bi;
@@ -719,7 +734,7 @@ class XodusVelvet implements IVelvet {
     /**
      * key: [key1][weight], value: key2
      */
-    private class SecIndexMultiLink<K, V, M extends Comparable<? super M>> implements IKeyIndexLink<K, M> {
+    private class SecIndexMultiLink<K, V, M extends Comparable<? super M>> extends AIndexMultiLink<K, M> {
 
         private Store connectMap;
         private ByteIterable key1Bi;
