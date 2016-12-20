@@ -1,5 +1,14 @@
 package com.zakgof.db.velvet.xodus;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import com.annimon.stream.Collector;
 import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
@@ -12,15 +21,6 @@ import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
 import com.zakgof.db.velvet.query.Queries;
 import com.zakgof.serialize.ISerializer;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 import jetbrains.exodus.ArrayByteIterable;
 import jetbrains.exodus.ByteIterable;
@@ -828,17 +828,17 @@ class XodusVelvet implements IVelvet {
     }
 
     private void debug(Store store) {
-        System.err.println("STORE-----------------------------");
-        Cursor c = null;
-        try {
-            c = store.openCursor(tx);
-            while (c.getNext()) {
-                System.err.println(c.getKey() + " --> " + c.getValue());
-            }
-        } finally {
-            if (c != null)
-                c.close();
-        }
+//        System.err.println("STORE-----------------------------");
+//        Cursor c = null;
+//        try {
+//            c = store.openCursor(tx);
+//            while (c.getNext()) {
+//                System.err.println(c.getKey() + " --> " + c.getValue());
+//            }
+//        } finally {
+//            if (c != null)
+//                c.close();
+//        }
     }
 
 }
