@@ -1,3 +1,4 @@
 [submodule "tools"]
 	path = tools
 	url = https://github.com/zakgof/tools.git
+  branch = android

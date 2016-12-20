@@ -23,6 +23,7 @@ import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.query.IQueryAnchor;
 import com.zakgof.db.velvet.query.IRangeQuery;
+import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
 import com.zakgof.serialize.ISerializer;
 
 /**
@@ -554,6 +555,17 @@ public class MapDbVelvet implements IVelvet {
         public List<K> keys(Class<K> clazz, IRangeQuery<K, K> query) {
             return new PriLinkProcessor().go(query);
         }
+        
+        @Override
+        public K key(Class<K> clazz, ISingleReturnRangeQuery<K, K> query) {
+            // TODO
+            List<K> keys = keys(clazz, query);
+            if (keys.isEmpty())
+                return null;
+            if (keys.size() > 1)
+                throw new VelvetException("");
+            return keys.get(0);
+        }
 
         private class PriLinkProcessor extends ARangeQueryProcessor<K, K, Object[]> {
 
@@ -633,6 +645,17 @@ public class MapDbVelvet implements IVelvet {
         @Override
         public List<K> keys(Class<K> clazz, IRangeQuery<K, M> query) {
             return new SecLinkProcessor().go(query);
+        }
+        
+        @Override
+        public K key(Class<K> clazz, ISingleReturnRangeQuery<K, M> query) {
+            // TODO
+            List<K> keys = keys(clazz, query);
+            if (keys.isEmpty())
+                return null;
+            if (keys.size() > 1)
+                throw new VelvetException("");
+            return keys.get(0);
         }
 
         private class SecLinkProcessor extends ARangeQueryProcessor<K, M, Object[]> {
