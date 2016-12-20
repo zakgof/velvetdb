@@ -6,13 +6,14 @@ import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
 import com.annimon.stream.function.Supplier;
+import com.zakgof.db.txn.ATransactionalEnvironment;
 import com.zakgof.db.txn.ITransactionCall;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvetEnvironment;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.serialize.ISerializer;
 
-public class MapDbNoTxnEnv implements IVelvetEnvironment {
+public class MapDbNoTxnEnv extends ATransactionalEnvironment<IVelvet> implements IVelvetEnvironment  {
 
     private DB db;
     private Supplier<ISerializer> serializerSupplier;
