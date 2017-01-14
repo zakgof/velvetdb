@@ -11,6 +11,7 @@ import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
 import com.zakgof.db.velvet.query.IRangeQuery;
+import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
 
 public class EntityDef<K, V> implements IEntityDef<K, V> {
 
@@ -101,6 +102,18 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
         if (keyProvider instanceof IPropertyAccessor)
             return (IPropertyAccessor<K, V>) keyProvider;
         return null;
+    }
+    
+    @Override
+    public <M extends Comparable<? super M>> V singleIndex(IVelvet velvet, String indexName, ISingleReturnRangeQuery<K, M> query) {
+        K key = indexKey(velvet, indexName, query);
+        return key == null ? null : get(velvet, key);
+    }
+
+    @Override
+    public <M extends Comparable<? super M>> K indexKey(IVelvet velvet, String indexName, ISingleReturnRangeQuery<K, M> query) {
+        List<K> keys = store(velvet).<M>index(indexName).keys(query);
+        return keys.isEmpty() ? null : keys.get(0);
     }
 
     @Override
