@@ -3,11 +3,10 @@ package com.zakgof.db.velvet.entity;
 import java.util.Collection;
 import java.util.List;
 
-import com.annimon.stream.Collectors;
-import com.annimon.stream.Stream;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
 import com.zakgof.db.velvet.query.IRangeQuery;
+import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
 
 public interface IEntityDef<K, V> {
 
@@ -43,6 +42,9 @@ public interface IEntityDef<K, V> {
     // TODO
     public <M extends Comparable<? super M>> List<V> index(IVelvet velvet, String indexName, IRangeQuery<K, M> query);
     public <M extends Comparable<? super M>> List<K> indexKeys(IVelvet velvet, String indexName, IRangeQuery<K, M> query);
+    
+    public <M extends Comparable<? super M>> V singleIndex(IVelvet velvet, String indexName, ISingleReturnRangeQuery<K, M> query);
+    public <M extends Comparable<? super M>> K indexKey(IVelvet velvet, String indexName, ISingleReturnRangeQuery<K, M> query);
 
     public List<V> get(IVelvet velvet, Collection<K> keys);
 
@@ -51,5 +53,6 @@ public interface IEntityDef<K, V> {
     public void deleteValue(IVelvet velvet, V value);
 
     public boolean equals(V value1, V value2);
+
 
 }

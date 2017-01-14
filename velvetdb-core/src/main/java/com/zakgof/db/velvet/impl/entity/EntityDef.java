@@ -1,5 +1,6 @@
 package com.zakgof.db.velvet.impl.entity;
 
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -13,6 +14,7 @@ import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
 import com.zakgof.db.velvet.query.IRangeQuery;
+import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
 
 public class EntityDef<K, V> implements IEntityDef<K, V> {
 
@@ -65,11 +67,23 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     public String getKind() {
         return kind;
     }
+    
+    @Override
+    public List<V> get(IVelvet velvet) {
+        return get(velvet, keys(velvet));
+    }
 
+    @Override
     public V get(IVelvet velvet, K key) {
         return store(velvet).get(key);
     }
+    
+    @Override
+    public List<V> get(IVelvet velvet, Collection<K> keys) {
+        return Stream.of(keys).map(key -> get(velvet, key)).collect(Collectors.toList());
+    }
 
+    @Override
     public List<K> keys(IVelvet velvet) {
         return store(velvet).keys();
     }
@@ -79,15 +93,18 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
         return store(velvet).size();
     }
 
+    @Override
     public K put(IVelvet velvet, V value) {
         return put(velvet, keyOf(value), value);
     }
-
+   
+    @Override
     public K put(IVelvet velvet, K key, V value) {
         store(velvet).put(key, value);
         return key;
     }
 
+    @Override
     public void deleteKey(IVelvet velvet, K key) {
         store(velvet).delete(key);
     }
@@ -104,6 +121,18 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
             return (IPropertyAccessor<K, V>) keyProvider;
         return null;
     }
+    
+    @Override
+    public <M extends Comparable<? super M>> V singleIndex(IVelvet velvet, String indexName, ISingleReturnRangeQuery<K, M> query) {
+        K key = indexKey(velvet, indexName, query);
+        return key == null ? null : get(velvet, key);
+    }
+
+    @Override
+    public <M extends Comparable<? super M>> K indexKey(IVelvet velvet, String indexName, ISingleReturnRangeQuery<K, M> query) {
+        List<K> keys = store(velvet).<M>index(indexName).keys(query);
+        return keys.isEmpty() ? null : keys.get(0);
+    }
 
     @Override
     public <M extends Comparable<? super M>> List<V> index(IVelvet velvet, String indexName, IRangeQuery<K, M> query) {
@@ -114,16 +143,6 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     @Override
     public <M extends Comparable<? super M>> List<K> indexKeys(IVelvet velvet, String indexName, IRangeQuery<K, M> query) {
         return store(velvet).<M>index(indexName).keys(query);
-    }
-
-    @Override
-    public List<V> get(IVelvet velvet, Collection<K> keys) {
-        return Stream.of(keys).map(key -> get(velvet, key)).collect(Collectors.toList());
-    }
-
-    @Override
-    public List<V> get(IVelvet velvet) {
-        return get(velvet, keys(velvet));
     }
 
     @Override

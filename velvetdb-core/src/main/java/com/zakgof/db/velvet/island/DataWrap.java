@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.annimon.stream.Stream;
+import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.link.IMultiLinkDef;
 import com.zakgof.db.velvet.link.ISingleLinkDef;
 
@@ -13,6 +13,7 @@ public class DataWrap<T> {
 
   public static class Builder<T> {
 
+	private Object key;
     private final T node;
     private final Map<String, List<DataWrap<?>>> multis = new HashMap<String, List<DataWrap<?>>>();
     private final Map<String, DataWrap<?>> singles = new HashMap<String, DataWrap<?>>();
@@ -36,29 +37,47 @@ public class DataWrap<T> {
       singles.put(name, childWrap);
       return this;
     }
+    
+	public Builder<T> key(Object key) {
+		this.key = key;
+		return this;
+	}
 
     public DataWrap<T> build() {
-      return new DataWrap<T>(node, singles, multis);
+      return new DataWrap<T>(node, key, singles, multis);
     }
-
   }
 
   private final T node;
+  private final Object key;
   private final Map<String, DataWrap<?>> singles;
   private final Map<String, List<DataWrap<?>>> multis;
 
   public T getNode() {
     return node;
   }
+  
+  public Object getKey() {
+	return key;
+  }
 
-  public DataWrap(T node, Map<String, DataWrap<?>> singles, Map<String, List<DataWrap<?>>> multis) {
+  public DataWrap(T node, Object key, Map<String, DataWrap<?>> singles, Map<String, List<DataWrap<?>>> multis) {
     this.node = node;
+    this.key = key;
     this.singles = singles;
     this.multis = multis;
   }
   
-  public DataWrap(T node) {
+  public <K> DataWrap(T node, IEntityDef<K, T> entity) {
     this.node = node;
+    this.key = entity.keyOf(node);
+    this.singles = Collections.emptyMap();
+    this.multis = Collections.emptyMap();
+  }
+  
+  public DataWrap(T node, Object key) {
+    this.node = node;
+    this.key = key;
     this.singles = Collections.emptyMap();
     this.multis = Collections.emptyMap();
   }
@@ -89,8 +108,8 @@ public class DataWrap<T> {
   @Override
   public String toString() {
     return " " + node + " " +
-        Stream.of(singles.entrySet()).reduce("", (s, e) -> s + e.getKey() + " [" + valueString(e.getValue()) + " ]") +
-        Stream.of(multis.entrySet()).reduce("", (s, e) -> s + e.getKey() + " [" + e.getValue().size() + " ]");
+        singles.entrySet().stream().reduce("", (s, e) -> s + e.getKey() + " [" + valueString(e.getValue()) + " ]" , (s1, s2) -> s1 + s2) +
+        multis.entrySet().stream().reduce("", (s, e) -> s + e.getKey() + " [" + e.getValue().size() + " ]" , (s1, s2) -> s1 + s2);
   }
   
   private String valueString(DataWrap<?> wrap) {
@@ -98,7 +117,7 @@ public class DataWrap<T> {
   }
 
   public <V> DataWrap<T> attach(String name, V value) {
-    return new Builder<>(this).add(name, new DataWrap<V>(value)).build();
+    return new Builder<>(this).add(name, new DataWrap<V>(value, null)).build(); // TODO: manage key
   }
 
 }
