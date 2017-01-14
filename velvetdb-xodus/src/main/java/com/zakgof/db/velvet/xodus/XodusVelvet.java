@@ -2,12 +2,7 @@ package com.zakgof.db.velvet.xodus;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -21,11 +16,7 @@ import com.zakgof.serialize.ISerializer;
 
 import jetbrains.exodus.ArrayByteIterable;
 import jetbrains.exodus.ByteIterable;
-import jetbrains.exodus.env.Cursor;
-import jetbrains.exodus.env.Environment;
-import jetbrains.exodus.env.Store;
-import jetbrains.exodus.env.StoreConfig;
-import jetbrains.exodus.env.Transaction;
+import jetbrains.exodus.env.*;
 
 /**
  * Simple store:        No duplicates     ze(key)       ->  ze(value)
@@ -279,12 +270,14 @@ class XodusVelvet implements IVelvet {
   private abstract class AStoreProcessor<K, M extends Comparable<? super M>> extends ARangeQueryProcessor<K, M> {
     
     protected Class<K> keyClass;
+	private Function<K, M> keyMetric;
 
-    AStoreProcessor(Class<K> keyClass) {
+    AStoreProcessor(Class<K> keyClass, Function<K, M> keyMetric) {
       this.keyClass = keyClass;
+      this.keyMetric = keyMetric;
     }
-  
-    @Override
+
+	@Override
     K get() {
       return BytesUtil.keyBiToObj(keyClass, cursor.getKey());
     }
@@ -316,18 +309,40 @@ class XodusVelvet implements IVelvet {
         cursor.getPrev();
         cursor.getNext();
       } else {
-        ByteIterable searchBi = BytesUtil.keyToBi(anchor.getMetric());
-        cursor.getSearchKeyRange(searchBi);
-        if (cursor.getKey().getLength() == 0) {
-          cursor.getLast();
-          cursor.getLast();
-          cursor.getPrev();  // Xodus bug
-          cursor.getNext();
-        }
-        else {
-          if (!anchor.isIncluding()) {
-            backwardWhile(() -> cursor.getKey().compareTo(searchBi) >= 0, () -> {});
-          }
+        M metric = anchor.getMetric();
+        if (metric == null) {
+        	K key = anchor.getKey();
+        	M m = this.keyMetric.apply(key);
+        	ByteIterable searchBi = BytesUtil.keyToBi(m);
+        	cursor.getSearchKeyRange(searchBi);
+        	if (!check()) {
+        		cursor.getLast(); // Xodus bug
+                cursor.getLast(); // Xodus bug
+                cursor.getPrev();
+                cursor.getNext();
+  	          return;
+  	        }
+        	forwardWhile(() -> indexValue().compareTo(m) == 0 && !get().equals(key), () -> {});
+	        if (!anchor.isIncluding()) {
+	        	cursor.getPrev();
+	        	if (!check() || get().equals(key)) {
+	        		cursorValid = false;
+	        	}
+	        }
+        } else {
+			ByteIterable searchBi = BytesUtil.keyToBi(metric);
+	        cursor.getSearchKeyRange(searchBi);
+	        if (cursor.getKey().getLength() == 0) {
+	          cursor.getLast();
+	          cursor.getLast();
+	          cursor.getPrev();  // Xodus bug
+	          cursor.getNext();
+	        }
+	        else {
+	          if (!anchor.isIncluding()) {
+	            backwardWhile(() -> cursor.getKey().compareTo(searchBi) >= 0, () -> {});
+	          }
+	        }
         }
       }
     }
@@ -337,7 +352,7 @@ class XodusVelvet implements IVelvet {
   private class SorterStoreProcessor<K extends Comparable<? super K>> extends AStoreProcessor<K, K> {
 
     SorterStoreProcessor(Class<K> keyClass) {
-      super(keyClass);
+      super(keyClass, v -> v);
     }
 
     @Override
@@ -353,7 +368,7 @@ class XodusVelvet implements IVelvet {
     private Function<V, M> valueMetric;
 
     StoreIndexProcessor(Class<K> keyClass, Function<V, M> valueMetric, Function<K, M> keyMetric, String storeName) {
-      super(keyClass);
+      super(keyClass, keyMetric);
       this.keyMetric = keyMetric;
       this.valueMetric = valueMetric;
       this.store = env.openStore(storeName, StoreConfig.WITH_DUPLICATES, tx);
@@ -583,8 +598,12 @@ class XodusVelvet implements IVelvet {
 	          return;
 	        }
 	        forwardWhile(() -> indexValue().compareTo(m) == 0 && !get().equals(key), () -> {});
-	        if (!anchor.isIncluding())
+	        if (!anchor.isIncluding()) {
 	        	oneStepBack();
+	        	if (indexValue().compareTo(m) == 0) {
+	        		cursorValid = false;
+	        	}
+	        }
         }
       } 
     }
