@@ -38,15 +38,15 @@ Coming soon:
 <dependency>
     <groupId>com.zakgof</groupId>
     <artifactId>velvetdb-xodus</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ```
 
 ```xml
-<repositories>
-    <repository>
-        <id>velvetdb</id>
-        <url>http://velvetdb.tk:8081/nexus/content/repositories/snapshots</url>
-    </repository>
-</repositories>
+	<repositories>
+	    <repository>
+	        <id>velvetdb</id>
+	        <url>http://nexus2-zakk.rhcloud.com/content/repositories/snapshots/</url>
+	    </repository>
+	</repositories>
 ```
