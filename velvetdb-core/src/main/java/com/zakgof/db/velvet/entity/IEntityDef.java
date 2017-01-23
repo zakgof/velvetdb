@@ -54,5 +54,4 @@ public interface IEntityDef<K, V> {
 
     public boolean equals(V value1, V value2);
 
-
 }

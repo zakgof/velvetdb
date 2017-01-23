@@ -13,41 +13,42 @@ import com.zakgof.db.velvet.link.ISingleGetter;
 import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
 
-public class BiSecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M>> extends ABiLinkDef<HK, HV, CK, CV, SecIndexMultiLinkDef<HK, HV, CK, CV, M>, IBiParentLinkDef<CK, CV, HK, HV>> implements IBiMultiLinkDef<HK, HV, CK, CV>, ISecSortedMultiLinkDef<HK, HV, CK, CV, M> {
+public class BiSecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M>> extends ABiLinkDef<HK, HV, CK, CV, SecIndexMultiLinkDef<HK, HV, CK, CV, M>, IBiParentLinkDef<CK, CV, HK, HV>>
+        implements IBiMultiLinkDef<HK, HV, CK, CV>, ISecSortedMultiLinkDef<HK, HV, CK, CV, M> {
 
-  private BiSecIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
-    super(new SecIndexMultiLinkDef<HK, HV, CK, CV, M>(hostEntity, childEntity, mclazz, metric));
-  }
-  
-  public static <HK, HV, CK, CV, M extends Comparable<? super M>> BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> create(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
-    BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> link = new BiSecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric);
-    BiParentLinkDef<CK, CV, HK, HV> backLink = new BiParentLinkDef<CK, CV, HK, HV>(childEntity, hostEntity);
-    link.setBackLink(backLink);
-    backLink.setBackLink(link);
-    return link;
-  }
+    private BiSecIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
+        super(new SecIndexMultiLinkDef<HK, HV, CK, CV, M>(hostEntity, childEntity, mclazz, metric));
+    }
 
-  @Override
-  public List<CV> multi(IVelvet velvet, HV node) {
-    return oneWay.multi(velvet, node);
-  }
+    public static <HK, HV, CK, CV, M extends Comparable<? super M>> BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> create(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
+        BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> link = new BiSecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric);
+        BiParentLinkDef<CK, CV, HK, HV> backLink = new BiParentLinkDef<CK, CV, HK, HV>(childEntity, hostEntity);
+        link.setBackLink(backLink);
+        backLink.setBackLink(link);
+        return link;
+    }
 
-  @Override
-  public List<CK> multiKeys(IVelvet velvet, HK key) {
-    return oneWay.multiKeys(velvet, key);
-  }
+    @Override
+    public List<CV> multi(IVelvet velvet, HV node) {
+        return oneWay.multi(velvet, node);
+    }
 
-	@Override
-	public IMultiGetter<HK, HV, CK, CV> indexed(IRangeQuery<CK, M> indexQuery) {
-		return oneWay.indexed(indexQuery);
-	}
+    @Override
+    public List<CK> multiKeys(IVelvet velvet, HK key) {
+        return oneWay.multiKeys(velvet, key);
+    }
 
-	@Override
-	public ISingleGetter<HK, HV, CK, CV> indexedSingle(ISingleReturnRangeQuery<CK, M> indexQuery) {
-		return oneWay.indexedSingle(indexQuery);
-	}
-	
-	public Function<CV, M> getMetric() {
-		return oneWay.getMetric();
-	}
+    @Override
+    public IMultiGetter<HK, HV, CK, CV> indexed(IRangeQuery<CK, M> indexQuery) {
+        return oneWay.indexed(indexQuery);
+    }
+
+    @Override
+    public ISingleGetter<HK, HV, CK, CV> indexedSingle(ISingleReturnRangeQuery<CK, M> indexQuery) {
+        return oneWay.indexedSingle(indexQuery);
+    }
+
+    public Function<CV, M> getMetric() {
+        return oneWay.getMetric();
+    }
 }

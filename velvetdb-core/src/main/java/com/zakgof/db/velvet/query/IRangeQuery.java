@@ -1,15 +1,15 @@
 package com.zakgof.db.velvet.query;
 
 public interface IRangeQuery<K, M extends Comparable<? super M>> {
-  
-  IQueryAnchor<K, M> getLowAnchor();
 
-  IQueryAnchor<K, M> getHighAnchor();
+    IQueryAnchor<K, M> getLowAnchor();
 
-  int getLimit();
+    IQueryAnchor<K, M> getHighAnchor();
 
-  int getOffset();
+    int getLimit();
 
-  boolean isAscending();
-  
+    int getOffset();
+
+    boolean isAscending();
+
 }

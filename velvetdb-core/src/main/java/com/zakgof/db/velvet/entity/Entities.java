@@ -43,8 +43,7 @@ final public class Entities {
     public static <K, V> IEntityDef<K, V> create(Class<V> valueClass, IStoreIndexDef<?, V>... indexes) {
         AnnoKeyProvider<K, V> annoKeyProvider = new AnnoKeyProvider<K, V>(valueClass);
         if (!annoKeyProvider.hasKey())
-            return (IEntityDef<K, V>) new KeylessEntityDef<V>(valueClass, AnnoEntityDef.kindOf(valueClass),
-                    Arrays.asList(indexes));
+            return (IEntityDef<K, V>) new KeylessEntityDef<V>(valueClass, AnnoEntityDef.kindOf(valueClass), Arrays.asList(indexes));
         else if (annoKeyProvider.isSorted())
             return (IEntityDef<K, V>) new SortedAnnoEntityDef(valueClass, annoKeyProvider, Arrays.asList(indexes));
         else
@@ -83,16 +82,16 @@ final public class Entities {
         private Class<V> clazz;
         private List<IStoreIndexDef<?, V>> indexes = new ArrayList<>();
 
-        private Builder (Class<V> clazz) {
+        private Builder(Class<V> clazz) {
             this.clazz = clazz;
         }
 
         public <M extends Comparable<? super M>> Builder<V> index(String name, Function<V, M> metric) {
-            indexes.add(Indexes.<M, V>create(name, metric));
+            indexes.add(Indexes.<M, V> create(name, metric));
             return this;
         }
 
-        public  <K> IEntityDef<K, V> make(Class<K> keyClass, Function<V, K> keyFunction) {
+        public <K> IEntityDef<K, V> make(Class<K> keyClass, Function<V, K> keyFunction) {
             String kind = AnnoEntityDef.kindOf(clazz);
             return new EntityDef<>(keyClass, clazz, kind, keyFunction, indexes);
         }

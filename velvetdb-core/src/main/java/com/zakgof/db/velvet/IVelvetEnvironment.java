@@ -1,6 +1,5 @@
 package com.zakgof.db.velvet;
 
-
 import com.annimon.stream.function.Supplier;
 import com.zakgof.db.txn.ITransactionalEnvironment;
 import com.zakgof.serialize.ISerializer;
