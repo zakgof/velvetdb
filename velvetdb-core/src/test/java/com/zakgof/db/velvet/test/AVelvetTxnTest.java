@@ -6,7 +6,7 @@ import com.zakgof.db.velvet.IVelvet;
 
 @RunWith(VelvetTransactionalRunner.class)
 public abstract class AVelvetTxnTest {
-  
-  public IVelvet velvet;
+
+    public IVelvet velvet;
 
 }

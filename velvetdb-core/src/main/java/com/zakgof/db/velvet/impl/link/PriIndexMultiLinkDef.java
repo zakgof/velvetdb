@@ -7,12 +7,12 @@ import com.zakgof.db.velvet.link.ISortedMultiGetter;
 
 public class PriIndexMultiLinkDef<HK, HV, CK extends Comparable<CK>, CV> extends AIndexMultiLinkDef<HK, HV, CK, CV, CK> implements ISortedMultiGetter<HK, HV, CK, CV, CK> {
 
-  public PriIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
-    super(hostEntity, childEntity);
-  }
+    public PriIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
+        super(hostEntity, childEntity);
+    }
 
-  protected IKeyIndexLink<CK, CK> index(IVelvet velvet, HK akey) {
-    return velvet.<CK, CV> primaryKeyIndex(akey, getKind());
-  }
+    protected IKeyIndexLink<CK, CK> index(IVelvet velvet, HK akey) {
+        return velvet.<CK, CV> primaryKeyIndex(akey, getKind());
+    }
 
 }

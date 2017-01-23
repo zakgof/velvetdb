@@ -97,8 +97,8 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
         }
 
     }
-    
-    private class MonolythicPropertyProvider  implements IPropertyAccessor<Long, V> {
+
+    private class MonolythicPropertyProvider implements IPropertyAccessor<Long, V> {
 
         private IProperty<V, V> valueProperty;
         private IProperty<Long, V> keyProperty;
@@ -152,14 +152,14 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
 
         @Override
         public IProperty<?, V> get(String property) {
-            return property.equals("value") ? valueProperty  : null;
+            return property.equals("value") ? valueProperty : null;
         }
 
         @Override
         public IProperty<Long, V> getKey() {
             return keyProperty;
         }
-        
+
     }
 
     @Override

@@ -43,6 +43,7 @@ public interface IVelvet {
 
     public interface IStoreIndexDef<M extends Comparable<? super M>, V> {
         public String name();
+
         public Function<V, M> metric();
     }
 
@@ -76,6 +77,7 @@ public interface IVelvet {
     }
 
     public enum LinkType {
-        Single, Multi,
+                          Single,
+                          Multi,
     }
 }
