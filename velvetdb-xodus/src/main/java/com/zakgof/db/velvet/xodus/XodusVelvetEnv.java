@@ -16,42 +16,42 @@ import jetbrains.exodus.env.Environments;
 
 public class XodusVelvetEnv implements IVelvetEnvironment {
 
-  private Environment env;
-  private IKeyGen keyGen;
-  private Supplier<ISerializer> serializerSupplier;
+    private Environment env;
+    private IKeyGen keyGen;
+    private Supplier<ISerializer> serializerSupplier;
 
-  public XodusVelvetEnv(File file) {
-    env = Environments.newInstance(file.getAbsolutePath());
-    keyGen = new IKeyGen();
-    serializerSupplier = () -> new ZeSerializer(ImmutableMap.of(ZeSerializer.USE_OBJENESIS, true));
-  }
+    public XodusVelvetEnv(File file) {
+        env = Environments.newInstance(file.getAbsolutePath());
+        keyGen = new IKeyGen();
+        serializerSupplier = () -> new ZeSerializer(ImmutableMap.of(ZeSerializer.USE_OBJENESIS, true));
+    }
 
-  @Override
-  public void execute(ITransactionCall<IVelvet> transaction) {
-    final Throwable[] exs = new Throwable[1];
-    final int[] count = new int[]{0};
-    env.executeInTransaction(txn -> {
-      try {
-    	  if (count[0] > 0)
-    		  System.err.println("Xodus transaction retry " + count[0]); // TODO
-        transaction.execute(new XodusVelvet(env, txn, keyGen, serializerSupplier));
-        count[0]++;
-      } catch (Throwable e) {
-        exs[0] = e;
-      }
-    });
-    if (exs[0] != null)
-      throw (exs[0] instanceof RuntimeException) ? (RuntimeException)exs[0] : new VelvetException(exs[0]);
-  }
+    @Override
+    public void execute(ITransactionCall<IVelvet> transaction) {
+        final Throwable[] exs = new Throwable[1];
+        final int[] count = new int[] { 0 };
+        env.executeInTransaction(txn -> {
+            try {
+                if (count[0] > 0)
+                    System.err.println("Xodus transaction retry " + count[0]); // TODO
+                transaction.execute(new XodusVelvet(env, txn, keyGen, serializerSupplier));
+                count[0]++;
+            } catch (Throwable e) {
+                exs[0] = e;
+            }
+        });
+        if (exs[0] != null)
+            throw (exs[0] instanceof RuntimeException) ? (RuntimeException) exs[0] : new VelvetException(exs[0]);
+    }
 
-  @Override
-  public void close() {
-    env.close();
-  }
+    @Override
+    public void close() {
+        env.close();
+    }
 
-  @Override
-  public void setSerializer(Supplier<ISerializer> serializerSupplier) {
-    this.serializerSupplier = serializerSupplier;
-  }
-  
+    @Override
+    public void setSerializer(Supplier<ISerializer> serializerSupplier) {
+        this.serializerSupplier = serializerSupplier;
+    }
+
 }

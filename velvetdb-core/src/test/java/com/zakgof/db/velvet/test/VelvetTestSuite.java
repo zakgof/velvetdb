@@ -16,18 +16,10 @@ import com.zakgof.db.velvet.VelvetFactory;
 
 @RunWith(Suite.class)
 
- @SuiteClasses({
-   StoreIndexesTest.class,
-   SecondarySortedLinkTest.class,
-   SortedStoreTest.class,
-   PutGetTest.class,
-   SimpleLinkTest.class,
-   PrimarySortedLinkTest.class,
-   PrimarySortedLinkTest2.class,
-   KeylessTest.class
-   // PerformanceTest.class,
-   // ConcurrentWriteTest.class,
-   
+@SuiteClasses({ StoreIndexesTest.class, SecondarySortedLinkTest.class, SortedStoreTest.class, PutGetTest.class, SimpleLinkTest.class, PrimarySortedLinkTest.class, PrimarySortedLinkTest2.class, KeylessTest.class
+        // PerformanceTest.class,
+        // ConcurrentWriteTest.class,
+
 })
 
 public abstract class VelvetTestSuite {

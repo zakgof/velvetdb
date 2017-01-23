@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import com.zakgof.tools.generic.Functions;
 
-
 public class VelvetFactory {
     public static IVelvetEnvironment open(String url) {
         try {
@@ -18,10 +17,7 @@ public class VelvetFactory {
             String name = u.getHost();
 
             ServiceLoader<IVelvetProvider> serviceLoader = ServiceLoader.load(IVelvetProvider.class);
-            IVelvetProvider provider = Functions.stream(serviceLoader.iterator())
-              .filter(reg -> reg.name().equals(name))
-              .findFirst()
-              .orElseThrow(() -> new VelvetException("Velvetdb backend not registered: " + name)); 
+            IVelvetProvider provider = Functions.stream(serviceLoader.iterator()).filter(reg -> reg.name().equals(name)).findFirst().orElseThrow(() -> new VelvetException("Velvetdb backend not registered: " + name));
             return provider.open(u.getPath());
         } catch (URISyntaxException e) {
             throw new VelvetException(e);

@@ -81,7 +81,7 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     public K put(IVelvet velvet, V value) {
         return put(velvet, keyOf(value), value);
     }
-   
+
     public K put(IVelvet velvet, K key, V value) {
         store(velvet).put(key, value);
         return key;
@@ -103,7 +103,7 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
             return (IPropertyAccessor<K, V>) keyProvider;
         return null;
     }
-    
+
     @Override
     public <M extends Comparable<? super M>> V singleIndex(IVelvet velvet, String indexName, ISingleReturnRangeQuery<K, M> query) {
         K key = indexKey(velvet, indexName, query);
@@ -112,7 +112,7 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
 
     @Override
     public <M extends Comparable<? super M>> K indexKey(IVelvet velvet, String indexName, ISingleReturnRangeQuery<K, M> query) {
-        List<K> keys = store(velvet).<M>index(indexName).keys(query);
+        List<K> keys = store(velvet).<M> index(indexName).keys(query);
         return keys.isEmpty() ? null : keys.get(0);
     }
 
@@ -124,6 +124,6 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
 
     @Override
     public <M extends Comparable<? super M>> List<K> indexKeys(IVelvet velvet, String indexName, IRangeQuery<K, M> query) {
-        return store(velvet).<M>index(indexName).keys(query);
+        return store(velvet).<M> index(indexName).keys(query);
     }
 }
