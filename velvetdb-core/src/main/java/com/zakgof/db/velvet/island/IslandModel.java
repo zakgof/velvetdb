@@ -10,8 +10,6 @@ import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.link.*;
 import com.zakgof.db.velvet.query.IRangeQuery;
-import com.zakgof.tools.generic.Functions;
-import com.zakgof.tools.generic.IFunction;
 
 public class IslandModel {
 
@@ -25,22 +23,6 @@ public class IslandModel {
     return new Builder();
   }
 
-	public static <T> IContextSingleGetter<T> createContextSingleGetter(String kind,
-			Function<IIslandContext, T> getter) {
-		return new IContextSingleGetter<T>() {
-
-			@Override
-			public T single(IVelvet velvet, IIslandContext context) {
-				return getter.apply(context);
-			}
-
-			@Override
-			public String kind() {
-				return kind;
-			}
-		};
-	}
-
   public static class Builder {
 
     private final Map<String, FetcherEntity<?, ?>> entities = new LinkedHashMap<String, FetcherEntity<?, ?>>();
@@ -53,7 +35,7 @@ public class IslandModel {
 
       private final IEntityDef<K, V> entityDef;
       
-      private final Map<Class<?>, IFunction<?, ? extends Comparable<?>>> sorts = new HashMap<>();
+      private final Map<Class<?>, Comparator<?>> sorts = new HashMap<>();
       private final Map<String, ISingleConnector<K, V, ?, ?>> singles = new HashMap<>();
       private final Map<String, IMultiConnector<K, V, ?, ?>> multis = new HashMap<>();
       private final Map<String, IContextSingleGetter<?>> singleContexts = new HashMap<>();
@@ -64,9 +46,9 @@ public class IslandModel {
         this.entityDef = entityDef;
       }
 
-      public <L, C extends Comparable<C>> FetcherEntityBuilder<K, V> include(IMultiLinkDef<K, V, ?, L> linkDef, IFunction<L, C> sortBy) {
+      public <L, C extends Comparable<C>> FetcherEntityBuilder<K, V> include(IMultiLinkDef<K, V, ?, L> linkDef, Function<L, C> sortBy) {
         multis.put(linkDef.getKind(), new MultiConnector<>(linkDef));
-        sorts.put(linkDef.getChildEntity().getValueClass(), sortBy);
+        sorts.put(linkDef.getChildEntity().getValueClass(), Comparator.<DataWrap<L>, C>comparing(w -> sortBy.apply(w.getNode())));
         return this;
       }
 
@@ -91,32 +73,39 @@ public class IslandModel {
         return this;
       }
 
-      public <L> FetcherEntityBuilder<K, V> include(IContextSingleGetter<L> contextSingleGetter) {
-        singleContexts.put(contextSingleGetter.kind(), contextSingleGetter);
+      public <L> FetcherEntityBuilder<K, V> attr(String name, IContextSingleGetter<L> contextSingleGetter) {
+        singleContexts.put(name, contextSingleGetter);
         return this;
+      }
+      
+      public FetcherEntityBuilder<K, V> sort(Comparator<V> comparator) {
+          return sortWraps(Comparator.comparing(DataWrap::getNode, comparator));
       }
 
-      public <L> FetcherEntityBuilder<K, V> include(IContextMultiGetter<L> contextMultiGetter) {
-        multiContexts.put(contextMultiGetter.kind(), contextMultiGetter);
-        return this;
+      public FetcherEntityBuilder<K, V> sortWraps(Comparator<DataWrap<V>> comparator) {
+          sorts.put(this.entityDef.getValueClass(), comparator);
+          return this;
       }
+      
+      
+//
+//      public <L> FetcherEntityBuilder<K, V> withCollection(String name, IContextMultiGetter<L> contextMultiGetter) {
+//        multiContexts.put(name, contextMultiGetter);
+//        return this;
+//      }
       
       public <L> FetcherEntityBuilder<K, V> include(String name, ISingleGetter<K, V, ?, L> getter) {
     	  singles.put(name, new SingleGetterConnector<>(getter));
 	      return this;
 	  }
-//      
-//      public <L> FetcherEntityBuilder<K, V> include(String name, IMultiGetter<K, V, ?, L> getter) {
-//    	  multis.put(name, new MultiConnector(name, getter));
-//	      return this;
-//	  }
 
-      public Builder done() {
+    public Builder done() {
         Builder.this.addEntity(new FetcherEntity<K, V>(entityDef, multis, singles, multiContexts, singleContexts, detaches, sorts));
         return Builder.this;
       }
 
     }
+
 
     private <K, V> void addEntity(FetcherEntity<K, V> entity) {
       entities.put(entity.entityDef.getKind(), entity);
@@ -134,12 +123,12 @@ public class IslandModel {
     private final Map<String, IMultiConnector<K, V, ?, ?>> multis;
     private final Map<String, ISingleConnector<K, V, ?, ?>> singles;
     private final List<? extends IBiLinkDef<K, V, ?, ?, ?>> detaches;
-    private final Map<Class<?>, IFunction<?, ? extends Comparable<?>>> sorts;
+    private final Map<Class<?>, Comparator<?>> sorts;
 	private final Map<String, IContextMultiGetter<?>> multiContexts;
 	private final Map<String, IContextSingleGetter<?>> singleContexts;
 
     private FetcherEntity(IEntityDef<K, V> entityDef, Map<String, IMultiConnector<K, V, ?, ?>> multis, Map<String, ISingleConnector<K, V, ?, ?>> singles, Map<String, IContextMultiGetter<?>> multiContexts,
-    		Map<String, IContextSingleGetter<?>> singleContexts, List<? extends IBiLinkDef<K, V, ?, ?, ?>> detaches, Map<Class<?>, IFunction<?, ? extends Comparable<?>>> sorts) {
+    		Map<String, IContextSingleGetter<?>> singleContexts, List<? extends IBiLinkDef<K, V, ?, ?, ?>> detaches, Map<Class<?>, Comparator<?>> sorts) {
       this.entityDef = entityDef;
       this.multis = multis;
       this.singles = singles;
@@ -218,15 +207,19 @@ private <T> DataWrap<?> wrapChild(IVelvet velvet, Context context, T node, ISing
   }
 
   private <T, CK, CV> List<DataWrap<?>> wrapChildren(IVelvet velvet, Context context, FetcherEntity<?, T> entity, T node, IMultiConnector<?, T, CK, CV> multiConn) {
-    Stream<CV> stream = multiConn.getter().multi(velvet, node).stream().filter(l -> l != null);// TODO : check for error
-    return decorateBySort(entity, stream, multiConn.getter().getChildEntity().getValueClass()).map(o -> createWrap(velvet, multiConn.getter().getChildEntity().getKind(), o, context)).collect(Collectors.toList());
+    Stream<DataWrap<CV>> stream = multiConn.getter().multi(velvet, node).stream()
+       .filter(l -> l != null) // TODO : check for error
+       .map(o -> createWrap(velvet, multiConn.getter().getChildEntity().getKind(), o, context));
+       
+       return decorateBySort(stream, entity, multiConn.getter().getChildEntity().getValueClass())
+       .collect(Collectors.toList());
   }
 
   // Natural sorting
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  private <T, V> Stream<V> decorateBySort(FetcherEntity<?, T> entity, Stream<V> stream, Class<?> childClass) {
-    IFunction<?, ? extends Comparable<?>> sorter = entity.sorts.get(childClass);
-    return (sorter != null) ? stream.sorted(Functions.comparator((IFunction) sorter)) : stream;
+  @SuppressWarnings({"unchecked"})
+  private <T, V> Stream<DataWrap<V>> decorateBySort(Stream<DataWrap<V>> stream, FetcherEntity<?, T> entity, Class<?> childClass) {
+    Comparator<DataWrap<V>> sorter = (Comparator<DataWrap<V>>) entity.sorts.get(childClass);
+    return (sorter != null) ? stream.sorted(sorter) : stream;
   }
 
   public <K, V> void deleteByKey(IVelvet velvet, K key, IEntityDef<K, V> entityDef) {
@@ -285,7 +278,11 @@ private <T> DataWrap<?> wrapChild(IVelvet velvet, Context context, T node, ISing
   }
   
   public <K, V> List<DataWrap<V>> getByKeys(IVelvet velvet, Collection<K> keys, IEntityDef<K, V> entityDef) {
-	return keys.stream().map(key -> getByKey(velvet, key, entityDef)).collect(Collectors.toList());
+	return 
+	    decorateBySort(    
+    	    keys.stream()
+            .map(key -> getByKey(velvet, key, entityDef)), entities.get(entityDef.getKind()), entityDef.getValueClass())
+        .collect(Collectors.toList());
   }
 
   /*
