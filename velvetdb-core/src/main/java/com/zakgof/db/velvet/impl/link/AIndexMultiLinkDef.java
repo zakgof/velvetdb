@@ -11,65 +11,64 @@ import com.zakgof.db.velvet.link.ISingleGetter;
 import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
 
-abstract class AIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M>> extends MultiLinkDef<HK, HV, CK, CV>
-		implements ISortedMultiLink<HK, HV, CK, CV, M> {
+abstract class AIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M>> extends MultiLinkDef<HK, HV, CK, CV> implements ISortedMultiLink<HK, HV, CK, CV, M> {
 
-	public AIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
-		super(hostEntity, childEntity);
-	}
+    public AIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
+        super(hostEntity, childEntity);
+    }
 
-	abstract protected IKeyIndexLink<CK, M> index(IVelvet velvet, HK akey);
+    abstract protected IKeyIndexLink<CK, M> index(IVelvet velvet, HK akey);
 
-	@Override
-	public IMultiGetter<HK, HV, CK, CV> indexed(IRangeQuery<CK, M> indexQuery) {
+    @Override
+    public IMultiGetter<HK, HV, CK, CV> indexed(IRangeQuery<CK, M> indexQuery) {
 
-		return new IMultiGetter<HK, HV, CK, CV>() {
+        return new IMultiGetter<HK, HV, CK, CV>() {
 
-			@Override
-			public List<CV> multi(IVelvet velvet, HV node) {
-				return getChildEntity().get(velvet, multiKeys(velvet, getHostEntity().keyOf(node)));
-			}
+            @Override
+            public List<CV> multi(IVelvet velvet, HV node) {
+                return getChildEntity().get(velvet, multiKeys(velvet, getHostEntity().keyOf(node)));
+            }
 
-			@Override
-			public List<CK> multiKeys(IVelvet velvet, HK akey) {
-				return index(velvet, akey).keys(getChildEntity().getKeyClass(), indexQuery);
-			}
+            @Override
+            public List<CK> multiKeys(IVelvet velvet, HK akey) {
+                return index(velvet, akey).keys(getChildEntity().getKeyClass(), indexQuery);
+            }
 
-			@Override
-			public IEntityDef<HK, HV> getHostEntity() {
-				return AIndexMultiLinkDef.this.getHostEntity();
-			}
+            @Override
+            public IEntityDef<HK, HV> getHostEntity() {
+                return AIndexMultiLinkDef.this.getHostEntity();
+            }
 
-			@Override
-			public IEntityDef<CK, CV> getChildEntity() {
-				return AIndexMultiLinkDef.this.getChildEntity();
-			}
-		};
-	}
+            @Override
+            public IEntityDef<CK, CV> getChildEntity() {
+                return AIndexMultiLinkDef.this.getChildEntity();
+            }
+        };
+    }
 
-	@Override
-	public ISingleGetter<HK, HV, CK, CV> indexedSingle(ISingleReturnRangeQuery<CK, M> indexQuery) {
-		return new ISingleGetter<HK, HV, CK, CV>() {
-			@Override
-			public CV single(IVelvet velvet, HV node) {
-				CK singleKey = singleKey(velvet, getHostEntity().keyOf(node));
-				return singleKey == null ? null : getChildEntity().get(velvet, singleKey);
-			}
+    @Override
+    public ISingleGetter<HK, HV, CK, CV> indexedSingle(ISingleReturnRangeQuery<CK, M> indexQuery) {
+        return new ISingleGetter<HK, HV, CK, CV>() {
+            @Override
+            public CV single(IVelvet velvet, HV node) {
+                CK singleKey = singleKey(velvet, getHostEntity().keyOf(node));
+                return singleKey == null ? null : getChildEntity().get(velvet, singleKey);
+            }
 
-			@Override
-			public CK singleKey(IVelvet velvet, HK akey) {
-				return index(velvet, akey).key(getChildEntity().getKeyClass(), indexQuery);
-			}
+            @Override
+            public CK singleKey(IVelvet velvet, HK akey) {
+                return index(velvet, akey).key(getChildEntity().getKeyClass(), indexQuery);
+            }
 
-			@Override
-			public IEntityDef<HK, HV> getHostEntity() {
-				return AIndexMultiLinkDef.this.getHostEntity();
-			}
+            @Override
+            public IEntityDef<HK, HV> getHostEntity() {
+                return AIndexMultiLinkDef.this.getHostEntity();
+            }
 
-			@Override
-			public IEntityDef<CK, CV> getChildEntity() {
-				return AIndexMultiLinkDef.this.getChildEntity();
-			}
-		};
-	}
+            @Override
+            public IEntityDef<CK, CV> getChildEntity() {
+                return AIndexMultiLinkDef.this.getChildEntity();
+            }
+        };
+    }
 }

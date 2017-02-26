@@ -6,58 +6,58 @@ import com.zakgof.db.velvet.annotation.SortedKey;
 
 public class TestEnt implements Serializable {
 
-  private static final long serialVersionUID = -624857516746316365L;
-  
-  private float val;
-  private String key;
+    private static final long serialVersionUID = -624857516746316365L;
 
-  public TestEnt() {
-  }
+    private float val;
+    private String key;
 
-  @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((key == null) ? 0 : key.hashCode());
-    result = prime * result + Float.floatToIntBits(val);
-    return result;
-  }
+    public TestEnt() {
+    }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
-    TestEnt other = (TestEnt) obj;
-    if (key == null) {
-      if (other.key != null)
-        return false;
-    } else if (!key.equals(other.key))
-      return false;
-    if (Math.abs(val - other.val) > 1e-6)
-      return false;
-    return true;
-  }
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((key == null) ? 0 : key.hashCode());
+        result = prime * result + Float.floatToIntBits(val);
+        return result;
+    }
 
-  public TestEnt(String key, float val) {
-    this.key = key;
-    this.val = val;
-  }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        TestEnt other = (TestEnt) obj;
+        if (key == null) {
+            if (other.key != null)
+                return false;
+        } else if (!key.equals(other.key))
+            return false;
+        if (Math.abs(val - other.val) > 1e-6)
+            return false;
+        return true;
+    }
 
-  public float getVal() {
-    return val;
-  }
+    public TestEnt(String key, float val) {
+        this.key = key;
+        this.val = val;
+    }
 
-  @SortedKey
-  public String getKey() {
-    return key;
-  }
+    public float getVal() {
+        return val;
+    }
 
-  @Override
-  public String toString() {
-    return key + " " + val;
-  }
+    @SortedKey
+    public String getKey() {
+        return key;
+    }
+
+    @Override
+    public String toString() {
+        return key + " " + val;
+    }
 }
