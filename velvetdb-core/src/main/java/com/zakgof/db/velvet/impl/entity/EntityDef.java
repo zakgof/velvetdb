@@ -65,10 +65,17 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
         return kind;
     }
 
+    @Override
     public V get(IVelvet velvet, K key) {
         return store(velvet).get(key);
     }
 
+    @Override
+    public byte[] getRaw(IVelvet velvet, K key) {
+        return store(velvet).getRaw(key);
+    }
+
+    @Override
     public List<K> keys(IVelvet velvet) {
         return store(velvet).keys();
     }
@@ -78,15 +85,18 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
         return store(velvet).size();
     }
 
+    @Override
     public K put(IVelvet velvet, V value) {
         return put(velvet, keyOf(value), value);
     }
 
+    @Override
     public K put(IVelvet velvet, K key, V value) {
         store(velvet).put(key, value);
         return key;
     }
 
+    @Override
     public void deleteKey(IVelvet velvet, K key) {
         store(velvet).delete(key);
     }

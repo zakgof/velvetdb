@@ -23,6 +23,8 @@ public interface IEntityDef<K, V> {
 
     public V get(IVelvet velvet, K key);
 
+    public byte[] getRaw(IVelvet velvet, K key);
+
     public List<K> keys(IVelvet velvet);
 
     public long size(IVelvet velvet);

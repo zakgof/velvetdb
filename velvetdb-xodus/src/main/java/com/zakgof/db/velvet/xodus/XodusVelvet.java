@@ -31,9 +31,9 @@ import jetbrains.exodus.env.Transaction;
  * Simple store:        No duplicates     ze(key)       ->  ze(value)
  * Sorted store:        No duplicates     xodus(key)    ->  ze(value)
  * Additional index:    With duplicates   xodus(metric) ->  ze(key) ??
- * 
+ *
  * TODO: add index on existing store ?
- * 
+ *
  * SingleLink:          No duplicates     ze(key1) -> ze(key2)
  * MultiLink:           No duplicates    [ze(key1), ze(key2)] -> empty
  * PriMultiLink:        No duplicates    [ze(key1), xodus(key2)] -> empty
@@ -58,6 +58,7 @@ class XodusVelvet implements IVelvet {
         return new SimpleStore<>(kind, keyClass, valueClass, indexes);
     }
 
+    @Override
     public <K extends Comparable<? super K>, V> ISortedStore<K, V> sortedStore(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes) {
         return new SortedStore<>(kind, keyClass, valueClass, indexes);
     }
@@ -80,7 +81,7 @@ class XodusVelvet implements IVelvet {
         }
 
         private <M extends Comparable<? super M>> StoreIndexProcessor<K, V, M> createStoreReq(IStoreIndexDef<M, V> indexDef) {
-            return new StoreIndexProcessor<K, V, M>(keyClass, indexDef.metric(), keyMetric(indexDef), "#s" + kind + "/" + indexDef.name());
+            return new StoreIndexProcessor<>(keyClass, indexDef.metric(), keyMetric(indexDef), "#s" + kind + "/" + indexDef.name());
         }
 
         private <M extends Comparable<? super M>> Function<K, M> keyMetric(IStoreIndexDef<M, V> indexDef) {
@@ -97,6 +98,14 @@ class XodusVelvet implements IVelvet {
 
         K toObj(ByteIterable bi) {
             return XodusVelvet.this.toObj(keyClass, bi);
+        }
+
+        @Override
+        public byte[] getRaw(K key) {
+            ByteIterable keyBi = toBi(key);
+            debug(valueMap);
+            ByteIterable valueBi = valueMap.get(tx, keyBi);
+            return valueBi == null ? null : biToByteArray(valueBi);
         }
 
         @Override
@@ -146,7 +155,7 @@ class XodusVelvet implements IVelvet {
             debug(valueMap);
 
             try (Cursor cursor = valueMap.openCursor(tx)) {
-                List<K> keys = new ArrayList<K>((int) valueMap.count(tx));
+                List<K> keys = new ArrayList<>((int) valueMap.count(tx));
                 while (cursor.getNext())
                     keys.add(toObj(cursor.getKey()));
                 return keys;
@@ -178,6 +187,7 @@ class XodusVelvet implements IVelvet {
             super(kind, keyClass, valueClass, indexes);
         }
 
+        @Override
         ByteIterable toBi(K key) {
             return BytesUtil.keyToBi(key);
         }
@@ -189,7 +199,7 @@ class XodusVelvet implements IVelvet {
 
         @Override
         public List<K> keys(IRangeQuery<K, K> query) {
-            return new SorterStoreProcessor<K>(keyClass).go(valueMap, query);
+            return new SorterStoreProcessor<>(keyClass).go(valueMap, query);
         }
 
         @Override
@@ -430,25 +440,34 @@ class XodusVelvet implements IVelvet {
         return ze.deserialize(inputStream, clazz);
     }
 
+    private byte[] biToByteArray(ByteIterable bi) {
+        byte[] bytes = bi.getBytesUnsafe();
+        int length = bi.getLength();
+        return Arrays.copyOf(bytes, length);
+    }
+
     private <T> ByteIterable toBi(T obj) {
         ISerializer ze = serializerSupplier.get();
         byte[] bytes = ze.serialize(obj);
         return new ArrayByteIterable(bytes);
     }
 
+    @Override
     public <K> ILink<K> simpleIndex(Object key1, String edgekind, LinkType type) {
         if (type == LinkType.Single) {
             return new SingleLink<>(key1, edgekind);
         } else if (type == LinkType.Multi) {
-            return new MultiLink<K>(key1, edgekind);
+            return new MultiLink<>(key1, edgekind);
         }
         throw new VelvetException("Unknown link type");
     }
 
+    @Override
     public <K extends Comparable<? super K>, T> IKeyIndexLink<K, K> primaryKeyIndex(Object key1, String edgekind) {
         return new PriIndexMultiLink<>(key1, edgekind);
     }
 
+    @Override
     public <K, T, M extends Comparable<? super M>> IKeyIndexLink<K, M> secondaryKeyIndex(Object key1, String edgekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<K> keyClazz, IStore<K, T> childStore) {
         return new SecIndexMultiLink<>(key1, edgekind, nodeMetric, mclazz, keyClazz, childStore);
     }
@@ -515,7 +534,7 @@ class XodusVelvet implements IVelvet {
             try (Cursor cursor = connectMap.openCursor(tx)) {
                 cursor.getSearchKey(key1Bi);
                 ByteIterable bi = cursor.getKey();
-                List<K> result = new ArrayList<K>();
+                List<K> result = new ArrayList<>();
                 while (key1Bi.equals(bi)) {
                     result.add(toObj(clazz, cursor.getValue()));
                     if (!cursor.getNext())

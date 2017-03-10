@@ -22,6 +22,8 @@ public interface IVelvet {
     public interface IStore<K, V> {
         V get(K key);
 
+        byte[] getRaw(K key);
+
         void put(K key, V value);
 
         K put(V value);
