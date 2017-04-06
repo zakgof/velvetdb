@@ -1,21 +1,13 @@
 package com.zakgof.db.velvet.island;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.link.IMultiGetter;
-import com.zakgof.db.velvet.link.IMultiLinkDef;
-import com.zakgof.db.velvet.link.ISingleGetter;
-import com.zakgof.db.velvet.link.ISingleLinkDef;
+import com.zakgof.db.velvet.link.*;
 
 public class IslandModel {
 
@@ -127,7 +119,14 @@ public class IslandModel {
     }
 
     public <K, V> List<DataWrap<K, V>> getByKeys(IVelvet velvet, IEntityDef<K, V> entityDef, Collection<K> keys) {
-        return keys.stream().map(key -> get(velvet, entityDef, key)).collect(Collectors.toList());
+        Stream<DataWrap<K, V>> stream = keys.stream().map(key -> get(velvet, entityDef, key));
+        @SuppressWarnings("unchecked")
+		FetcherEntity<K, V> fetcher = (FetcherEntity<K, V>) entities.get(entityDef);        
+        Comparator<DataWrap<K, V>> comparator = (fetcher == null) ?  null : fetcher.sort;
+        if (comparator != null) {
+        	stream = stream.sorted(comparator);
+        }
+		return stream.collect(Collectors.toList());
     }
 
     public <K, V> List<DataWrap<K, V>> getAll(IVelvet velvet, IEntityDef<K, V> entityDef) {
