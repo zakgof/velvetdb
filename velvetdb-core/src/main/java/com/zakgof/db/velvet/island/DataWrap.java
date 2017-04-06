@@ -1,6 +1,9 @@
 package com.zakgof.db.velvet.island;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.link.IMultiLinkDef;
@@ -12,8 +15,9 @@ public class DataWrap<T> {
 
         private Object key;
         private final T node;
-        private final Map<String, List<DataWrap<?>>> multis = new HashMap<String, List<DataWrap<?>>>();
-        private final Map<String, DataWrap<?>> singles = new HashMap<String, DataWrap<?>>();
+        private final Map<String, List<DataWrap<?>>> multis = new HashMap<>();
+        private final Map<String, DataWrap<?>> singles = new HashMap<>();
+        private final Map<String, Object> attrs = new HashMap<>();
 
         public Builder(T node) {
             this.node = node;
@@ -35,13 +39,18 @@ public class DataWrap<T> {
             return this;
         }
 
+        public Builder<T> attr(String name, Object object) {
+            attrs.put(name, object);
+            return this;
+        }
+
         public Builder<T> key(Object key) {
             this.key = key;
             return this;
         }
 
         public DataWrap<T> build() {
-            return new DataWrap<T>(node, key, singles, multis);
+            return new DataWrap<>(node, key, singles, multis, attrs);
         }
     }
 
@@ -49,6 +58,7 @@ public class DataWrap<T> {
     private final Object key;
     private final Map<String, DataWrap<?>> singles;
     private final Map<String, List<DataWrap<?>>> multis;
+    private final Map<String, Object> attrs;
 
     public T getNode() {
         return node;
@@ -58,11 +68,12 @@ public class DataWrap<T> {
         return key;
     }
 
-    public DataWrap(T node, Object key, Map<String, DataWrap<?>> singles, Map<String, List<DataWrap<?>>> multis) {
+    public DataWrap(T node, Object key, Map<String, DataWrap<?>> singles, Map<String, List<DataWrap<?>>> multis, Map<String, Object> attrs) {
         this.node = node;
         this.key = key;
         this.singles = singles;
         this.multis = multis;
+        this.attrs = attrs;
     }
 
     public <K> DataWrap(T node, IEntityDef<K, T> entity) {
@@ -70,6 +81,7 @@ public class DataWrap<T> {
         this.key = entity.keyOf(node);
         this.singles = Collections.emptyMap();
         this.multis = Collections.emptyMap();
+        this.attrs = Collections.emptyMap();
     }
 
     public DataWrap(T node, Object key) {
@@ -77,6 +89,7 @@ public class DataWrap<T> {
         this.key = key;
         this.singles = Collections.emptyMap();
         this.multis = Collections.emptyMap();
+        this.attrs = Collections.emptyMap();
     }
 
     public List<DataWrap<?>> multi(String name) {
@@ -102,6 +115,11 @@ public class DataWrap<T> {
         return (L) singles.get(linkDef.getKind()).getNode();
     }
 
+    @SuppressWarnings("unchecked")
+    public <L> L attr(String name) {
+        return (L) attrs.get(name);
+    }
+
     @Override
     public String toString() {
         return " " + node + " " + singles.entrySet().stream().reduce("", (s, e) -> s + e.getKey() + " [" + valueString(e.getValue()) + " ]", (s1, s2) -> s1 + s2)
@@ -113,7 +131,7 @@ public class DataWrap<T> {
     }
 
     public <V> DataWrap<T> attach(String name, V value) {
-        return new Builder<>(this).add(name, new DataWrap<V>(value, null)).build(); // TODO: manage key
+        return new Builder<>(this).add(name, new DataWrap<>(value, null)).build(); // TODO: manage key
     }
 
 }
