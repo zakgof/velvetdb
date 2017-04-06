@@ -4,7 +4,7 @@ import com.zakgof.db.velvet.entity.IEntityDef;
 
 public interface IRelation<HK, HV, CK, CV> {
 
-	public IEntityDef<HK, HV> getHostEntity();
+    public IEntityDef<HK, HV> getHostEntity();
 
-	public IEntityDef<CK, CV> getChildEntity();
+    public IEntityDef<CK, CV> getChildEntity();
 }
