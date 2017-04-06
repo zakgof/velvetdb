@@ -42,7 +42,7 @@ public class IslandModel {
             private final IEntityDef<K, V> entityDef;
             private final Map<String, ISingleGetter<K,V,?,?>> singles = new HashMap<>();
             private final Map<String, IMultiGetter<K,V,?,?>> multis = new HashMap<>();
-            private final Map<String, IContextSingleGetter<?>> attrs = new HashMap<>();
+            private final Map<String, IContextSingleGetter<K, V, ?>> attrs = new HashMap<>();
             private Comparator<DataWrap<K, V>> sort = null;
 
             public FetcherEntityBuilder(IEntityDef<K, V> entityDef) {
@@ -69,7 +69,7 @@ public class IslandModel {
                 return include(linkDef.getKind(), linkDef);
             }
 
-            public <CK, CV> FetcherEntityBuilder<K, V> attribute(String name, IContextSingleGetter<CV> contextSingleGetter) {
+            public <CV> FetcherEntityBuilder<K, V> attribute(String name, IContextSingleGetter<K, V, CV> contextSingleGetter) {
                 attrs.put(name, contextSingleGetter);
                 return this;
             }
@@ -106,12 +106,12 @@ public class IslandModel {
         private final Map<String, IMultiGetter<K, V, ?, ?>> multis;
         private final Map<String, ISingleGetter<K, V, ?, ?>> singles;
         private final Comparator<DataWrap<K, V>> sort;
-        private final Map<String, IContextSingleGetter<?>> attrs;
+        private final Map<String, IContextSingleGetter<K, V, ?>> attrs;
 
         private FetcherEntity(IEntityDef<K, V> entityDef,
                               Map<String, IMultiGetter<K,V,?,?>> multis,
                               Map<String, ISingleGetter<K,V,?,?>> singles,
-                              Map<String, IContextSingleGetter<?>> attrs,
+                              Map<String, IContextSingleGetter<K, V, ?>> attrs,
                               Comparator<DataWrap<K, V>> sort) {
             this.entityDef = entityDef;
             this.multis = multis;
@@ -131,17 +131,16 @@ public class IslandModel {
     }
 
     public <K, V> List<DataWrap<K, V>> getAll(IVelvet velvet, IEntityDef<K, V> entityDef) {
-        List<DataWrap<K, V>> wrap = entityDef.get(velvet).stream().map(node -> createWrap(velvet, entityDef, node, new Context())).collect(Collectors.toList());
+        List<DataWrap<K, V>> wrap = entityDef.get(velvet).stream().map(node -> createWrap(velvet, entityDef, node, null)).collect(Collectors.toList());
         return wrap;
     }
 
     public <K, V> DataWrap<K, V> wrap(IVelvet velvet, IEntityDef<K, V> entityDef, V node) {
-        return createWrap(velvet, entityDef, node, new Context());
+        return createWrap(velvet, entityDef, node, null);
     }
 
-    private <K, V> DataWrap<K, V> createWrap(IVelvet velvet, IEntityDef<K, V> entityDef, V node, Context context) {
-        context.setCurrent(node);
-        context.addNode(entityDef, node);
+    private <K, V> DataWrap<K, V> createWrap(IVelvet velvet, IEntityDef<K, V> entityDef, V node, Context<?, ?> parentContext) {
+        Context<K, V> context = new Context<>(parentContext, entityDef, node);
         DataWrap.Builder<K, V> wrapBuilder = new DataWrap.Builder<>(node);
         @SuppressWarnings("unchecked")
         FetcherEntity<K, V> entity = (FetcherEntity<K, V>) entities.get(entityDef);
@@ -150,6 +149,7 @@ public class IslandModel {
         }
         K key = entity.entityDef.keyOf(node);
         wrapBuilder.key(key);
+        context.setKey(key);
 
         if (entity != null) {
             for (Entry<String, ? extends IMultiGetter<K, V, ?, ?>> entry : entity.multis.entrySet()) {
@@ -163,7 +163,7 @@ public class IslandModel {
                 if (wrappedLink != null)
                     wrapBuilder.add(entry.getKey(), wrappedLink);
             }
-            for (Entry<String, IContextSingleGetter<?>> entry : entity.attrs.entrySet()) {
+            for (Entry<String, IContextSingleGetter<K, V, ?>> entry : entity.attrs.entrySet()) {
                 Object link = entry.getValue().single(velvet, context);
                 if (link != null) {
                     wrapBuilder.attr(entry.getKey(), link);
@@ -171,18 +171,18 @@ public class IslandModel {
             }
         }
         DataWrap<K, V> wrap = wrapBuilder.build();
-        context.addWrap(entityDef, wrap);
+        context.addWrap(wrap);
         return wrap;
     }
 
-    private <K, V, CK, CV> DataWrap<CK, CV> wrapChild(IVelvet velvet, Context context, V node, ISingleGetter<K, V, CK, CV> singleGetter) {
+    private <K, V, CK, CV> DataWrap<CK, CV> wrapChild(IVelvet velvet, Context<K, V> context, V node, ISingleGetter<K, V, CK, CV> singleGetter) {
         CV childValue = singleGetter.single(velvet, node);
         if (childValue == null)
             return null;
         return createWrap(velvet, singleGetter.getChildEntity(), childValue, context);
     }
 
-    private <K, V, CK, CV> List<DataWrap<CK, CV>> wrapChildren(IVelvet velvet, Context context, V node, IMultiGetter<K, V, CK, CV> multiGetter) {
+    private <K, V, CK, CV> List<DataWrap<CK, CV>> wrapChildren(IVelvet velvet, Context<K, V> context, V node, IMultiGetter<K, V, CK, CV> multiGetter) {
         @SuppressWarnings("unchecked")
         FetcherEntity<CK, CV> childFetcher = (FetcherEntity<CK, CV>) entities.get(multiGetter.getChildEntity());
         Comparator<DataWrap<CK, CV>> comparator = (childFetcher == null) ?  null : childFetcher.sort;
@@ -199,49 +199,60 @@ public class IslandModel {
         return nodes;
     }
 
-    public interface IIslandContext {
+    public interface IIslandContext<K, V> {
 
-        public <V> V current();
+        V current();
 
-        public <K, V> V get(IEntityDef<K, V> def);
+        K currentKey();
 
-        public <K, V> DataWrap<K, V> wrap(IEntityDef<K, V> def);
+        <CK, CV> CV node(IEntityDef<CK, CV> def);
+
+        <CK, CV> DataWrap<CK, CV> wrap(IEntityDef<CK, CV> def);
+
     }
 
     // TODO: refactor, add parents and make immutable
-    private static class Context implements IIslandContext {
+    private static class Context<K, V> implements IIslandContext<K, V> {
 
-        private Object current;
-        private final Map<IEntityDef<?, ?>, Object> map = new HashMap<>();
+        private final IEntityDef<K, V> entityDef;
+        private final V current;
+        private final Map<IEntityDef<?, ?>, Object> nodes = new HashMap<>();
         private final Map<IEntityDef<?, ?>, DataWrap<?, ?>> wraps = new HashMap<>();
+        private K currentKey;
 
-        public void setCurrent(Object node) {
+        private Context(Context<?, ?> parentContext, IEntityDef<K, V> entityDef, V node) {
             this.current = node;
+            this.entityDef = entityDef;
+            nodes.put(entityDef, node);
         }
 
-        public <K, V> void addNode(IEntityDef<K, V> def, V node) {
-            map.put(def, node);
+        public void setKey(K key) {
+            this.currentKey = key;
         }
 
-        public <K, V> void addWrap(IEntityDef<K, V> def, DataWrap<K, V> wrap) {
-            wraps.put(def, wrap);
+        public void addWrap(DataWrap<K, V> wrap) {
+            wraps.put(entityDef, wrap);
         }
 
         @Override
-        public <K, V> V get(IEntityDef<K, V> def) {
-            return def.getValueClass().cast(map.get(def));
+        public <CK, CV> CV node(IEntityDef<CK, CV> def) {
+            return def.getValueClass().cast(nodes.get(def));
         }
 
         @SuppressWarnings("unchecked")
         @Override
-        public <K, V> DataWrap<K, V> wrap(IEntityDef<K, V> def) {
-            return (DataWrap<K, V>) wraps.get(def);
+        public <CK, CV> DataWrap<CK, CV> wrap(IEntityDef<CK, CV> def) {
+            return (DataWrap<CK, CV>) wraps.get(def);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
-        public <T> T current() {
-            return (T) current;
+        public V current() {
+            return current;
+        }
+
+        @Override
+        public K currentKey() {
+            return currentKey;
         }
 
     }
