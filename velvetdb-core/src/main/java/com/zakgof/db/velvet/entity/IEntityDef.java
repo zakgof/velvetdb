@@ -11,15 +11,17 @@ import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
 
 public interface IEntityDef<K, V> {
 
+    // Metadata
+
     public Class<K> getKeyClass();
 
     public Class<V> getValueClass();
 
-    public K keyOf(V value);
-
     public String getKind();
 
-    //
+    // Query
+
+    public K keyOf(V value);
 
     public V get(IVelvet velvet, K key);
 
@@ -29,18 +31,31 @@ public interface IEntityDef<K, V> {
 
     public long size(IVelvet velvet);
 
+    public boolean containsKey(IVelvet velvet, K key);
+
+    public default List<V> get(IVelvet velvet, Collection<K> keys) {
+        return keys.stream().map(key -> get(velvet, key)).collect(Collectors.toList());
+    }
+
+    public default List<V> get(IVelvet velvet) {
+        return get(velvet, keys(velvet));
+    }
+
+    // Write
+
     public K put(IVelvet velvet, V value);
 
     public K put(IVelvet velvet, K key, V value);
 
-    public boolean containsKey(IVelvet velvet, K key);
+    // Delete
 
     public void deleteKey(IVelvet velvet, K key);
 
-    public IPropertyAccessor<K, V> propertyAccessor();
+    public default void deleteValue(IVelvet velvet, V value) {
+        deleteKey(velvet, keyOf(value));
+    }
 
-    //
-    // public <M extends Comparable<? super M>> IStoreIndex<K, M> index(IVelvet velvet, String name);
+    // Index
 
     // TODO
     public <M extends Comparable<? super M>> List<V> index(IVelvet velvet, String indexName, IRangeQuery<K, M> query);
@@ -51,17 +66,9 @@ public interface IEntityDef<K, V> {
 
     public <M extends Comparable<? super M>> K indexKey(IVelvet velvet, String indexName, ISingleReturnRangeQuery<K, M> query);
 
-    public default List<V> get(IVelvet velvet, Collection<K> keys) {
-        return keys.stream().map(key -> get(velvet, key)).collect(Collectors.toList());
-    }
+    // Other
 
-    public default List<V> get(IVelvet velvet) {
-        return get(velvet, keys(velvet));
-    }
-
-    public default void deleteValue(IVelvet velvet, V value) {
-        deleteKey(velvet, keyOf(value));
-    }
+    public IPropertyAccessor<K, V> propertyAccessor();
 
     public default boolean equals(V value1, V value2) {
         return keyOf(value1).equals(keyOf(value2));
