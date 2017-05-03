@@ -2,4 +2,4 @@ language: java
 jdk:
   - oraclejdk8
 install:
-script: mvn deploy -B --settings travis/settings.xml -DskipTests -DaltDeploymentRepository diet::default::http://nexus2-zakk.rhcloud.com/content/repositories/snapshots/ 
+script: mvn deploy -B --settings travis/settings.xml -DskipTests -DaltDeploymentRepository velvetdb::default::http://nexus2-zakk.rhcloud.com/content/repositories/snapshots/
