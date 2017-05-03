@@ -1,3 +1,4 @@
+<settings>
   <servers>
       <server>
           <id>diet</id>
@@ -5,3 +6,4 @@
           <password>${env.DIET_NEXUS_PASSWORD}</password>
       </server>
   </servers>
+</settings>
