@@ -67,7 +67,7 @@ public class IslandModel {
             }
 
             public FetcherEntityBuilder<K, V> sort(Comparator<V> comparator) {
-                return sortWraps(Comparator.comparing(DataWrap::getNode, comparator));
+                return sortWraps((c1, c2) -> comparator.compare(c1.getNode(), c2.getNode()));
             }
 
             public FetcherEntityBuilder<K, V> sortWraps(Comparator<DataWrap<K, V>> comparator) {
