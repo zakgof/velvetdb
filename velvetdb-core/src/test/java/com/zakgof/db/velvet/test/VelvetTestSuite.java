@@ -3,13 +3,13 @@ package com.zakgof.db.velvet.test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.function.Supplier;
 
 import org.junit.AfterClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
+import com.annimon.stream.function.Supplier;
 import com.zakgof.db.velvet.IVelvetEnvironment;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.VelvetFactory;

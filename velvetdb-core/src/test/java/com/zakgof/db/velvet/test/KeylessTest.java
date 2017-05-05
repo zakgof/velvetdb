@@ -2,12 +2,13 @@ package com.zakgof.db.velvet.test;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.annimon.stream.Collectors;
+import com.annimon.stream.Stream;
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.IKeylessEntityDef;
 import com.zakgof.db.velvet.query.Queries;
@@ -28,7 +29,7 @@ public class KeylessTest extends AVelvetTxnTest {
 
   @Test
   public void testGetAll() {
-    List<Integer> all = ENTITY.get(velvet).stream().map(KeylessEnt::getNum).collect(Collectors.toList());
+    List<Integer> all = Stream.of(ENTITY.get(velvet)).map(KeylessEnt::getNum).collect(Collectors.toList());
     Assert.assertEquals(Arrays.asList(7, 5, 2, 3, 1), all);
   }
   
