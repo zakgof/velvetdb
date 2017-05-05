@@ -198,18 +198,6 @@ public class IslandModel {
         return nodes;
     }
 
-    public interface IIslandContext<K, V> {
-
-        V current();
-
-        K currentKey();
-
-        <CK, CV> CV node(IEntityDef<CK, CV> def);
-
-        <CK, CV> DataWrap<CK, CV> wrap(IEntityDef<CK, CV> def);
-
-    }
-
     // TODO: refactor, add parents and make immutable
     private static class Context<K, V> implements IIslandContext<K, V> {
 
