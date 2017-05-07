@@ -35,6 +35,10 @@ public class Queries {
     public static <K, M extends Comparable<? super M>> IRangeQuery<K, M> equalsTo(M p) {
         return Queries.<K, M> builder().greaterOrEq(p).lessOrEq(p).build();
     }
+    
+    public static <K, M extends Comparable<? super M>> ISingleReturnRangeQuery<K, M> equalsToSingle(M p) {
+        return Queries.<K, M> builder().greaterOrEq(p).lessOrEq(p).buildSingle();
+    }
 
     public static <K, M extends Comparable<? super M>> IRangeQuery<K, M> range(int offset, int limit) {
         return Queries.<K, M> builder().offset(offset).limit(limit).build();

@@ -1,9 +1,6 @@
 package com.zakgof.db.velvet.island;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.link.IMultiLinkDef;
@@ -25,6 +22,7 @@ public class DataWrap<K, V> {
 
         public Builder(DataWrap<K, V> wrap) {
             this.node = wrap.node;
+            this.key = wrap.key;
             this.multis.putAll(wrap.multis);
             this.singles.putAll(wrap.singles);
             this.attrs.putAll(wrap.attrs);

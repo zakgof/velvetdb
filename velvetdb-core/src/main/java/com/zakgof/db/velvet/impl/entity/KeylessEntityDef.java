@@ -1,8 +1,6 @@
 package com.zakgof.db.velvet.impl.entity;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.WeakHashMap;
+import java.util.*;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
@@ -12,7 +10,7 @@ import com.zakgof.db.velvet.properties.IPropertyAccessor;
 
 public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKeylessEntityDef<V> {
 
-    private final WeakHashMap<V, Long> keys = new WeakHashMap<>();
+    private final Map<V, Long> keys = Collections.synchronizedMap(new WeakHashMap<>());
     private IPropertyAccessor<Long, V> propertyAccessor;
 
     public KeylessEntityDef(Class<V> valueClass, String kind, Collection<IStoreIndexDef<?, V>> indexes) {

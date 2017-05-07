@@ -136,4 +136,9 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     public <M extends Comparable<? super M>> List<K> indexKeys(IVelvet velvet, String indexName, IRangeQuery<K, M> query) {
         return store(velvet).<M> index(indexName).keys(query);
     }
+
+    @Override
+    public String toString() {
+        return "[" + kind + "]";
+    }
 }
