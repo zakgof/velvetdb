@@ -10,7 +10,11 @@ public class GuavaCache implements ICache {
     private Cache<Object, Object> cache;
 
     public GuavaCache(long maxSize, long minutes) {
-        cache = CacheBuilder.newBuilder().maximumWeight(maxSize).weigher((k, v) -> weight(k, v)).expireAfterWrite(minutes, TimeUnit.MINUTES).build();
+        cache = CacheBuilder.newBuilder()
+                .maximumWeight(maxSize)
+                .weigher((k, v) -> weight(k, v))
+                .expireAfterWrite(minutes, TimeUnit.MINUTES)
+                .build();
     }
 
     private int weight(Object k, Object v) {

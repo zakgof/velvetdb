@@ -1,6 +1,14 @@
+<<<<<<< HEAD
 language: java
 jdk:
   - oraclejdk8
 install:
 after_success:
   - mvn deploy --altDeploymentRepository diet::default::http://nexus2-zakk.rhcloud.com/content/repositories/snapshots/ --settings travis/settings.xml -DskipTests -B
+=======
+language: java
+jdk:
+  - oraclejdk8
+install:
+script: mvn -DaltDeploymentRepository=velvetdb::default::http://nexus2-zakk.rhcloud.com/content/repositories/snapshots/ -B -Dmaven.test.skip=true -DskipTests -s "travis/settings.xml" deploy
+>>>>>>> branch 'master' of https://github.com/zakgof/velvetdb
