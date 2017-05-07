@@ -26,12 +26,12 @@ import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.serialize.ISerializer;
 
 /**
- * normal store: #k/kind1 
+ * normal store: #k/kind1
  * sorted store: treemap #n/kind : [key] -> [value]
- * 
- * single link: hash map: [key1] -> [key2] 
+ *
+ * single link: hash map: [key1] -> [key2]
  * store index: treeset [metric1, key1]
- * multi link : treeset: [key1, key2] 
+ * multi link : treeset: [key1, key2]
  * pri-multilink: treeset [key1, key2]
  * sec-multilink: treeset [key1, metric2, key2]
  *
@@ -75,6 +75,12 @@ public class MapDbVelvet implements IVelvet {
         @Override
         public V get(K key) {
             return valueMap.get(key);
+        }
+
+        @Override
+        public byte[] getRaw(K key) {
+            // TODO
+            throw new RuntimeException("Not implemented yet");
         }
 
         @Override
@@ -130,7 +136,7 @@ public class MapDbVelvet implements IVelvet {
     }
 
     private abstract class ARangeQueryProcessor<K, M extends Comparable<? super M>, CURSOR> {
-        
+
         CURSOR cursor;
         protected NavigableSet<CURSOR> set;
 
@@ -139,9 +145,9 @@ public class MapDbVelvet implements IVelvet {
         }
 
         List<K> go(IRangeQuery<K, M> query) {
-    
+
             List<K> result = new ArrayList<>();
-    
+
             if (query.isAscending()) {
                 IQueryAnchor<K, M> lowAnchor = query.getLowAnchor();
                 gotoLowElement(lowAnchor);
@@ -150,7 +156,7 @@ public class MapDbVelvet implements IVelvet {
                 forwardWhile(
                         () -> (isBelow(query.getHighAnchor(), true) && (query.getLimit() < 0 || result.size() < query.getLimit())),
                         () -> result.add(cursorResult()));
-                
+
                 if (check() && query.getHighAnchor() != null && query.getHighAnchor().isIncluding() && cursorResult()!=null && cursorResult().equals(query.getHighAnchor().getKey()))
                     result.add(cursorResult());
             } else {
@@ -167,7 +173,7 @@ public class MapDbVelvet implements IVelvet {
             }
             return result;
         }
-    
+
         void forwardWhile(Supplier<Boolean> condition, Runnable action) {
             while (check() && condition.get()) {
                 action.run();
@@ -177,7 +183,7 @@ public class MapDbVelvet implements IVelvet {
                 cursor = next;
             }
         }
-    
+
         void backwardWhile(Supplier<Boolean> condition, Runnable action) {
             while (check() && condition.get()) {
                 action.run();
@@ -187,7 +193,7 @@ public class MapDbVelvet implements IVelvet {
                 cursor = prev;
             }
         }
-    
+
         boolean isBelow(IQueryAnchor<K, M> anchor, boolean below) {
             if (anchor == null)
                 return true;
@@ -202,7 +208,7 @@ public class MapDbVelvet implements IVelvet {
                 return compare < 0 && below || compare > 0 && !below; // TODO // XOR
             }
         }
-    
+
         void gotoLowElement(IQueryAnchor<K, M> anchor) {
             if (anchor == null) {
                 cursor = set.isEmpty() ? null : set.first();
@@ -228,7 +234,7 @@ public class MapDbVelvet implements IVelvet {
                 }
             }
         }
-    
+
         void gotoHighElement(IQueryAnchor<K, M> anchor) {
             if (anchor == null) {
                 cursor = set.isEmpty() ? null : set.last();
@@ -244,18 +250,18 @@ public class MapDbVelvet implements IVelvet {
                         while(check() && cursorMetric().equals(metric))
                             cursor = set.lower(cursor);
                 }
-                
+
             }
         }
-    
+
         abstract CURSOR cursorAtKey(K key);
-    
+
         abstract CURSOR cursorAfterMetric(M metric);
-    
+
         abstract M cursorMetric();
-    
+
         abstract K cursorResult();
-    
+
         abstract boolean check();
     }
 
@@ -337,7 +343,7 @@ public class MapDbVelvet implements IVelvet {
         private Function<V, M> metric;
 
         public StoreIndex(String kind, IStoreIndexDef<M, V> index) {
-            
+
             metric = index.metric();
             indexSet = db.treeSet("#s/" + kind + "/" + index.name(), BTreeKeySerializer.ARRAY2);
         }
@@ -361,7 +367,7 @@ public class MapDbVelvet implements IVelvet {
      * store index: treeset [metric1, key1]
      */
     private class StoreIndexProcessor<K, M extends Comparable<? super M>> extends ARangeQueryProcessor<K, M, Object[]> {
-        
+
         public StoreIndexProcessor(NavigableSet<Object[]> set) {
             super(set);
         }
@@ -392,7 +398,7 @@ public class MapDbVelvet implements IVelvet {
         boolean check() {
             return cursor != null;
         }
-    }    
+    }
     //
     //
     //
@@ -440,7 +446,7 @@ public class MapDbVelvet implements IVelvet {
     @Override
     public <K, V, M extends Comparable<? super M>> IKeyIndexLink<K, M> secondaryKeyIndex(Object key1, String edgekind,
             Function<V, M> nodeMetric, Class<M> mclazz, Class<K> keyClazz, IStore<K, V> childStore) {
-        return new SecMultiLink<K, V, M>(key1, edgekind, nodeMetric, keyClazz, childStore);
+        return new SecMultiLink<>(key1, edgekind, nodeMetric, keyClazz, childStore);
     }
 
     /**
@@ -588,7 +594,7 @@ public class MapDbVelvet implements IVelvet {
                 return cursor != null && key1.equals(cursor[0]);
             }
 
-           
+
         }
     }
 
