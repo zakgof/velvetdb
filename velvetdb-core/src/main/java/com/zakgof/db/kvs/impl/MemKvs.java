@@ -56,14 +56,15 @@ public class MemKvs implements IKvs {
     }
 
     public void persist(OutputStream stream) throws IOException {
-        SimpleOutputStream sos = new SimpleOutputStream(stream);
-        sos.write(values.size());
-        for (Entry<Buffer, Buffer> entry : values.entrySet()) {
-            sos.write(entry.getKey().bytes());
-            sos.write(entry.getValue().bytes());
+        try (SimpleOutputStream sos = new SimpleOutputStream(stream)) {
+            sos.write(values.size());
+            for (Entry<Buffer, Buffer> entry : values.entrySet()) {
+                sos.write(entry.getKey().bytes());
+                sos.write(entry.getValue().bytes());
+            }
+            stream.flush();
+            stream.close();
         }
-        stream.flush();
-        stream.close();
     }
 
     public void load(InputStream is) throws IOException {
