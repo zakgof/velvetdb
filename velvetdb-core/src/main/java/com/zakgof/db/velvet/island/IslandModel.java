@@ -2,6 +2,7 @@ package com.zakgof.db.velvet.island;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,6 +36,7 @@ public class IslandModel {
             private final Map<String, ISingleGetter<K,V,?,?>> singles = new HashMap<>();
             private final Map<String, IMultiGetter<K,V,?,?>> multis = new HashMap<>();
             private final Map<String, IContextSingleGetter<K, V, ?>> attrs = new HashMap<>();
+            private final Map<String, Function<DataWrap<K, V>, ?>> postattrs = new HashMap<>();
             private Comparator<DataWrap<K, V>> sort = null;
 
             public FetcherEntityBuilder(IEntityDef<K, V> entityDef) {
@@ -66,6 +68,11 @@ public class IslandModel {
                 return this;
             }
 
+            public <CV> FetcherEntityBuilder<K, V> attribute(String name, Function<DataWrap<K, V>, CV> function) {
+                postattrs.put(name, function);
+                return this;
+            }
+
             public FetcherEntityBuilder<K, V> sort(Comparator<V> comparator) {
                 return sortWraps(Comparator.comparing(DataWrap::getNode, comparator));
             }
@@ -76,7 +83,7 @@ public class IslandModel {
             }
 
             public Builder done() {
-                Builder.this.addEntity(new FetcherEntity<>(entityDef, multis, singles, attrs, sort));
+                Builder.this.addEntity(new FetcherEntity<>(entityDef, multis, singles, attrs, postattrs, sort));
                 return Builder.this;
             }
 
@@ -99,16 +106,19 @@ public class IslandModel {
         private final Map<String, ISingleGetter<K, V, ?, ?>> singles;
         private final Comparator<DataWrap<K, V>> sort;
         private final Map<String, IContextSingleGetter<K, V, ?>> attrs;
+        private final Map<String, Function<DataWrap<K, V>, ?>> postattrs;
 
         private FetcherEntity(IEntityDef<K, V> entityDef,
                               Map<String, IMultiGetter<K,V,?,?>> multis,
                               Map<String, ISingleGetter<K,V,?,?>> singles,
                               Map<String, IContextSingleGetter<K, V, ?>> attrs,
+                              Map<String, Function<DataWrap<K, V>, ?>> postattrs,
                               Comparator<DataWrap<K, V>> sort) {
             this.entityDef = entityDef;
             this.multis = multis;
             this.singles = singles;
             this.attrs = attrs;
+            this.postattrs = postattrs;
             this.sort = sort;
         }
 
@@ -167,6 +177,11 @@ public class IslandModel {
                 if (link != null) {
                     wrapBuilder.attr(entry.getKey(), link);
                 }
+            }
+            DataWrap<K, V> wrap = wrapBuilder.build();
+            wrapBuilder = new DataWrap.Builder<>(wrap);
+            for (Entry<String, Function<DataWrap<K, V>, ?>> entry : entity.postattrs.entrySet()) {
+                wrapBuilder.attr(entry.getKey(), entry.getValue().apply(wrap));
             }
         }
         DataWrap<K, V> wrap = wrapBuilder.build();
