@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.zakgof</groupId>
   <artifactId>velvetdb-serializer-kryo</artifactId>
-  <version>0.3.1-SNAPSHOT</version>
+  <version>0.3.2-SNAPSHOT</version>
   <properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
@@ -12,7 +12,7 @@
   	<dependency>
   		<groupId>com.zakgof</groupId>
   		<artifactId>velvetdb</artifactId>
-  		<version>0.3.1-SNAPSHOT</version>
+  		<version>0.3.2-SNAPSHOT</version>
   	</dependency>
   	<dependency>
         <groupId>com.esotericsoftware</groupId>
