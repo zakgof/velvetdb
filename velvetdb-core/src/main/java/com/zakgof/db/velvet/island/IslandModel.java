@@ -130,18 +130,27 @@ public class IslandModel {
 
     public <K, V> List<DataWrap<K, V>> getByKeys(IVelvet velvet, IEntityDef<K, V> entityDef, Collection<K> keys) {
         Stream<DataWrap<K, V>> stream = keys.stream().map(key -> get(velvet, entityDef, key));
-        @SuppressWarnings("unchecked")
-		FetcherEntity<K, V> fetcher = (FetcherEntity<K, V>) entities.get(entityDef);        
-        Comparator<DataWrap<K, V>> comparator = (fetcher == null) ?  null : fetcher.sort;
-        if (comparator != null) {
-        	stream = stream.sorted(comparator);
-        }
-		return stream.collect(Collectors.toList());
+        stream = sortTheseWraps(entityDef, stream);
+        return stream.collect(Collectors.toList());
     }
 
     public <K, V> List<DataWrap<K, V>> getAll(IVelvet velvet, IEntityDef<K, V> entityDef) {
-        List<DataWrap<K, V>> wrap = entityDef.get(velvet).stream().map(node -> createWrap(velvet, entityDef, node, null)).collect(Collectors.toList());
-        return wrap;
+        Stream<DataWrap<K, V>> stream = entityDef.get(velvet)
+          .stream()
+          .map(node -> createWrap(velvet, entityDef, node, null));
+        stream = sortTheseWraps(entityDef, stream);
+        List<DataWrap<K, V>> wrapList = stream.collect(Collectors.toList());
+        return wrapList;
+    }
+
+    private <K, V> Stream<DataWrap<K, V>> sortTheseWraps(IEntityDef<K, V> entityDef, Stream<DataWrap<K, V>> stream) {
+        @SuppressWarnings("unchecked")
+        FetcherEntity<K, V> fetcher = (FetcherEntity<K, V>) entities.get(entityDef);
+        Comparator<DataWrap<K, V>> comparator = (fetcher == null) ?  null : fetcher.sort;
+        if (comparator != null) {
+            stream = stream.sorted(comparator);
+        }
+        return stream;
     }
 
     public <K, V> DataWrap<K, V> wrap(IVelvet velvet, IEntityDef<K, V> entityDef, V node) {
