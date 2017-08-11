@@ -1,9 +1,6 @@
 apply plugin: 'java'
 compileJava.options.encoding = 'UTF-8'
 
-group = 'com.zakgof'
-version = '0.3.2-SNAPSHOT'
-
 repositories {
     mavenCentral()
     maven {
@@ -11,7 +8,3 @@ repositories {
     }
 }
 
-dependencies {
-    compile 'com.zakgof:tools:0.3.2-SNAPSHOT'
-    testCompile 'junit:junit:4.12'
-}
