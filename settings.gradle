@@ -1,0 +1,3 @@
+include 'velvetdb-xodus'
+include 'velvetdb-core'
+include 'tools'

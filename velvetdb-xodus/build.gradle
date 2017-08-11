@@ -12,6 +12,8 @@ repositories {
 }
 
 dependencies {
-    compile 'com.zakgof:tools:0.3.2-SNAPSHOT'
+    compile 'com.zakgof:velvetdb:0.3.2-SNAPSHOT'
+    compile 'org.jetbrains.xodus:xodus-environment:1.0.4'
+    testCompile 'com.zakgof:velvetdb:0.3.2-SNAPSHOT:tests'
     testCompile 'junit:junit:4.12'
 }
