@@ -315,7 +315,12 @@ class XodusVelvet implements IVelvet {
             if (anchor == null) {
                 cursor.getNext();
             } else {
-                ByteIterable searchBi = BytesUtil.keyToBi(anchor.getMetric());
+                M metric = anchor.getMetric();
+                if (metric == null) {
+                    K key = anchor.getKey();
+                    metric = this.keyMetric.apply(key);
+                }
+                ByteIterable searchBi = BytesUtil.keyToBi(metric);
                 cursor.getSearchKeyRange(searchBi);
                 if (!anchor.isIncluding()) {
                     forwardWhile(() -> cursor.getKey().equals(searchBi), () -> {
