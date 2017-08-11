@@ -128,8 +128,15 @@ public class SortedStoreTest extends AVelvetTxnTest {
         check(Queries.range(0, true, 8, true), 1, 2, 3, 5, 7);
         check(Queries.range(0, true, 8, true), 1, 2, 3, 5, 7);
         check(Queries.range(0, true, 8, true), 1, 2, 3, 5, 7);
-
     }
+
+    @Test
+    public void testRangeDesc() {
+        check(Queries.<Integer, Integer>builder().descending().greater(3).build(), 7, 5);
+        check(Queries.<Integer, Integer>builder().descending().greaterOrEq(3).build(), 7, 5, 3);
+        check(Queries.<Integer, Integer>builder().descending().greaterOrEq(3).lessOrEq(5).build(), 5, 3);
+    }
+
 
     void check(IRangeQuery<Integer, Integer> query, Integer... ref) {
         List<TestEnt2> result = ENTITY2.get(velvet, query);
