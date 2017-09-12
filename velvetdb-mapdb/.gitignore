@@ -3,5 +3,4 @@
 **/.settings
 **/target
 **/.gradle
-
-
+/bin/
