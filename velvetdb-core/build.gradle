@@ -38,12 +38,17 @@ task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
 }
 
+task testJar(type: Jar) {
+    classifier = 'tests'
+    from sourceSets.test.output
+}
+
 test {
     exclude "**"
 }
 
 artifacts {
-    archives javadocJar, sourcesJar
+    archives javadocJar, sourcesJar, testJar
 }
 
 signing {
@@ -65,8 +70,8 @@ uploadArchives {
 
       pom.project {
         packaging 'jar'
-        artifactId 'tools'
-        url 'https://github.com/zakgof/tools'
+        artifactId 'velvetdb-core'
+        url 'https://github.com/zakgof/velvetdb'
 
         scm {
           connection 'scm:git:https://github.com/zakgof/velvetdb.git'
