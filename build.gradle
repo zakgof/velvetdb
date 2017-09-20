@@ -4,7 +4,7 @@ compileJava.options.encoding = 'UTF-8'
 repositories {
     mavenCentral()
     maven {
-        url "http://nexus2-zakk.rhcloud.com/content/repositories/snapshots/"
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
     }
 }
 
