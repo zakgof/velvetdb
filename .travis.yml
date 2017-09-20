@@ -1,5 +1,3 @@
 language: java
 jdk:
   - oraclejdk8
-install: /bin/true
-script: mvn -DaltDeploymentRepository=velvetdb::default::http://nexus2-zakk.rhcloud.com/content/repositories/snapshots/ -B -DskipTests=true -s "travis/settings.xml" deploy
