@@ -1,2 +1,5 @@
 include 'velvetdb-xodus'
+include 'velvetdb-mapdb'
 include 'velvetdb-core'
+include 'velvetdb-serializer-kryo'
+include 'velvetdb-serializer-elsa'
