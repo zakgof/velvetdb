@@ -1,12 +1,23 @@
 package com.zakgof.db.velvet.mapdb;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableSet;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import org.mapdb.*;
+import org.mapdb.Atomic;
+import org.mapdb.BTreeKeySerializer;
+import org.mapdb.BTreeMap;
+import org.mapdb.DB;
+import org.mapdb.Fun;
+import org.mapdb.HTreeMap;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
@@ -16,9 +27,9 @@ import com.zakgof.serialize.ISerializer;
 
 /**
  * normal store: #k/kind1
- * sorted store: treemap #n/kind : [key] -> [value]
+ * sorted store: treemap #n/kind : [key] -&gt; [value]
  *
- * single link: hash map: [key1] -> [key2]
+ * single link: hash map: [key1] -&gt; [key2]
  * store index: treeset [metric1, key1]
  * multi link : treeset: [key1, key2]
  * pri-multilink: treeset [key1, key2]

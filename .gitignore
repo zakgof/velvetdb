@@ -3,6 +3,4 @@
 **/.settings
 **/target
 **/.gradle
-
-
 /build/
