@@ -11,8 +11,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
 import com.zakgof.db.velvet.VelvetException;
+import com.zakgof.db.velvet.annotation.Index;
 import com.zakgof.db.velvet.annotation.Key;
 import com.zakgof.db.velvet.annotation.SortedKey;
 import com.zakgof.db.velvet.properties.IProperty;
@@ -24,7 +27,8 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
     private Function<V, K> provider;
     private Class<K> keyClass;
     private boolean sorted;
-    Map<String, IProperty<?, V>> propMap = new LinkedHashMap<>();
+    private Map<String, IProperty<?, V>> propMap = new LinkedHashMap<>();
+    private Map<String, IProperty<?, V>> secIndexMap = new LinkedHashMap<>();
     private IProperty<K, V> keyProp;
 
     @SuppressWarnings("unchecked")
@@ -41,9 +45,14 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
                         throw new VelvetException(e);
                     }
                 };
-                keyProp = new FieldProperty<K, V>(field, false);
+                keyProp = new FieldProperty<>(field, false);
             } else {
-                propMap.put(field.getName(), new FieldProperty<>(field));
+                FieldProperty<Object, V> fieldProperty = new FieldProperty<>(field);
+                Index indexAnno = field.getAnnotation(Index.class);
+                if (indexAnno != null) {
+                    secIndexMap.put(indexAnno.name(), fieldProperty);
+                }
+                propMap.put(field.getName(), fieldProperty);
             }
         }
         for (Method method : valueClass.getDeclaredMethods()) { // TODO: include inherited!
@@ -58,20 +67,22 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
                         throw new VelvetException(e);
                     }
                 });
-                keyProp = new MethodProperty<K, V>(method);
+                keyProp = new MethodProperty<>(method);
+            } else {
+                Index indexAnno = method.getAnnotation(Index.class);
+                if (indexAnno != null) {
+                    MethodProperty<Object, V> indexProp = new MethodProperty<>(method);
+                    secIndexMap.put(indexAnno.name(), indexProp);
+                }
             }
 
-            // else {
-            // if (method.getParameterCount() == 0 && method.getReturnType() != void.class)
-            // propMap.put(method.getName(), new MethodProperty(field));
-            // }
         }
         // throw new VelvetException("No annotation for key found in " + valueClass);
     }
 
     // TODO skip static and transient ?
     static List<Field> getAllFields(Class<?> type) {
-        List<Field> fields = new ArrayList<Field>();
+        List<Field> fields = new ArrayList<>();
         Field[] declaredFields = type.getDeclaredFields();
         Arrays.sort(declaredFields, Functions.comparator(Field::getName));
         for (Field field : declaredFields) {
@@ -114,6 +125,25 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
     @Override
     public IProperty<K, V> getKey() {
         return keyProp;
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<IStoreIndexDef<?, V>> getIndexes() {
+        return secIndexMap.entrySet().stream().map(e -> createIndexDef((Map.Entry)e)).collect(Collectors.toList());
+    }
+
+    private <M extends Comparable<M>> IStoreIndexDef<M, V> createIndexDef(Map.Entry<String, IProperty<M, V>> entry) {
+        return new IStoreIndexDef<M, V>() {
+            @Override
+            public String name() {
+                return entry.getKey();
+            }
+
+            @Override
+            public Function<V, M> metric() {
+                return v -> entry.getValue().get(v);
+            }
+        };
     }
 
     private static class FieldProperty<P, V> implements IProperty<P, V> {
