@@ -10,11 +10,12 @@ import com.zakgof.db.velvet.impl.entity.AnnoKeyProvider;
 import com.zakgof.db.velvet.impl.entity.EntityDef;
 import com.zakgof.db.velvet.impl.entity.KeylessEntityDef;
 import com.zakgof.db.velvet.impl.entity.SortedAnnoEntityDef;
+import com.zakgof.db.velvet.impl.entity.SortedEntityDef;
 
 final public class Entities {
 
-    public static <K extends Comparable<? super K>, V> IEntityDef<K, V> anno(Class<K> keyClass, Class<V> valueClass) {
-        return from(valueClass).make(keyClass);
+    public static <K, V> IEntityDef<K, V> create(Class<V> valueClass) {
+        return from(valueClass).make();
     }
 
     public static <V> IKeylessEntityDef<V> keyless(Class<V> valueClass) {
@@ -74,6 +75,10 @@ final public class Entities {
         @SuppressWarnings("unchecked")
         public <K extends Comparable<? super K>> ISortableEntityDef<K, V> makeSorted() {
             return new SortedAnnoEntityDef<>(clazz, (AnnoKeyProvider<K, V>)annoKeyProvider, kind, indexes);
+        }
+
+        public <K extends Comparable<? super K>> ISortableEntityDef<K, V> makeSorted(Class<K> keyClass, Function<V, K> keyFunction) {
+            return new SortedEntityDef<>(keyClass, clazz, kind, keyFunction, indexes);
         }
 
     }

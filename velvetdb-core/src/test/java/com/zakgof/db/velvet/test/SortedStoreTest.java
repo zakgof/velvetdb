@@ -17,7 +17,7 @@ import com.zakgof.db.velvet.query.Queries;
 public class SortedStoreTest extends AVelvetTxnTest {
 
     private ISortableEntityDef<Integer, TestEnt2> ENTITY2 = Entities.sorted(TestEnt2.class);
-    private ISortableEntityDef<Integer, TestEnt3> ENTITY_EMPTY = Entities.sorted(Integer.class, TestEnt3.class, "realpojo", TestEnt3::getKey, Collections.emptyList());
+    private ISortableEntityDef<Integer, TestEnt3> ENTITY_EMPTY = Entities.from(TestEnt3.class).kind("realpojo").makeSorted(Integer.class, TestEnt3::getKey);
 
     @Before
     public void init() {
