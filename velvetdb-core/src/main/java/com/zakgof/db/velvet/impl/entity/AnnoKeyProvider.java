@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -127,9 +128,13 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
         return keyProp;
     }
 
-    @SuppressWarnings("unchecked")
     public List<IStoreIndexDef<?, V>> getIndexes() {
-        return secIndexMap.entrySet().stream().map(e -> createIndexDef((Map.Entry)e)).collect(Collectors.toList());
+        return secIndexMap.entrySet().stream().map(e -> createIndexDefX(e)).collect(Collectors.toList());
+    }
+
+    @SuppressWarnings("unchecked")
+    private IStoreIndexDef<?, V> createIndexDefX(Entry<String, IProperty<?, V>> e) {
+        return createIndexDef((Map.Entry)e);
     }
 
     private <M extends Comparable<M>> IStoreIndexDef<M, V> createIndexDef(Map.Entry<String, IProperty<M, V>> entry) {

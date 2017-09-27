@@ -605,7 +605,7 @@ class XodusVelvet implements IVelvet {
                     forwardWhile(() -> indexValue().compareTo(m) == 0 && !get().equals(key), () -> {
                     });
                     if (!anchor.isIncluding() && get().equals(key))
-                        cursor.getNext();
+                        cursorValid = cursor.getNext();
                 }
             }
 
@@ -658,7 +658,7 @@ class XodusVelvet implements IVelvet {
                 cursor.getPrev();
                 cursor.getNext();
             } else {
-                cursor.getPrev();
+                cursorValid = cursor.getPrev();
             }
 
         }
