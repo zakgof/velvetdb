@@ -40,14 +40,14 @@ velvetdb is on Maven Central
 
 ```xml
 <dependency>
-    <groupId>com.zakgof</groupId>
+    <groupId>com.zakgof.github</groupId>
     <artifactId>velvetdb-xodus</artifactId>
     <version>0.3.2</version>
 </dependency>
 ```
 
 ## Define entities and links
-
+```java
    public class Book {
         @Key
         private String isbn;
@@ -65,8 +65,8 @@ velvetdb is on Maven Central
     IKeylessEntityDef<Author> AUTHOR = Entities.keyless(Author.class);
 
     IMultiLink<Long, Author, String, Book> AUTHOR_BOOKS = Links.oneToMany(AUTHOR, BOOKS);
-
-## Work with velvet
+```
+## Working with velvetdb
 ```java
     // Get some POJOs to store
     Book book = ...
