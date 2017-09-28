@@ -6,19 +6,16 @@ compileJava.options.encoding = 'UTF-8'
 
 group = 'com.github.zakgof'
 archivesBaseName = 'velvetdb-xodus'
-version = '0.3.2-SNAPSHOT'
+version = '0.3.2'
 
 repositories {
     mavenCentral()
-    maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
 }
 
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core:0.3.2-SNAPSHOT'
-    compile 'org.jetbrains.xodus:xodus-environment:1.0.7-SNAPSHOT'
-    testCompile 'com.github.zakgof:velvetdb-core:0.3.2-SNAPSHOT:tests'
+    compile 'com.github.zakgof:velvetdb-core:0.3.2'
+    compile 'org.jetbrains.xodus:xodus-environment:1.0.6'
+    testCompile 'com.github.zakgof:velvetdb-core:0.3.2:tests'
     testCompile 'junit:junit:4.12'
 }
 

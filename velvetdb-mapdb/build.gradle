@@ -6,21 +6,19 @@ compileJava.options.encoding = 'UTF-8'
 
 group = 'com.github.zakgof'
 archivesBaseName = 'velvetdb-mapdb'
-version = '0.3.2-SNAPSHOT'
+version = '0.3.2'
 
 repositories {
     mavenCentral()
-    maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
 }
 
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core:0.3.2-SNAPSHOT'
-    compile 'org.mapdb:mapdb:2.0.0-SNAPSHOT'
-    testCompile 'com.github.zakgof:velvetdb-core:0.3.2-SNAPSHOT:tests'
+    compile 'com.github.zakgof:velvetdb-core:0.3.2'
+    compile 'org.mapdb:mapdb:2.0-beta8'
+    testCompile 'com.github.zakgof:velvetdb-core:0.3.2:tests'
     testCompile 'junit:junit:4.12'
 }
+
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'

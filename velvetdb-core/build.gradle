@@ -6,7 +6,7 @@ compileJava.options.encoding = 'UTF-8'
 
 group = 'com.github.zakgof'
 archivesBaseName = 'velvetdb-core'
-version = '0.3.2-SNAPSHOT'
+version = '0.3.2'
 
 repositories {
     mavenCentral()
@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.github.zakgof:tools:0.3.2-SNAPSHOT'
+    compile 'com.github.zakgof:tools:0.3.2'
     testCompile 'junit:junit:4.12'
 }
 
