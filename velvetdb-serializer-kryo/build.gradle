@@ -73,6 +73,9 @@ uploadArchives {
         artifactId 'velvetdb-serializer-kryo'
         url 'https://github.com/zakgof/velvetdb'
 
+        name 'velvetdb-serializer-kryo'
+        description 'Kryo serializer plugin for velvetdb'
+
         scm {
           connection 'scm:git:https://github.com/zakgof/velvetdb.git'
           developerConnection 'scm:git:https://github.com/zakgof/velvetdb.git'

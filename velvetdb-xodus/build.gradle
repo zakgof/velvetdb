@@ -66,6 +66,9 @@ uploadArchives {
         artifactId 'velvetdb-xodus'
         url 'https://github.com/zakgof/velvetdb'
 
+        name 'velvetdb-xodus'
+        description 'Jetbrains Xodus backend for velvetdb'
+
         scm {
           connection 'scm:git:https://github.com/zakgof/velvetdb.git'
           developerConnection 'scm:git:https://github.com/zakgof/velvetdb.git'

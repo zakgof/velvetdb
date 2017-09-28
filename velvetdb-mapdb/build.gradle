@@ -70,6 +70,9 @@ uploadArchives {
         artifactId 'velvetdb-mapdb'
         url 'https://github.com/zakgof/velvetdb'
 
+        name 'velvetdb-mapdb'
+        description 'MapDB backend for velvetdb'
+
         scm {
           connection 'scm:git:https://github.com/zakgof/velvetdb.git'
           developerConnection 'scm:git:https://github.com/zakgof/velvetdb.git'
