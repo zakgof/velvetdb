@@ -4,7 +4,8 @@
 
 # Overview
 
-Velvetdb is a general purpose nosql embedded data storage.
+Velvetdb is a embedded data storage with graph-like API, perfectly fitting for small websites, desktop and mobile applications.
+With zero configuration and simple API you'll need just 5 minutes to start using velvetdb.
 
 Yes, we offer yet another persistence framework, but its design is based on principles making velvetdb distinct:
 - **Least intrusive.**  
@@ -40,7 +41,7 @@ velvetdb is on Maven Central
 
 ```xml
 <dependency>
-    <groupId>com.zakgof.github</groupId>
+    <groupId>com.github.zakgof</groupId>
     <artifactId>velvetdb-xodus</artifactId>
     <version>0.3.2</version>
 </dependency>
