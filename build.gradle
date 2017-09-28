@@ -1,10 +1,25 @@
 apply plugin: 'java'
 compileJava.options.encoding = 'UTF-8'
 
+allprojects {
+   ext {
+       ossrhUsername = hasProperty('ossrhUsername') ? ossrhUsername : System.getenv('ossrhUsername')
+       ossrhPassword = hasProperty('ossrhPassword') ? ossrhPassword : System.getenv('ossrhPassword')
+   }
+   version = '0.3.3-SNAPSHOT'
+
+   configurations.all {
+      resolutionStrategy {
+          dependencySubstitution {
+              substitute module("com.github.zakgof:velvetdb-core") with project(":velvetdb-core")
+          }
+       }
+   }
+}
+
 repositories {
     mavenCentral()
     maven {
         url "https://oss.sonatype.org/content/repositories/snapshots/"
     }
 }
-

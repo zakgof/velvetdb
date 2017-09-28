@@ -6,7 +6,6 @@ compileJava.options.encoding = 'UTF-8'
 
 group = 'com.github.zakgof'
 archivesBaseName = 'velvetdb-mapdb'
-version = '0.3.2-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -15,10 +14,12 @@ repositories {
     }
 }
 
+compileTestJava.dependsOn tasks.getByPath(':velvetdb-core:testClasses')
+
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core:0.3.2-SNAPSHOT'
+    compile 'com.github.zakgof:velvetdb-core:0.3.3-SNAPSHOT'
     compile 'org.mapdb:mapdb:2.0.0-SNAPSHOT'
-    testCompile 'com.github.zakgof:velvetdb-core:0.3.2-SNAPSHOT:tests'
+    testCompile project(':velvetdb-core').sourceSets.test.output
     testCompile 'junit:junit:4.12'
 }
 
