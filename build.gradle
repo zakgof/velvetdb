@@ -3,8 +3,15 @@ compileJava.options.encoding = 'UTF-8'
 
 repositories {
     mavenCentral()
-    maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
+}
+
+allprojects {
+	configurations.all {
+	     resolutionStrategy {
+	         dependencySubstitution {
+	             substitute module("com.github.zakgof:velvetdb-core:0.3.2") with project(":velvetdb-core") 
+	         }
+	     }
+	}
 }
 

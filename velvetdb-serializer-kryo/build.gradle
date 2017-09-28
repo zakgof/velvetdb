@@ -6,17 +6,14 @@ compileJava.options.encoding = 'UTF-8'
 
 group = 'com.github.zakgof'
 archivesBaseName = 'velvetdb-serializer-kryo'
-version = '0.3.2-SNAPSHOT'
+version = '0.3.2'
 
 repositories {
     mavenCentral()
-     maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
 }
 
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core:0.3.2-SNAPSHOT'
+    compile 'com.github.zakgof:velvetdb-core:0.3.2'
     compile 'com.esotericsoftware:kryo:4.0.0'
 }
 
