@@ -72,6 +72,9 @@ uploadArchives {
         packaging 'jar'
         artifactId 'velvetdb-core'
         url 'https://github.com/zakgof/velvetdb'
+        
+        name 'velvetdb'
+        description 'General purpose graph database.'
 
         scm {
           connection 'scm:git:https://github.com/zakgof/velvetdb.git'
