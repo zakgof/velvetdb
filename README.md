@@ -67,7 +67,7 @@ velvetdb is on Maven Central
     IMultiLink<Long, Author, String, Book> AUTHOR_BOOKS = Links.oneToMany(AUTHOR, BOOKS);
 
 ## Work with velvet
-
+```java
     // Get some POJOs to store
     Book book = ...
     Author author = ...
@@ -94,5 +94,6 @@ velvetdb is on Maven Central
     
     // Now get all books of a specific author:
     List<Book> authorsBooks = AUTHOR_BOOKS.multi(velvet, author);
-    
+```
+
 [More on API on Wiki...](https://github.com/zakgof/velvetdb/wiki/Getting-started)
