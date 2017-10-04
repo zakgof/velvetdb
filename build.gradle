@@ -1,10 +1,13 @@
 apply plugin: 'java'
 compileJava.options.encoding = 'UTF-8'
 
+def ossrhUser = hasProperty('ossrhUsername') ? ossrhUsername : System.getenv('ossrhUsername')
+def ossrhPass = hasProperty('ossrhPassword') ? ossrhPassword : System.getenv('ossrhPassword')
+
 allprojects {
    ext {
-       ossrhUsername = hasProperty('ossrhUsername') ? ossrhUsername : System.getenv('ossrhUsername')
-       ossrhPassword = hasProperty('ossrhPassword') ? ossrhPassword : System.getenv('ossrhPassword')
+       ossrhUsername = ossrhUser
+       ossrhPassword = ossrhPass
    }
    version = '0.3.3-SNAPSHOT'
 
