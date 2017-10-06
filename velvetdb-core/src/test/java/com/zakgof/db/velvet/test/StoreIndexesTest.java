@@ -1,12 +1,13 @@
 package com.zakgof.db.velvet.test;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.annimon.stream.Collectors;
+import com.annimon.stream.Stream;
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.query.IRangeQuery;
@@ -89,7 +90,7 @@ public class StoreIndexesTest extends AVelvetTxnTest {
     private <K, M extends Comparable<? super M>> void check(String name, IRangeQuery<Integer, M> query, String ref) {
         List<Integer> keys = ENTITY3.<M> indexKeys(velvet, name, query);
         List<TestEnt3> values = ENTITY3.get(velvet, keys);
-        String result = values.stream().map(TestEnt3::getStr).collect(Collectors.joining(""));
+        String result = Stream.of(values).map(TestEnt3::getStr).collect(Collectors.joining(""));
         Assert.assertEquals(ref, result);
     }
 

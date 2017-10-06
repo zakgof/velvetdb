@@ -2,7 +2,7 @@ package com.zakgof.db.velvet;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
+import com.annimon.stream.function.Function;
 
 import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
@@ -66,7 +66,12 @@ public interface IVelvet {
 
         List<K> keys(Class<K> clazz, IRangeQuery<K, M> query);
 
-        default K key(Class<K> clazz, ISingleReturnRangeQuery<K, M> query) {
+        K key(Class<K> clazz, ISingleReturnRangeQuery<K, M> query);
+    }
+
+    public abstract class AKeyIndexLink<K, M extends Comparable<? super M>> implements IKeyIndexLink<K, M> {
+        @Override
+        public K key(Class<K> clazz, ISingleReturnRangeQuery<K, M> query) {
             // TODO
             List<K> keys = keys(clazz, query);
             if (keys.isEmpty())

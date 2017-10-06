@@ -1,9 +1,10 @@
 package com.zakgof.db.velvet.xodus;
 
 import java.io.File;
-import java.util.function.Supplier;
 
+import com.annimon.stream.function.Supplier;
 import com.google.common.collect.ImmutableMap;
+import com.zakgof.db.txn.ATransactionalEnvironment;
 import com.zakgof.db.txn.ITransactionCall;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvetEnvironment;
@@ -14,7 +15,7 @@ import com.zakgof.serialize.ZeSerializer;
 import jetbrains.exodus.env.Environment;
 import jetbrains.exodus.env.Environments;
 
-public class XodusVelvetEnv implements IVelvetEnvironment {
+public class XodusVelvetEnv extends ATransactionalEnvironment<IVelvet> implements IVelvetEnvironment {
 
     private Environment env;
     private IKeyGen keyGen;

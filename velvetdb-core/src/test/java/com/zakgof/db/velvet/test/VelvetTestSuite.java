@@ -3,7 +3,7 @@ package com.zakgof.db.velvet.test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.function.Supplier;
+import com.annimon.stream.function.Supplier;
 
 import org.junit.AfterClass;
 import org.junit.runner.RunWith;

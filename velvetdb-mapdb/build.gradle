@@ -17,7 +17,7 @@ repositories {
 compileTestJava.dependsOn tasks.getByPath(':velvetdb-core:testClasses')
 
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core:0.3.3-SNAPSHOT'
+    compile 'com.github.zakgof:velvetdb-core:' + version
     compile 'org.mapdb:mapdb:2.0.0-SNAPSHOT'
     testCompile project(':velvetdb-core').sourceSets.test.output
     testCompile 'junit:junit:4.12'
@@ -77,7 +77,7 @@ uploadArchives {
         scm {
           connection 'scm:git:https://github.com/zakgof/velvetdb.git'
           developerConnection 'scm:git:https://github.com/zakgof/velvetdb.git'
-          url 'https://github.com/zakgof/velvetdb/tree/master/velvetdb-mapdb'
+          url 'https://github.com/zakgof/velvetdb/tree/android/velvetdb-mapdb'
         }
 
         licenses {

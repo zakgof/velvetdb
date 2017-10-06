@@ -11,14 +11,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import com.annimon.stream.function.Function;
 
+import com.annimon.stream.Collectors;
+import com.annimon.stream.Stream;
 import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.annotation.Index;
 import com.zakgof.db.velvet.annotation.Key;
 import com.zakgof.db.velvet.annotation.SortedKey;
+import com.zakgof.db.velvet.properties.AProperty;
 import com.zakgof.db.velvet.properties.IProperty;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
 import com.zakgof.tools.generic.Functions;
@@ -129,7 +131,7 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
     }
 
     public List<IStoreIndexDef<?, V>> getIndexes() {
-        return secIndexMap.entrySet().stream().map(e -> createIndexDefX(e)).collect(Collectors.toList());
+        return Stream.of(secIndexMap.entrySet()).map(e -> createIndexDefX(e)).collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")
@@ -203,7 +205,7 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
 
     }
 
-    private static class MethodProperty<P, V> implements IProperty<P, V> {
+    private static class MethodProperty<P, V> extends AProperty<P, V> implements IProperty<P, V> {
 
         private Method method;
 

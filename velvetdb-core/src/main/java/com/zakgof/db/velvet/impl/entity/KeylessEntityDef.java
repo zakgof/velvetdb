@@ -1,10 +1,15 @@
 package com.zakgof.db.velvet.impl.entity;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
 import com.zakgof.db.velvet.entity.IKeylessEntityDef;
+import com.zakgof.db.velvet.properties.AProperty;
 import com.zakgof.db.velvet.properties.IProperty;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
 
@@ -70,7 +75,7 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
 
         public KeylessPropertyProvider(Class<V> valueClass) {
             super(valueClass);
-            this.keyProperty = new IProperty<Long, V>() {
+            this.keyProperty = new AProperty<Long, V>()  {
 
                 @Override
                 public Long get(V instance) {
@@ -95,14 +100,14 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
         }
 
     }
-    
+
     private class MonolythicPropertyProvider  implements IPropertyAccessor<Long, V> {
 
         private IProperty<V, V> valueProperty;
         private IProperty<Long, V> keyProperty;
 
         public MonolythicPropertyProvider(Class<V> valueClass) {
-            this.keyProperty = new IProperty<Long, V>() {
+            this.keyProperty = new AProperty<Long, V>() {
 
                 @Override
                 public Long get(V instance) {
@@ -119,7 +124,7 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
                     return "[autokey]";
                 }
             };
-            valueProperty = new IProperty<V, V>() {
+            valueProperty = new AProperty<V, V>() {
 
                 @Override
                 public V get(V instance) {
@@ -157,7 +162,7 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
         public IProperty<Long, V> getKey() {
             return keyProperty;
         }
-        
+
     }
 
     @Override

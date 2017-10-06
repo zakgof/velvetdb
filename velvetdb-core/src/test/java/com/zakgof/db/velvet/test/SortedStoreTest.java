@@ -3,12 +3,13 @@ package com.zakgof.db.velvet.test;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.annimon.stream.Collectors;
+import com.annimon.stream.Stream;
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.ISortableEntityDef;
 import com.zakgof.db.velvet.query.IRangeQuery;
@@ -50,7 +51,7 @@ public class SortedStoreTest extends AVelvetTxnTest {
         ENTITY.put(velvet, new TestEnt("aaaa", 8.1f));
         ENTITY.put(velvet, new TestEnt("Aaa", 7.1f));
         ENTITY.put(velvet, new TestEnt("ab", 9.1f));
-        List<String> list = ENTITY.get(velvet).stream().map(TestEnt::getKey).collect(Collectors.toList());
+        List<String> list = Stream.of(ENTITY.get(velvet)).map(TestEnt::getKey).collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList("", "Aa", "Aaa", "Az", "a", "aaaa", "ab", "b"), list);
     }
 
@@ -140,7 +141,7 @@ public class SortedStoreTest extends AVelvetTxnTest {
 
     void check(IRangeQuery<Integer, Integer> query, Integer... ref) {
         List<TestEnt2> result = ENTITY2.get(velvet, query);
-        Assert.assertEquals(Arrays.stream(ref).collect(Collectors.toList()), result.stream().map(TestEnt2::getKey).collect(Collectors.toList()));
+        Assert.assertEquals(Stream.of(ref).collect(Collectors.toList()), Stream.of(result).map(TestEnt2::getKey).collect(Collectors.toList()));
         List<TestEnt3> resultE = ENTITY_EMPTY.get(velvet, query);
         Assert.assertEquals(Collections.emptyList(), resultE);
     }

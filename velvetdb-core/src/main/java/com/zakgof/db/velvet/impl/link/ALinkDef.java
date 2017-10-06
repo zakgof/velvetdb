@@ -41,8 +41,18 @@ abstract class ALinkDef<HK, HV, CK, CV> implements ILinkDef<HK, HV, CK, CV> {
     }
 
     @Override
+    public boolean isConnected(IVelvet velvet, HV a, CV b) {
+        return isConnectedKeys(velvet, getHostEntity().keyOf(a), getChildEntity().keyOf(b));
+    }
+
+    @Override
     public void connect(IVelvet velvet, HV a, CV b) {
         connectKeys(velvet, getHostEntity().keyOf(a), getChildEntity().keyOf(b));
+    }
+
+    @Override
+    public void disconnect(IVelvet velvet, HV a, CV b) {
+        disconnectKeys(velvet, getHostEntity().keyOf(a), getChildEntity().keyOf(b));
     }
 
     @Override

@@ -4,12 +4,13 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.annimon.stream.Collectors;
+import com.annimon.stream.Stream;
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.link.ISecSortedMultiLinkDef;
@@ -297,7 +298,7 @@ public class SecondarySortedLinkTest extends AVelvetTxnTest {
 
   @Test
   public void testAllKeys() {
-    List<String> result = MULTI.multi(velvet, root).stream().map(TestEnt3::getStr).collect(Collectors.toList());
+    List<String> result = Stream.of(MULTI.multi(velvet, root)).map(TestEnt3::getStr).collect(Collectors.toList());
     checkData(result, new Object[]{rOne, "two", "three", rFour, rSix});
   }
 
@@ -306,7 +307,7 @@ public class SecondarySortedLinkTest extends AVelvetTxnTest {
   }
 
   private void check(IRangeQuery<Integer, Long> query, Object...ref) {
-    List<String> result = MULTI.indexed(query).multi(velvet, root).stream().map(TestEnt3::getStr).collect(Collectors.toList());
+    List<String> result = Stream.of(MULTI.indexed(query).multi(velvet, root)).map(TestEnt3::getStr).collect(Collectors.toList());
     checkData(result, ref);
   }
 
