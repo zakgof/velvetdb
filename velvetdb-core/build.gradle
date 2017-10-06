@@ -15,7 +15,8 @@ repositories {
 }
 
 dependencies {
-    compile 'com.github.zakgof:tools:0.3.2-SNAPSHOT'
+    compile 'com.github.zakgof:tools:0.3.3.android-SNAPSHOT'
+    compile 'com.annimon:stream:1.1.9'
     testCompile 'junit:junit:4.12'
 }
 
@@ -78,7 +79,7 @@ uploadArchives {
         scm {
           connection 'scm:git:https://github.com/zakgof/velvetdb.git'
           developerConnection 'scm:git:https://github.com/zakgof/velvetdb.git'
-          url 'https://github.com/zakgof/velvetdb/tree/master/velvetdb-core'
+          url 'https://github.com/zakgof/velvetdb/tree/android/velvetdb-core'
         }
 
         licenses {

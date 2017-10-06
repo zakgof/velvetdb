@@ -1,20 +1,21 @@
 package com.zakgof.db.velvet.mapdb;
 
 import java.io.File;
-import java.util.function.Supplier;
+import com.annimon.stream.function.Supplier;
 
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.DBMaker.Maker;
 import org.mapdb.TxMaker;
 
+import com.zakgof.db.txn.ATransactionalEnvironment;
 import com.zakgof.db.txn.ITransactionCall;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvetEnvironment;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.serialize.ISerializer;
 
-public class MapDbVelvetEnv implements IVelvetEnvironment {
+public class MapDbVelvetEnv extends ATransactionalEnvironment<IVelvet> implements IVelvetEnvironment {
 
     private TxMaker txMaker;
     private Supplier<ISerializer> serializerSupplier;

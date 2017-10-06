@@ -8,7 +8,5 @@ public interface IReadOnlyLinkDef<HK, HV, CK, CV> extends IRelation<HK, HV, CK, 
 
     public boolean isConnectedKeys(IVelvet velvet, HK akey, CK bkey);
 
-    public default boolean isConnected(IVelvet velvet, HV a, CV b) {
-        return isConnectedKeys(velvet, getHostEntity().keyOf(a), getChildEntity().keyOf(b));
-    }
+    public boolean isConnected(IVelvet velvet, HV a, CV b);
 }

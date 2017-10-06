@@ -3,17 +3,18 @@ package com.zakgof.db.velvet.impl.entity;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
+import com.annimon.stream.function.Function;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IStore;
 import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
+import com.zakgof.db.velvet.entity.AEntityDef;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
 import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
 
-public class EntityDef<K, V> implements IEntityDef<K, V> {
+public class EntityDef<K, V> extends AEntityDef<K, V> implements IEntityDef<K, V> {
 
     private final Class<V> valueClass;
     private final Class<K> keyClass;

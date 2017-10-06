@@ -1,6 +1,6 @@
 package com.zakgof.db.velvet.entity;
 
-import java.util.function.Function;
+import com.annimon.stream.function.Function;
 
 import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
 
