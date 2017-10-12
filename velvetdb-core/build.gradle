@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.github.zakgof:tools:0.3.3.android-SNAPSHOT'
+    compile 'com.github.zakgof:tools:0.3.3.android'
     compile 'com.annimon:stream:1.1.9'
     testCompile 'junit:junit:4.12'
 }
