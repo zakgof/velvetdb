@@ -9,7 +9,7 @@ allprojects {
        ossrhUsername = ossrhUser
        ossrhPassword = ossrhPass
    }
-   version = '0.3.3.android-SNAPSHOT'
+   version = '0.3.3.android'
 
    configurations.all {
       resolutionStrategy {
@@ -22,7 +22,4 @@ allprojects {
 
 repositories {
     mavenCentral()
-    maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
 }
