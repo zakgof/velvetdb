@@ -26,12 +26,13 @@ public class SingleLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV
 
     @Override
     public CK singleKey(IVelvet velvet, HK key) {
-        List<CK> linkKeys = (List<CK>) index(velvet, key).keys(getChildEntity().getKeyClass());
+        List<CK> linkKeys = index(velvet, key).keys();
         return linkKeys.isEmpty() ? null : linkKeys.get(0);
     }
 
-    ILink<CK> index(IVelvet velvet, HK akey) {
-        return velvet.simpleIndex(akey, getKind(), LinkType.Single);
+    @Override
+    ILink<HK, CK> index(IVelvet velvet, HK akey) {
+        return velvet.simpleIndex(akey, getHostEntity().getKeyClass(), getChildEntity().getKeyClass(), getKind(), LinkType.Single);
     }
 
     @Override

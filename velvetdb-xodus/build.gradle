@@ -17,8 +17,9 @@ repositories {
 compileTestJava.dependsOn tasks.getByPath(':velvetdb-core:testClasses')
 
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core:0.3.3-SNAPSHOT'
+    compile 'com.github.zakgof:velvetdb-core:0.4.0-SNAPSHOT'
     compile 'org.jetbrains.xodus:xodus-environment:1.0.7-SNAPSHOT'
+    compile 'com.google.guava:guava:18.0'
     testCompile project(':velvetdb-core').sourceSets.test.output
     testCompile 'junit:junit:4.12'
 }

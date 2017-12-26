@@ -10,11 +10,11 @@ import org.mapdb.TxMaker;
 
 import com.zakgof.db.txn.ITransactionCall;
 import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.IVelvetEnvironment;
 import com.zakgof.db.velvet.VelvetException;
+import com.zakgof.db.velvet.impl.AVelvetEnvironment;
 import com.zakgof.serialize.ISerializer;
 
-public class MapDbVelvetEnv implements IVelvetEnvironment {
+public class MapDbVelvetEnv extends AVelvetEnvironment {
 
     private TxMaker txMaker;
     private Supplier<ISerializer> serializerSupplier;
@@ -50,10 +50,4 @@ public class MapDbVelvetEnv implements IVelvetEnvironment {
     public void close() {
         txMaker.close();
     }
-
-    @Override
-    public void setSerializer(Supplier<ISerializer> serializer) {
-        this.serializerSupplier = serializer;
-    }
-
 }

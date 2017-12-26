@@ -23,7 +23,7 @@ public class ElsaVelvetSerializer implements ISerializer {
     this.elsa = elsa;
   }
 
-  public byte[] serialize(Object object) {
+  public <T> byte[] serialize(T object, Class<T> clazz) {
     ByteArrayOutputStream bas = new ByteArrayOutputStream();
     DataOutputStream dos = new DataOutputStream(bas);
     try {

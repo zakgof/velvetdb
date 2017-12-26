@@ -93,7 +93,7 @@ class XodusVelvet implements IVelvet {
         }
 
         ByteIterable toBi(K key) {
-            return XodusVelvet.this.toBi(key);
+            return XodusVelvet.this.toBi(key, keyClass);
         }
 
         K toObj(ByteIterable bi) {
@@ -119,7 +119,7 @@ class XodusVelvet implements IVelvet {
         @Override
         public void put(K key, V value) {
             ByteIterable keyBi = toBi(key);
-            ByteIterable valueBi = XodusVelvet.this.toBi(value);
+            ByteIterable valueBi = XodusVelvet.this.toBi(value, valueClass);
             ByteIterable oldValueBi = valueMap.get(tx, keyBi);
             valueMap.put(tx, keyBi, valueBi);
             // remove indexes
@@ -451,97 +451,101 @@ class XodusVelvet implements IVelvet {
         return Arrays.copyOf(bytes, length);
     }
 
-    private <T> ByteIterable toBi(T obj) {
+    private <T> ByteIterable toBi(T obj, Class<T> clazz) {
         ISerializer ze = serializerSupplier.get();
-        byte[] bytes = ze.serialize(obj);
+        byte[] bytes = ze.serialize(obj, clazz);
         return new ArrayByteIterable(bytes);
     }
 
     @Override
-    public <K> ILink<K> simpleIndex(Object key1, String edgekind, LinkType type) {
+    public <HK, CK> ILink<HK, CK> simpleIndex(HK key1, Class<HK> hostClass,  Class<CK> childClass, String edgekind, LinkType type) {
         if (type == LinkType.Single) {
-            return new SingleLink<>(key1, edgekind);
+            return new SingleLink<>(key1, hostClass, childClass, edgekind);
         } else if (type == LinkType.Multi) {
-            return new MultiLink<>(key1, edgekind);
+            return new MultiLink<>(key1, hostClass, childClass, edgekind);
         }
         throw new VelvetException("Unknown link type");
     }
 
     @Override
-    public <K extends Comparable<? super K>, T> IKeyIndexLink<K, K> primaryKeyIndex(Object key1, String edgekind) {
-        return new PriIndexMultiLink<>(key1, edgekind);
+    public <HK, CK extends Comparable<? super CK>, T> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(HK key1, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+        return new PriIndexMultiLink<>(key1, hostKeyClass, childKeyClass, edgekind);
     }
 
     @Override
-    public <K, T, M extends Comparable<? super M>> IKeyIndexLink<K, M> secondaryKeyIndex(Object key1, String edgekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<K> keyClazz, IStore<K, T> childStore) {
-        return new SecIndexMultiLink<>(key1, edgekind, nodeMetric, mclazz, keyClazz, childStore);
+    public <HK, CK, T, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex(HK key1, Class<HK> hostKeyClass, String edgekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<CK> keyClazz, IStore<CK, T> childStore) {
+        return new SecIndexMultiLink<>(key1, hostKeyClass, edgekind, nodeMetric, mclazz, keyClazz, childStore);
     }
 
-    private class SingleLink<K> implements ILink<K> {
+    private class SingleLink<HK, CK> implements ILink<HK, CK> {
 
         private Store connectMap;
         private ByteIterable key1Bi;
+        private Class<CK> childClass;
 
-        public SingleLink(Object key1, String edgeKind) {
+        public SingleLink(HK key1, Class<HK> hostClass, Class<CK> childClass, String edgeKind) {
             this.connectMap = env.openStore("#s/" + edgeKind, StoreConfig.WITHOUT_DUPLICATES, tx);
-            this.key1Bi = toBi(key1);
+            this.childClass = childClass;
+            this.key1Bi = toBi(key1, hostClass);
         }
 
         @Override
-        public void put(K key2) {
-            connectMap.put(tx, key1Bi, toBi(key2));
+        public void put(CK key2) {
+            connectMap.put(tx, key1Bi, toBi(key2, childClass));
         }
 
         @Override
-        public void delete(K key2) {
+        public void delete(CK key2) {
             connectMap.delete(tx, key1Bi);
         }
 
         @Override
-        public List<K> keys(Class<K> clazz) {
+        public List<CK> keys() {
             ByteIterable key2Bi = connectMap.get(tx, key1Bi);
-            return (key2Bi == null) ? Collections.emptyList() : Arrays.asList(toObj(clazz, key2Bi));
+            return (key2Bi == null) ? Collections.emptyList() : Arrays.asList(toObj(childClass, key2Bi));
         }
 
         @Override
-        public boolean contains(K key2) {
+        public boolean contains(CK key2) {
             ByteIterable key2Bi = connectMap.get(tx, key1Bi);
-            return key2Bi != null && key2Bi.equals(toBi(key2));
+            return key2Bi != null && key2Bi.equals(toBi(key2, childClass));
         }
 
     }
 
-    private class MultiLink<K> implements ILink<K> {
+    private class MultiLink<HK, CK> implements ILink<HK, CK> {
 
         private Store connectMap;
         private ByteIterable key1Bi;
+        private Class<CK> childKeyClass;
 
-        public MultiLink(Object key1, String edgeKind) {
+        public MultiLink(HK key1, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgeKind) {
             this.connectMap = env.openStore("#m/" + edgeKind, StoreConfig.WITH_DUPLICATES, tx);
-            this.key1Bi = toBi(key1);
+            this.key1Bi = toBi(key1, hostKeyClass);
+            this.childKeyClass = childKeyClass;
         }
 
         @Override
-        public void put(K key2) {
-            connectMap.put(tx, key1Bi, toBi(key2));
+        public void put(CK key2) {
+            connectMap.put(tx, key1Bi, toBi(key2, childKeyClass));
         }
 
         @Override
-        public void delete(K key2) {
+        public void delete(CK key2) {
             try (Cursor cursor = connectMap.openCursor(tx)) {
-                if (cursor.getSearchBoth(key1Bi, toBi(key2)))
+                if (cursor.getSearchBoth(key1Bi, toBi(key2, childKeyClass)))
                     cursor.deleteCurrent();
             }
         }
 
         @Override
-        public List<K> keys(Class<K> clazz) {
+        public List<CK> keys() {
             try (Cursor cursor = connectMap.openCursor(tx)) {
                 cursor.getSearchKey(key1Bi);
                 ByteIterable bi = cursor.getKey();
-                List<K> result = new ArrayList<>();
+                List<CK> result = new ArrayList<>();
                 while (key1Bi.equals(bi)) {
-                    result.add(toObj(clazz, cursor.getValue()));
+                    result.add(toObj(childKeyClass, cursor.getValue()));
                     if (!cursor.getNext())
                         break;
                     bi = cursor.getKey();
@@ -551,9 +555,9 @@ class XodusVelvet implements IVelvet {
         }
 
         @Override
-        public boolean contains(K key2) {
+        public boolean contains(CK key2) {
             try (Cursor cursor = connectMap.openCursor(tx)) {
-                return cursor.getSearchBoth(key1Bi, toBi(key2));
+                return cursor.getSearchBoth(key1Bi, toBi(key2, childKeyClass));
             }
         }
     }
@@ -674,59 +678,61 @@ class XodusVelvet implements IVelvet {
     /**
      * key: [key1][key2], value: empty
      */
-    private class PriIndexMultiLink<K extends Comparable<? super K>> implements IKeyIndexLink<K, K> {
+    private class PriIndexMultiLink<HK, CK extends Comparable<? super CK>> implements IKeyIndexLink<HK, CK, CK> {
 
         private Store connectMap;
         private ByteIterable key1Bi;
+        private Class<CK> childKeyClass;
 
-        public PriIndexMultiLink(Object key1, String edgeKind) {
+        public PriIndexMultiLink(HK key1, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgeKind) {
             this.connectMap = env.openStore("#mp/" + edgeKind, StoreConfig.WITHOUT_DUPLICATES, tx);
-            this.key1Bi = toBi(key1);
+            this.key1Bi = toBi(key1, hostKeyClass);
+            this.childKeyClass = childKeyClass;
         }
 
         @Override
-        public void put(K key2) {
+        public void put(CK key2) {
             ByteIterable compKey = BytesUtil.join(key1Bi, BytesUtil.keyToBi(key2));
             // System.err.println(compKey);
             connectMap.put(tx, compKey, ByteIterable.EMPTY);
         }
 
         @Override
-        public void delete(K key2) {
+        public void delete(CK key2) {
             connectMap.delete(tx, BytesUtil.join(key1Bi, BytesUtil.keyToBi(key2)));
         }
 
         @Override
-        public List<K> keys(Class<K> clazz) {
-            return keys(clazz, Queries.<K, K> builder().build());
+        public List<CK> keys() {
+            return keys(Queries.<CK, CK> builder().build());
         }
 
         @Override
-        public boolean contains(K key2) {
+        public boolean contains(CK key2) {
             ByteIterable compKey = BytesUtil.join(key1Bi, BytesUtil.keyToBi(key2));
             return connectMap.exists(tx, compKey, ByteIterable.EMPTY);
         }
 
         @Override
-        public void update(K key2) {
+        public void update(CK key2) {
             // Nothing to do for keys
         }
 
         @Override
-        public List<K> keys(Class<K> clazz, IRangeQuery<K, K> query) {
-            return new PriLinkProcessor(clazz, clazz, key1Bi).go(connectMap, query);
+        public List<CK> keys(IRangeQuery<CK, CK> query) {
+            return new PriLinkProcessor(childKeyClass, childKeyClass, key1Bi).go(connectMap, query);
         }
 
-        private class PriLinkProcessor extends ALinkProcessor<K, K> {
+        private class PriLinkProcessor extends ALinkProcessor<CK, CK> {
 
-            PriLinkProcessor(Class<K> keyClass, Class<K> mClass, ByteIterable key1Bi) {
+            PriLinkProcessor(Class<CK> keyClass, Class<CK> mClass, ByteIterable key1Bi) {
                 super(keyClass, mClass, key1Bi, x -> x);
             }
 
             @Override
-            K get() {
+            CK get() {
                 ByteIterable k2bi = BytesUtil.extract2(cursor.getKey());
-                K key = BytesUtil.keyBiToObj(keyClass, k2bi);
+                CK key = BytesUtil.keyBiToObj(keyClass, k2bi);
                 return key;
             }
 
@@ -737,17 +743,17 @@ class XodusVelvet implements IVelvet {
     /**
      * key: [key1][weight], value: key2
      */
-    private class SecIndexMultiLink<K, V, M extends Comparable<? super M>> implements IKeyIndexLink<K, M> {
+    private class SecIndexMultiLink<HK, CK, V, M extends Comparable<? super M>> implements IKeyIndexLink<HK, CK, M> {
 
         private Store connectMap;
         private ByteIterable key1Bi;
-        private Function<K, M> keyMetric;
+        private Function<CK, M> keyMetric;
         private Class<M> mclazz;
-        private Class<K> keyClass;
+        private Class<CK> keyClass;
 
-        public SecIndexMultiLink(Object key1, String edgeKind, Function<V, M> nodeMetric, Class<M> mclazz, Class<K> keyClass, IStore<K, V> childStore) {
+        public SecIndexMultiLink(HK key1, Class<HK> hostKeyClass, String edgeKind, Function<V, M> nodeMetric, Class<M> mclazz, Class<CK> keyClass, IStore<CK, V> childStore) {
             this.connectMap = env.openStore("#ms/" + edgeKind, StoreConfig.WITH_DUPLICATES, tx);
-            this.key1Bi = toBi(key1);
+            this.key1Bi = toBi(key1, hostKeyClass);
             this.mclazz = mclazz;
             this.keyClass = keyClass;
             this.keyMetric = key -> {
@@ -757,19 +763,19 @@ class XodusVelvet implements IVelvet {
         }
 
         @Override
-        public void put(K key2) {
+        public void put(CK key2) {
             ByteIterable compKey = BytesUtil.join(key1Bi, BytesUtil.keyToBi(keyMetric.apply(key2)));
-            connectMap.put(tx, compKey, toBi(key2));
+            connectMap.put(tx, compKey, toBi(key2, keyClass));
         }
 
         @Override
-        public void delete(K key2) {
+        public void delete(CK key2) {
             M metric = keyMetric.apply(key2);
             if (metric == null)
                 return;
             ByteIterable searchKey = BytesUtil.join(key1Bi, BytesUtil.keyToBi(metric));
             try (Cursor cursor = connectMap.openCursor(tx)) {
-                boolean find = cursor.getSearchBoth(searchKey, toBi(key2));
+                boolean find = cursor.getSearchBoth(searchKey, toBi(key2, keyClass));
                 if (find) {
                     cursor.deleteCurrent();
                 } else {
@@ -779,39 +785,39 @@ class XodusVelvet implements IVelvet {
         }
 
         @Override
-        public List<K> keys(Class<K> clazz) {
-            return keys(clazz, Queries.<K, M> builder().build());
+        public List<CK> keys() {
+            return keys(Queries.<CK, M> builder().build());
         }
 
         @Override
-        public boolean contains(K key2) {
+        public boolean contains(CK key2) {
             M metric = keyMetric.apply(key2);
             if (metric == null)
                 return false;
             try (Cursor cursor = connectMap.openCursor(tx)) {
                 ByteIterable searchKey = BytesUtil.join(key1Bi, BytesUtil.keyToBi(metric));
-                return cursor.getSearchBoth(searchKey, toBi(key2));
+                return cursor.getSearchBoth(searchKey, toBi(key2, keyClass));
             }
         }
 
         @Override
-        public void update(K key2) {
+        public void update(CK key2) {
             // TODO: it's a problem ! don't have old values
         }
 
         @Override
-        public List<K> keys(Class<K> clazz, IRangeQuery<K, M> query) {
+        public List<CK> keys(IRangeQuery<CK, M> query) {
             return new SecLinkProcessor(keyClass, mclazz, key1Bi, keyMetric).go(connectMap, query);
         }
 
-        private class SecLinkProcessor extends ALinkProcessor<K, M> {
+        private class SecLinkProcessor extends ALinkProcessor<CK, M> {
 
-            SecLinkProcessor(Class<K> keyClass, Class<M> mClass, ByteIterable key1Bi, Function<K, M> keyMetric) {
+            SecLinkProcessor(Class<CK> keyClass, Class<M> mClass, ByteIterable key1Bi, Function<CK, M> keyMetric) {
                 super(keyClass, mClass, key1Bi, keyMetric);
             }
 
             @Override
-            K get() {
+            CK get() {
                 ByteIterable key2bi = cursor.getValue();
                 return toObj(keyClass, key2bi);
             }
