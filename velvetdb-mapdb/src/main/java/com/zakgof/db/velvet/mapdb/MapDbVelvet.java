@@ -1,23 +1,12 @@
 package com.zakgof.db.velvet.mapdb;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableSet;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import org.mapdb.Atomic;
-import org.mapdb.BTreeKeySerializer;
-import org.mapdb.BTreeMap;
-import org.mapdb.DB;
-import org.mapdb.Fun;
-import org.mapdb.HTreeMap;
+import org.mapdb.*;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
@@ -427,9 +416,9 @@ public class MapDbVelvet implements IVelvet {
     // kinds.remove(kind);
     // }
     //
-
+    
     @Override
-    public <K> ILink<K> simpleIndex(Object key1, String edgekind, LinkType type) {
+    public <HK, CK> ILink<HK, CK> simpleIndex(HK key1, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind, LinkType type) {
         if (type == LinkType.Single) {
             return new SingleLink<>(key1, edgekind);
         } else if (type == LinkType.Multi) {
@@ -437,79 +426,78 @@ public class MapDbVelvet implements IVelvet {
         }
         return null;
     }
-
+    
     @Override
-    public <K extends Comparable<? super K>, V> IKeyIndexLink<K, K> primaryKeyIndex(Object key1, String edgekind) {
+    public <HK, CK extends Comparable<? super CK>, T> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(HK key1, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
         return new PriMultiLink<>(key1, edgekind);
     }
-
+    
     @Override
-    public <K, V, M extends Comparable<? super M>> IKeyIndexLink<K, M> secondaryKeyIndex(Object key1, String edgekind,
-            Function<V, M> nodeMetric, Class<M> mclazz, Class<K> keyClazz, IStore<K, V> childStore) {
+    public <HK, CK, T, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex(HK key1, Class<HK> hostKeyClass, String edgekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<CK> keyClazz, IStore<CK, T> childStore) {
         return new SecMultiLink<>(key1, edgekind, nodeMetric, keyClazz, childStore);
     }
 
     /**
      * hash map: key1 -> key2
      */
-    private class SingleLink<K> implements ILink<K> {
+    private class SingleLink<HK, CK> implements ILink<HK, CK> {
 
-        private Object key1;
-        private HTreeMap<Object, K> connectMap;
+        private HK key1;
+        private HTreeMap<HK, CK> connectMap;
 
-        public SingleLink(Object key1, String edgeKind) {
+        public SingleLink(HK key1, String edgeKind) {
             this.connectMap = db.hashMap("#s/" + edgeKind);
             this.key1 = key1;
         }
 
         @Override
-        public void put(K key2) {
+        public void put(CK key2) {
             connectMap.put(key1, key2);
         }
 
         @Override
-        public void delete(K key2) {
+        public void delete(CK key2) {
             connectMap.remove(key1, key2);
         }
 
         @Override
-        public List<K> keys(Class<K> clazz) {
-            K key = connectMap.get(key1);
-            return (key == null) ? Collections.<K> emptyList() : Arrays.asList(key);
+        public List<CK> keys() {
+            CK key = connectMap.get(key1);
+            return (key == null) ? Collections.emptyList() : Arrays.asList(key);
         }
 
         @Override
-        public boolean contains(K key2) {
+        public boolean contains(CK key2) {
             return key2.equals(connectMap.get(key1));
         }
     }
 
-    private abstract class AMultiLink<K> implements ILink<K> {
+    private abstract class AMultiLink<HK, CK> implements ILink<HK, CK> {
 
-        Object key1;
+        HK key1;
         NavigableSet<Object[]> connectSet;
 
-        public AMultiLink(Object key1, String edgeKind) {
+        public AMultiLink(HK key1, String edgeKind) {
             this.connectSet = db.treeSetCreate("#m/" + edgeKind).serializer(serializer()).makeOrGet();
             this.key1 = key1;
         }
 
         abstract BTreeKeySerializer<?, ?> serializer();
 
-        abstract Object[] el(K key2);
+        abstract Object[] el(CK key2);
 
         @Override
-        public void put(K key2) {
+        public void put(CK key2) {
             connectSet.add(el(key2));
         }
 
         @Override
-        public void delete(K key2) {
+        public void delete(CK key2) {
             connectSet.remove(el(key2));
         }
 
         @Override
-        public boolean contains(K key2) {
+        public boolean contains(CK key2) {
             return connectSet.contains(el(key2));
         }
 
@@ -517,9 +505,9 @@ public class MapDbVelvet implements IVelvet {
     /**
      * tree set [key1, key2]
      */
-    private class MultiLink<K> extends AMultiLink<K> {
+    private class MultiLink<HK, CK> extends AMultiLink<HK, CK> {
 
-        public MultiLink(Object key1, String edgeKind) {
+        public MultiLink(HK key1, String edgeKind) {
             super(key1, edgeKind);
         }
 
@@ -529,14 +517,14 @@ public class MapDbVelvet implements IVelvet {
         }
 
         @Override
-        Object[] el(K key2) {
+        Object[] el(CK key2) {
             return new Object[] { key1, key2 };
         }
 
         @Override
-        public List<K> keys(Class<K> clazz) {
+        public List<CK> keys() {
             @SuppressWarnings("unchecked")
-            List<K> keys = StreamSupport.stream(Fun.filter(connectSet, key1).spliterator(), false).map(v -> (K) v[1])
+            List<CK> keys = StreamSupport.stream(Fun.filter(connectSet, key1).spliterator(), false).map(v -> (CK) v[1])
                     .collect(Collectors.toList());
             return keys;
         }
@@ -545,48 +533,48 @@ public class MapDbVelvet implements IVelvet {
     /**
      * set [key1, key2]
      */
-    private class PriMultiLink<K extends Comparable<? super K>> extends MultiLink<K> implements IKeyIndexLink<K, K> {
+    private class PriMultiLink<HK, CK extends Comparable<? super CK>> extends MultiLink<HK, CK> implements IKeyIndexLink<HK, CK, CK> {
 
-        public PriMultiLink(Object key1, String edgeKind) {
+        public PriMultiLink(HK key1, String edgeKind) {
             super(key1, edgeKind);
         }
 
         @Override
-        public void update(K key2) {
+        public void update(CK key2) {
             // Do nothin, keys don't change
         }
 
         @Override
-        public List<K> keys(Class<K> clazz, IRangeQuery<K, K> query) {
+        public List<CK> keys(IRangeQuery<CK, CK> query) {
             return new PriLinkProcessor().go(query);
         }
 
-        private class PriLinkProcessor extends ARangeQueryProcessor<K, K, Object[]> {
+        private class PriLinkProcessor extends ARangeQueryProcessor<CK, CK, Object[]> {
 
             public PriLinkProcessor() {
                 super(connectSet);
             }
 
             @Override
-            Object[] cursorAtKey(K key) {
+            Object[] cursorAtKey(CK key) {
                 throw new VelvetException("TODO");
             }
 
             @Override
-            Object[] cursorAfterMetric(K metric) {
+            Object[] cursorAfterMetric(CK metric) {
                 return new Object[] {key1, metric};
             }
 
             @SuppressWarnings("unchecked")
             @Override
-            K cursorMetric() {
-                return (K) cursor[1];
+            CK cursorMetric() {
+                return (CK) cursor[1];
             }
 
             @SuppressWarnings("unchecked")
             @Override
-            K cursorResult() {
-                return (K) cursor[1];
+            CK cursorResult() {
+                return (CK) cursor[1];
             }
 
             @Override
@@ -601,13 +589,13 @@ public class MapDbVelvet implements IVelvet {
     /**
      * treeset [key1, metric2, key2]
      */
-    private class SecMultiLink<K, V, M extends Comparable<? super M>> extends AMultiLink<K>
-            implements IKeyIndexLink<K, M> {
+    private class SecMultiLink<HK, CK, V, M extends Comparable<? super M>> extends AMultiLink<HK, CK>
+            implements IKeyIndexLink<HK, CK, M> {
 
-        private Function<K, M> keyMetric;
+        private Function<CK, M> keyMetric;
 
-        public SecMultiLink(Object key1, String edgeKind, Function<V, M> nodeMetric, Class<K> keyClass,
-                IStore<K, V> childStore) {
+        public SecMultiLink(HK key1, String edgeKind, Function<V, M> nodeMetric, Class<CK> keyClass,
+                IStore<CK, V> childStore) {
             super(key1, edgeKind);
             this.keyMetric = key -> {
                 V v = childStore.get(key);
@@ -622,33 +610,33 @@ public class MapDbVelvet implements IVelvet {
 
         @SuppressWarnings("unchecked")
         @Override
-        public List<K> keys(Class<K> clazz) {
-            return connectSet.stream().map(el -> (K) el[2]).collect(Collectors.toList());
+        public List<CK> keys() {
+            return connectSet.stream().map(el -> (CK) el[2]).collect(Collectors.toList());
         }
 
         @Override
-        public void update(K key2) {
+        public void update(CK key2) {
             // TODO
         }
 
         @Override
-        Object[] el(K key2) {
+        Object[] el(CK key2) {
             return new Object[] { key1, keyMetric.apply(key2), key2 };
         }
 
         @Override
-        public List<K> keys(Class<K> clazz, IRangeQuery<K, M> query) {
+        public List<CK> keys(IRangeQuery<CK, M> query) {
             return new SecLinkProcessor().go(query);
         }
 
-        private class SecLinkProcessor extends ARangeQueryProcessor<K, M, Object[]> {
+        private class SecLinkProcessor extends ARangeQueryProcessor<CK, M, Object[]> {
 
             public SecLinkProcessor() {
                 super(connectSet);
             }
 
             @Override
-            Object[] cursorAtKey(K key) {
+            Object[] cursorAtKey(CK key) {
                 return new Object[] {key1, keyMetric.apply(key), key};
             }
 
@@ -665,8 +653,8 @@ public class MapDbVelvet implements IVelvet {
 
             @SuppressWarnings("unchecked")
             @Override
-            K cursorResult() {
-                return (K) cursor[2];
+            CK cursorResult() {
+                return (CK) cursor[2];
             }
 
             @Override
