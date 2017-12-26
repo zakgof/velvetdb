@@ -13,11 +13,11 @@ public interface IVelvet {
 
     public <K extends Comparable<? super K>, V> ISortedStore<K, V> sortedStore(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes);
 
-    public <K> ILink<K> simpleIndex(Object key1, String edgekind, LinkType type);
+    public <HK, CK> ILink<HK, CK> simpleIndex(HK key1, Class<HK> hostKeyClass,  Class<CK> childKeyClass, String edgekind, LinkType type);
 
-    public <K extends Comparable<? super K>, T> IKeyIndexLink<K, K> primaryKeyIndex(Object key1, String edgekind);
+    public <HK, CK extends Comparable<? super CK>, T> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(HK key1, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind);
 
-    public <K, T, M extends Comparable<? super M>> IKeyIndexLink<K, M> secondaryKeyIndex(Object key1, String edgekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<K> keyClazz, IStore<K, T> childStore);
+    public <HK, CK, T, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex(HK key1, Class<HK> hostKeyClass, String edgekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<CK> keyClazz, IStore<CK, T> childStore);
 
     public interface IStore<K, V> {
         V get(K key);
@@ -51,24 +51,25 @@ public interface IVelvet {
     public interface ISortedStore<K extends Comparable<? super K>, V> extends IStore<K, V>, IStoreIndex<K, K> {
     }
 
-    public interface ILink<K> {
-        void put(K key2);
+    public interface ILink<HK, CK> {
+        void put(CK key2);
 
-        void delete(K key2);
+        void delete(CK key2);
 
-        List<K> keys(Class<K> clazz);
+        List<CK> keys();
 
-        boolean contains(K key2);
+        boolean contains(CK key2);
     }
 
-    public interface IKeyIndexLink<K, M extends Comparable<? super M>> extends ILink<K> {
-        void update(K key2);
+    public interface IKeyIndexLink<HK, CK, M extends Comparable<? super M>> extends ILink<HK, CK> {
 
-        List<K> keys(Class<K> clazz, IRangeQuery<K, M> query);
+        void update(CK key2);
 
-        default K key(Class<K> clazz, ISingleReturnRangeQuery<K, M> query) {
+        List<CK> keys(IRangeQuery<CK, M> query);
+
+        default CK key(ISingleReturnRangeQuery<CK, M> query) {
             // TODO
-            List<K> keys = keys(clazz, query);
+            List<CK> keys = keys(query);
             if (keys.isEmpty())
                 return null;
             if (keys.size() > 1)

@@ -19,10 +19,12 @@ public class SecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M
         this.mclazz = mclazz;
     }
 
-    protected IKeyIndexLink<CK, M> index(IVelvet velvet, HK akey) {
-        return velvet.<CK, CV, M> secondaryKeyIndex(akey, getKind(), metric, mclazz, getChildEntity().getKeyClass(), ((EntityDef<CK, CV>) getChildEntity()).store(velvet));
+    @Override
+    protected IKeyIndexLink<HK, CK, M> index(IVelvet velvet, HK akey) {
+        return velvet.<HK, CK, CV, M> secondaryKeyIndex(akey, getHostEntity().getKeyClass(), getKind(), metric, mclazz, getChildEntity().getKeyClass(), ((EntityDef<CK, CV>) getChildEntity()).store(velvet));
     }
 
+    @Override
     public Function<CV, M> getMetric() {
         return metric;
     }

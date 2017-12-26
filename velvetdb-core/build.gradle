@@ -15,7 +15,8 @@ repositories {
 }
 
 dependencies {
-    compile 'com.github.zakgof:tools:0.3.4-SNAPSHOT'
+    compile 'com.google.guava:guava:18.0'
+    compile 'com.github.zakgof:tools:0.4.0-SNAPSHOT'
     testCompile 'junit:junit:4.12'
 }
 

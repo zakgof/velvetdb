@@ -33,16 +33,16 @@ public class MultiLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV>
 
   @Override
   public List<CK> multiKeys(IVelvet velvet, HK key) {
-    return index(velvet, key).keys(getChildEntity().getKeyClass());
+    return index(velvet, key).keys();
   }
 
-  protected ILink<CK> index(IVelvet velvet, HK hkey) {
-    return velvet.simpleIndex(hkey, getKind(), LinkType.Multi);
+  protected ILink<HK, CK> index(IVelvet velvet, HK hkey) {
+    return velvet.simpleIndex(hkey, getHostEntity().getKeyClass(), getChildEntity().getKeyClass(), getKind(), LinkType.Multi);
   }
 
   @Override
   public String toString() {
     return "multi " + super.toString();
   }
-  
+
 }

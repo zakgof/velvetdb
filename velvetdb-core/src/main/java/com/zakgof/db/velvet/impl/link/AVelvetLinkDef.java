@@ -18,7 +18,7 @@ abstract class AVelvetLinkDef<HK, HV, CK, CV> extends ALinkDef<HK, HV, CK, CV> {
     super(hostClass, childClass);
   }
 
-  abstract ILink<CK> index(IVelvet velvet, HK hostKey);
+  abstract ILink<HK, CK> index(IVelvet velvet, HK hostKey);
 
   @Override
   public void connectKeys(IVelvet velvet, HK akey, CK bkey) {
@@ -29,7 +29,7 @@ abstract class AVelvetLinkDef<HK, HV, CK, CV> extends ALinkDef<HK, HV, CK, CV> {
   public void disconnectKeys(IVelvet velvet, HK akey, CK bkey) {
     index(velvet, akey).delete(bkey);
   }
-  
+
   @Override
   public boolean isConnectedKeys(IVelvet velvet, HK akey, CK bkey) {
     return index(velvet, akey).contains(bkey);
