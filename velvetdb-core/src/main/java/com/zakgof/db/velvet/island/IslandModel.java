@@ -1,11 +1,6 @@
 package com.zakgof.db.velvet.island;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -13,10 +8,7 @@ import java.util.stream.Stream;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.link.IMultiGetter;
-import com.zakgof.db.velvet.link.IMultiLinkDef;
-import com.zakgof.db.velvet.link.ISingleGetter;
-import com.zakgof.db.velvet.link.ISingleLinkDef;
+import com.zakgof.db.velvet.link.*;
 
 public class IslandModel {
 
@@ -42,7 +34,7 @@ public class IslandModel {
 
             private final IEntityDef<K, V> entityDef;
             private final Map<String, ISingleGetter<K,V,?,?>> singles = new HashMap<>();
-            private final Map<String, ISingleLinkDef<K,V,?,?>> detaches = new HashMap<>();
+            private final Set<ISingleLinkDef<K,V,?,?>> detaches = new HashSet<>();
             private final Map<String, IMultiGetter<K,V,?,?>> multis = new HashMap<>();
             private final Map<String, IContextSingleGetter<K, V, ?>> attrs = new HashMap<>();
             private final Map<String, Function<DataWrap<K, V>, ?>> postattrs = new HashMap<>();
@@ -70,8 +62,8 @@ public class IslandModel {
                 return include(linkDef.getKind(), linkDef);
             }
 
-            public <CK, CV> FetcherEntityBuilder<K, V> detach(String name, ISingleLinkDef<K, V, CK, CV> parentLink) {
-                detaches.put(name, parentLink);
+            public <CK, CV> FetcherEntityBuilder<K, V> detach(ISingleLinkDef<K, V, CK, CV> parentLink) {
+                detaches.add(parentLink);
                 return this;
             }
 
@@ -116,7 +108,7 @@ public class IslandModel {
         private final IEntityDef<K, V> entityDef;
         private final Map<String, IMultiGetter<K, V, ?, ?>> multis;
         private final Map<String, ISingleGetter<K, V, ?, ?>> singles;
-        private final Map<String, ISingleLinkDef<K, V, ?, ?>> detaches;
+        private final Set<ISingleLinkDef<K, V, ?, ?>> detaches;
         private final Comparator<DataWrap<K, V>> sort;
         private final Map<String, IContextSingleGetter<K, V, ?>> attrs;
         private final Map<String, Function<DataWrap<K, V>, ?>> postattrs;
@@ -124,7 +116,7 @@ public class IslandModel {
         private FetcherEntity(IEntityDef<K, V> entityDef,
                               Map<String, IMultiGetter<K,V,?,?>> multis,
                               Map<String, ISingleGetter<K,V,?,?>> singles,
-                              Map<String, ISingleLinkDef<K, V, ?, ?>> detaches,
+                              Set<ISingleLinkDef<K, V, ?, ?>> detaches,
                               Map<String, IContextSingleGetter<K, V, ?>> attrs,
                               Map<String, Function<DataWrap<K, V>, ?>> postattrs,
                               Comparator<DataWrap<K, V>> sort) {
@@ -168,10 +160,11 @@ public class IslandModel {
             for (Entry<String, ISingleGetter<K, V, ?, ?>> entry : entity.singles.entrySet()) {
                 killChild(velvet, entry.getValue(), key);
             }
-            for (Entry<String, ISingleLinkDef<K, V, ?, ?>> entry : entity.detaches.entrySet()) {
-                detachParent(velvet, entry.getValue(), key);
+            for (ISingleLinkDef<K, V, ?, ?> parent : entity.detaches) {
+                detachParent(velvet, parent, key);
             }
         }
+        entityDef.deleteKey(velvet, key);
     }
 
     private <K, V, CK, CV> void killChild(IVelvet velvet, ISingleGetter<K, V, CK, CV> singleGetter, K key) {
