@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.function.Supplier;
 
+import org.apache.commons.text.StrSubstitutor;
 import org.junit.AfterClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -16,10 +17,20 @@ import com.zakgof.db.velvet.VelvetFactory;
 
 @RunWith(Suite.class)
 
-@SuiteClasses({ StoreIndexesTest.class, SecondarySortedLinkTest.class, SortedStoreTest.class, PutGetTest.class, SimpleLinkTest.class, PrimarySortedLinkTest.class, PrimarySortedLinkTest2.class, KeylessTest.class
-        ,PerformanceTest.class,
-        ConcurrentWriteTest.class,
+@SuiteClasses({
+    PutGetTest.class,
+    KeylessTest.class,
+    SortedStoreTest.class,
+    /*
+    StoreIndexesTest.class,
+    SimpleLinkTest.class,
+    PrimarySortedLinkTest.class,
+    PrimarySortedLinkTest2.class,
+    SecondarySortedLinkTest.class,
+    PerformanceTest.class,
+    ConcurrentWriteTest.class,
 
+    */
 })
 
 public abstract class VelvetTestSuite {
@@ -39,10 +50,15 @@ public abstract class VelvetTestSuite {
 
     private static IVelvetEnvironment createVelvet(String providerName) {
         tearDownClass();
-        new File(PATH).mkdirs();
-        env = VelvetFactory.open("velvetdb://" + providerName + "/" + PATH.replace(File.separatorChar, '/'));
-        // env.setSerializer(() -> new KryoSerializer());
-        // env.setSerializer(() -> new ElsaVelvetSerializer());
+        if (providerName.equals("datastore")) {
+            String url =  StrSubstitutor.replaceSystemProperties("velvetdb://datastore/${velvetdb.datastore.projectId}/?credentialPath=${velvetdb.datastore.credentialPath}&proxyHost=${velvetdb.datastore.proxyHost}&proxyPort=${velvetdb.datastore.proxyPort}&proxyUser=${velvetdb.datastore.proxyUser}&proxyPassword=${velvetdb.datastore.proxyPassword}");
+            env = VelvetFactory.open(url);
+        } else {
+            new File(PATH).mkdirs();
+            env = VelvetFactory.open("velvetdb://" + providerName + "/" + PATH.replace(File.separatorChar, '/'));
+            // env.setSerializer(() -> new KryoSerializer());
+            // env.setSerializer(() -> new ElsaVelvetSerializer());
+        }
         return env;
     }
 

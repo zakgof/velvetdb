@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,14 +22,20 @@ public class SortedStoreTest extends AVelvetTxnTest {
 
     @Before
     public void init() {
-
         // v1 v2 v3 v5 v7
         ENTITY2.put(velvet, new TestEnt2(7));
         ENTITY2.put(velvet, new TestEnt2(5));
         ENTITY2.put(velvet, new TestEnt2(2));
         ENTITY2.put(velvet, new TestEnt2(3));
         ENTITY2.put(velvet, new TestEnt2(1));
+    }
 
+    @After
+    public void cleanup() {
+        List<Integer> keys = ENTITY2.keys(velvet);
+        for (Integer key : keys) {
+            ENTITY2.deleteKey(velvet, key);
+        }
     }
 
     @Test
@@ -132,11 +139,10 @@ public class SortedStoreTest extends AVelvetTxnTest {
 
     @Test
     public void testRangeDesc() {
-        check(Queries.<Integer, Integer>builder().descending().greater(3).build(), 7, 5);
-        check(Queries.<Integer, Integer>builder().descending().greaterOrEq(3).build(), 7, 5, 3);
-        check(Queries.<Integer, Integer>builder().descending().greaterOrEq(3).lessOrEq(5).build(), 5, 3);
+        check(Queries.<Integer, Integer> builder().descending().greater(3).build(), 7, 5);
+        check(Queries.<Integer, Integer> builder().descending().greaterOrEq(3).build(), 7, 5, 3);
+        check(Queries.<Integer, Integer> builder().descending().greaterOrEq(3).lessOrEq(5).build(), 5, 3);
     }
-
 
     void check(IRangeQuery<Integer, Integer> query, Integer... ref) {
         List<TestEnt2> result = ENTITY2.get(velvet, query);

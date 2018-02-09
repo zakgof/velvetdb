@@ -1,21 +1,20 @@
-package com.zakgof.db.velvet.xodus;
+package com.zakgof.db.velvet.datastore;
 
-import java.io.File;
 import java.net.URI;
 
 import com.zakgof.db.velvet.IVelvetEnvironment;
 import com.zakgof.db.velvet.IVelvetProvider;
 
-public class XodusVelvetProvider implements IVelvetProvider {
+public class DatastoreVelvetProvider implements IVelvetProvider {
 
     @Override
     public IVelvetEnvironment open(URI uri) {
-        return new XodusVelvetEnv(new File(uri.getPath()));
+        return new DatastoreVelvetEnv(uri);
     }
 
     @Override
     public String name() {
-        return "xodus";
+        return "datastore";
     }
 
 }

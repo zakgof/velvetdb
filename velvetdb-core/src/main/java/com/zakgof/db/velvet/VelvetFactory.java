@@ -21,8 +21,8 @@ public class VelvetFactory {
             IVelvetProvider provider = Functions.stream(serviceLoader.iterator())
               .filter(reg -> reg.name().equals(name))
               .findFirst()
-              .orElseThrow(() -> new VelvetException("Velvetdb backend not registered: " + name)); 
-            return provider.open(u.getPath());
+              .orElseThrow(() -> new VelvetException("Velvetdb backend not registered: " + name));
+            return provider.open(u);
         } catch (URISyntaxException e) {
             throw new VelvetException(e);
         }
