@@ -1,5 +1,6 @@
 include 'velvetdb-core'
 include 'velvetdb-xodus'
+include 'velvetdb-googledatastore'
 include 'velvetdb-mapdb'
 include 'velvetdb-serializer-kryo'
 include 'velvetdb-serializer-elsa'
