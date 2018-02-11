@@ -5,10 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.ISortableEntityDef;
@@ -46,7 +43,7 @@ public class SortedStoreTest extends AVelvetTxnTest {
 
     @Test
     public void testStringOrder() {
-        final ISortableEntityDef<String, TestEnt> ENTITY = Entities.sorted(TestEnt.class);
+        final ISortableEntityDef<String, TestEnt> ENTITY = Entities.from(TestEnt.class).kind("testentsorted").makeSorted();
         ENTITY.put(velvet, new TestEnt("Aaa", 7.1f));
         ENTITY.put(velvet, new TestEnt("ab", 9.1f));
         ENTITY.put(velvet, new TestEnt("", 0.1f));

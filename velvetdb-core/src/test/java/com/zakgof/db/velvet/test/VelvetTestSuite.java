@@ -18,10 +18,11 @@ import com.zakgof.db.velvet.VelvetFactory;
 @RunWith(Suite.class)
 
 @SuiteClasses({
-    PutGetTest.class,
-    KeylessTest.class,
+
     SortedStoreTest.class,
-    /*
+    KeylessTest.class,
+    PutGetTest.class,
+  /*
     StoreIndexesTest.class,
     SimpleLinkTest.class,
     PrimarySortedLinkTest.class,
@@ -53,7 +54,10 @@ public abstract class VelvetTestSuite {
         if (providerName.equals("datastore")) {
             String url =  StrSubstitutor.replaceSystemProperties("velvetdb://datastore/${velvetdb.datastore.projectId}/?credentialPath=${velvetdb.datastore.credentialPath}&proxyHost=${velvetdb.datastore.proxyHost}&proxyPort=${velvetdb.datastore.proxyPort}&proxyUser=${velvetdb.datastore.proxyUser}&proxyPassword=${velvetdb.datastore.proxyPassword}");
             env = VelvetFactory.open(url);
-        } else {
+        } else if (providerName.equals("dynamodb")) {
+            String url =  StrSubstitutor.replaceSystemProperties("velvetdb://dynamodb/us-west-2?awsAccessKeyId=${velvetdb.aws.accessKeyId}&awsSecretKey=${velvetdb.aws.secretKey}");
+            env = VelvetFactory.open(url);
+        } else{
             new File(PATH).mkdirs();
             env = VelvetFactory.open("velvetdb://" + providerName + "/" + PATH.replace(File.separatorChar, '/'));
             // env.setSerializer(() -> new KryoSerializer());
