@@ -2,12 +2,7 @@ package com.zakgof.db.velvet.xodus;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -21,11 +16,7 @@ import com.zakgof.serialize.ISerializer;
 
 import jetbrains.exodus.ArrayByteIterable;
 import jetbrains.exodus.ByteIterable;
-import jetbrains.exodus.env.Cursor;
-import jetbrains.exodus.env.Environment;
-import jetbrains.exodus.env.Store;
-import jetbrains.exodus.env.StoreConfig;
-import jetbrains.exodus.env.Transaction;
+import jetbrains.exodus.env.*;
 
 /**
  * Simple store:        No duplicates     ze(key)       ->  ze(value)
@@ -468,7 +459,7 @@ class XodusVelvet implements IVelvet {
     }
 
     @Override
-    public <HK, CK extends Comparable<? super CK>, T> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(HK key1, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+    public <HK, CK extends Comparable<? super CK>> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(HK key1, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
         return new PriIndexMultiLink<>(key1, hostKeyClass, childKeyClass, edgekind);
     }
 
