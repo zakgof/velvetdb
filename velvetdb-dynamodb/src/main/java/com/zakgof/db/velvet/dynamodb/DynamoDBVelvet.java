@@ -1,37 +1,19 @@
 package com.zakgof.db.velvet.dynamodb;
 
 import java.io.ByteArrayInputStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.KeyAttribute;
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
-import com.amazonaws.services.dynamodbv2.document.RangeKeyCondition;
-import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.TableCollection;
+import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.KeyType;
-import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.dynamodbv2.model.*;
 import com.google.common.primitives.Primitives;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
@@ -153,19 +135,33 @@ public class DynamoDBVelvet implements IVelvet {
 
     @Override
     public <HK, CK> ILink<HK, CK> simpleIndex(HK hostKey, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind, LinkType type) {
-        return type == LinkType.Single ? new SingleLink<>(hostKey, hostKeyClass, childKeyClass, edgekind) : new MultiLink<>(hostKey, hostKeyClass, childKeyClass, edgekind);
+        return type == LinkType.Single ? new SingleLink<>(hostKey, hostKeyClass, childKeyClass, edgekind) : new MultiLink(hostKey, hostKeyClass, childKeyClass, edgekind);
     }
 
     @Override
-    public <HK, CK extends Comparable<? super CK>, T> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(HK key1, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
-        // TODO Auto-generated method stub
-        return null;
+    public <HK, CK extends Comparable<? super CK>> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(HK hk, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+        return new MultiLink<>(hk, hostKeyClass, childKeyClass, edgekind);
     }
 
     @Override
     public <HK, CK, T, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex(HK key1, Class<HK> hostKeyClass, String edgekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<CK> keyClazz, IStore<CK, T> childStore) {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    public void killAll() {
+        TableCollection<ListTablesResult> listTables = db.listTables();
+        for (Table table : listTables) {
+            System.err.print("Deleting " + table.getTableName() + "... ");
+            table.delete();
+            try {
+                table.waitForDelete();
+                // db.batchWriteItem(tableWriteItems)
+                System.err.println("done!");
+            } catch (InterruptedException e) {
+                throw new VelvetException(e);
+            }
+        }
     }
 
     private class Store<K, V> implements IStore<K, V> {
@@ -365,20 +361,6 @@ public class DynamoDBVelvet implements IVelvet {
 
     }
 
-    public void killAll() {
-        TableCollection<ListTablesResult> listTables = db.listTables();
-        for (Table table : listTables) {
-            System.err.print("Deleting " + table.getTableName() + "... ");
-            table.delete();
-            try {
-                table.waitForDelete();
-                System.err.println("done!");
-            } catch (InterruptedException e) {
-                throw new VelvetException(e);
-            }
-        }
-    }
-
     /**
      * Hash key: hk
      * Value: ck
@@ -447,10 +429,11 @@ public class DynamoDBVelvet implements IVelvet {
     }
 
     /**
+     * MultiLink = PrimaryKeyLink
      * Hash key: hk
      * Range key: ck
      */
-    private class MultiLink<HK, CK> extends SingleLink<HK, CK> {
+    private class MultiLink<HK, CK extends Comparable<? super CK>> extends SingleLink<HK, CK> implements IKeyIndexLink<HK, CK, CK> {
 
         public MultiLink(HK hostKey, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
             super(hostKey, hostKeyClass, childKeyClass, edgekind);
@@ -492,7 +475,67 @@ public class DynamoDBVelvet implements IVelvet {
             return new KeyAttribute[] {new KeyAttribute("hk", hk), new KeyAttribute("ck", ck)};
         }
 
-    }
+        @Override
+        public void update(CK ck) {
+           delete(ck);
+           put(ck);
+        }
 
+        @Override
+        public List<CK> keys(IRangeQuery<CK, CK> query) {
+
+            QuerySpec qs = new QuerySpec()
+                    .withAttributesToGet("ck")
+                    .withHashKey(keyFor());
+
+
+            IQueryAnchor<CK, CK> lowAnchor = query.getLowAnchor();
+            IQueryAnchor<CK, CK> highAnchor = query.getHighAnchor();
+            CK lowKey = null;
+            CK highKey = null;
+            Predicate<CK> fixBeetween = (ck) -> true;
+            if (lowAnchor != null) {
+                lowKey = lowAnchor.getKey() == null ? lowAnchor.getMetric() : lowAnchor.getKey(); // TODO create single-arg queries
+            }
+            if (highAnchor != null) {
+                highKey = highAnchor.getKey() == null ? highAnchor.getMetric() : highAnchor.getKey();
+            }
+            if (lowKey != null && highKey == null) {
+                RangeKeyCondition condition = new RangeKeyCondition("ck");
+                condition = lowAnchor.isIncluding() ? condition.ge(lowKey) : condition.gt(lowKey);
+                qs.withRangeKeyCondition(condition);
+            } else if (lowKey == null && highKey != null) {
+                RangeKeyCondition condition = new RangeKeyCondition("ck");
+                condition = highAnchor.isIncluding() ? condition.le(highKey) : condition.lt(highKey);
+                qs.withRangeKeyCondition(condition);
+            } else if (lowKey != null && highKey != null) {
+                if (lowKey.compareTo(highKey) > 0)
+                    return Collections.emptyList();
+                RangeKeyCondition condition = new RangeKeyCondition("ck").between(lowKey, highKey);
+                qs.withRangeKeyCondition(condition);
+                CK lowKey2 = lowKey;
+                CK highKey2 = highKey;
+                fixBeetween = (ck) -> (lowAnchor.isIncluding() || !ck.equals(lowKey2)) && (highAnchor.isIncluding() || !ck.equals(highKey2));
+            }
+            if (query.getLimit() > 0) {
+                int number = query.getLimit() + query.getOffset();
+                qs.withMaxResultSize(number);
+            }
+            if (!query.isAscending()) {
+                qs.withScanIndexForward(false);
+            }
+            Predicate<CK> fixBeetween2 = fixBeetween;
+            List<CK> cks = calcOnTable(() -> {
+                ItemCollection<QueryOutcome> itemCollection = table.query(qs);
+                return StreamSupport.stream(itemCollection.spliterator(), false)
+                    .map(item -> valueFromItem(item, childKeyClass, "ck", true))
+                    .filter(fixBeetween2)
+                    .skip(query.getOffset())
+                    .collect(Collectors.toList());
+            }, this::createTable);
+            return cks;
+        }
+
+    }
 
 }

@@ -19,14 +19,15 @@ import com.zakgof.db.velvet.VelvetFactory;
 
 @SuiteClasses({
 
+    PrimarySortedLinkTest.class,
+    PrimarySortedLinkTest2.class,
     SortedStoreTest.class,
     KeylessTest.class,
     PutGetTest.class,
+    SimpleLinkTest.class,
+
   /*
     StoreIndexesTest.class,
-    SimpleLinkTest.class,
-    PrimarySortedLinkTest.class,
-    PrimarySortedLinkTest2.class,
     SecondarySortedLinkTest.class,
     PerformanceTest.class,
     ConcurrentWriteTest.class,

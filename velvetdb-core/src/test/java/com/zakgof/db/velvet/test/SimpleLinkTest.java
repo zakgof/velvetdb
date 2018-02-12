@@ -8,12 +8,7 @@ import org.junit.Test;
 
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.link.IBiManyToManyLinkDef;
-import com.zakgof.db.velvet.link.IBiMultiLinkDef;
-import com.zakgof.db.velvet.link.IBiSingleLinkDef;
-import com.zakgof.db.velvet.link.IMultiLinkDef;
-import com.zakgof.db.velvet.link.ISingleLinkDef;
-import com.zakgof.db.velvet.link.Links;
+import com.zakgof.db.velvet.link.*;
 
 public class SimpleLinkTest extends AVelvetTxnTest {
 
@@ -22,12 +17,12 @@ public class SimpleLinkTest extends AVelvetTxnTest {
     private IEntityDef<String, TestEnt> ENTITY = Entities.create(TestEnt.class);
     private IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.create(TestEnt2.class);
 
-    private ISingleLinkDef<String, TestEnt, Integer, TestEnt2> SINGLE = Links.single(ENTITY, ENTITY2, "single");
-    private IMultiLinkDef<String, TestEnt, Integer, TestEnt2> MULTI = Links.multi(ENTITY, ENTITY2, "multi");
+    private ISingleLinkDef<String, TestEnt, Integer, TestEnt2> SINGLE = Links.single(ENTITY, ENTITY2, "slt-single");
+    private IMultiLinkDef<String, TestEnt, Integer, TestEnt2> MULTI = Links.multi(ENTITY, ENTITY2, "slt-multi");
 
-    private IBiSingleLinkDef<String, TestEnt, Integer, TestEnt2> ONE_TO_ONE = Links.biSingle(ENTITY, ENTITY2, "bisingle", "bisingle-back");
-    private IBiMultiLinkDef<String, TestEnt, Integer, TestEnt2> ONE_TO_MANY = Links.biMulti(ENTITY, ENTITY2, "bimulti", "bimulti-back");
-    private IBiManyToManyLinkDef<String, TestEnt, Integer, TestEnt2> MANY_TO_MANY = Links.biManyToMany(ENTITY, ENTITY2, "many", "many-back");
+    private IBiSingleLinkDef<String, TestEnt, Integer, TestEnt2> ONE_TO_ONE = Links.biSingle(ENTITY, ENTITY2, "slt-bisingle", "slt-bisingle-back");
+    private IBiMultiLinkDef<String, TestEnt, Integer, TestEnt2> ONE_TO_MANY = Links.biMulti(ENTITY, ENTITY2, "slt-bimulti", "slt-bimulti-back");
+    private IBiManyToManyLinkDef<String, TestEnt, Integer, TestEnt2> MANY_TO_MANY = Links.biManyToMany(ENTITY, ENTITY2, "slt-many", "slt-many-back");
 
 
     @Test

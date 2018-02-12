@@ -13,7 +13,7 @@ public class PriIndexMultiLinkDef<HK, HV, CK extends Comparable<CK>, CV> extends
 
     @Override
     protected IKeyIndexLink<HK, CK, CK> index(IVelvet velvet, HK akey) {
-        return velvet.<HK, CK, CV> primaryKeyIndex(akey, getHostEntity().getKeyClass(), getChildEntity().getKeyClass(), getKind());
+        return velvet.<HK, CK> primaryKeyIndex(akey, getHostEntity().getKeyClass(), getChildEntity().getKeyClass(), getKind());
     }
 
 }
