@@ -19,7 +19,11 @@ import com.zakgof.db.velvet.VelvetFactory;
 
 @SuiteClasses({
 
+    StoreIndexesTest.class,
 
+    /*
+
+    SecondarySortedLinkTest.class,
     PrimarySortedLinkTest.class,
     PrimarySortedLinkTest2.class,
     SortedStoreTest.class,
@@ -27,10 +31,10 @@ import com.zakgof.db.velvet.VelvetFactory;
     KeylessTest.class,
     PutGetTest.class,
 
-    /*
-    StoreIndexesTest.class,
-    SecondarySortedLinkTest.class,
+
+    ConcurrentWriteTest.class,
     PerformanceTest.class,
+
     */
 })
 
@@ -50,16 +54,18 @@ public abstract class VelvetTestSuite {
     }
 
     private static IVelvetEnvironment createVelvet(String providerName) {
-        tearDownClass();
+        cleanup(false);
         if (providerName.equals("datastore")) {
             String url =  StrSubstitutor.replaceSystemProperties("velvetdb://datastore/${velvetdb.datastore.projectId}/?credentialPath=${velvetdb.datastore.credentialPath}&proxyHost=${velvetdb.proxyHost}&proxyPort=${velvetdb.proxyPort}&proxyUser=${velvetdb.proxyUser}&proxyPassword=${velvetdb.proxyPassword}");
             env = VelvetFactory.open(url);
         } else if (providerName.equals("dynamodb")) {
-            String url =  StrSubstitutor.replaceSystemProperties("velvetdb://dynamodb/us-west-2?awsAccessKeyId=${velvetdb.aws.accessKeyId}&awsSecretKey=${velvetdb.aws.secretKey}&proxyHost=${velvetdb.proxyHost}&proxyPort=${velvetdb.proxyPort}&proxyUser=${velvetdb.proxyUser}&proxyPassword=${velvetdb.proxyPassword}");
-            env = VelvetFactory.open(url);
-            env.execute(velvet -> {
-                velvet.getClass().getDeclaredMethod("killAll").invoke(velvet);
-            });
+            if (env == null) {
+                String url =  StrSubstitutor.replaceSystemProperties("velvetdb://dynamodb/us-west-2?awsAccessKeyId=${velvetdb.aws.accessKeyId}&awsSecretKey=${velvetdb.aws.secretKey}"); // &proxyHost=${velvetdb.proxyHost}&proxyPort=${velvetdb.proxyPort}&proxyUser=${velvetdb.proxyUser}&proxyPassword=${velvetdb.proxyPassword}");            )
+                env = VelvetFactory.open(url);
+                env.execute(velvet -> {
+                    velvet.getClass().getDeclaredMethod("killAll", boolean.class).invoke(velvet, false);
+                });
+            }
         } else{
             new File(PATH).mkdirs();
             env = VelvetFactory.open("velvetdb://" + providerName + "/" + PATH.replace(File.separatorChar, '/'));
@@ -71,10 +77,26 @@ public abstract class VelvetTestSuite {
 
     @AfterClass
     public static void tearDownClass() {
+        cleanup(true);
+    }
+
+    private static void cleanup(boolean full) {
         if (env != null) {
-            env.close();
+            if (isDynamo()) {
+                env.execute(velvet -> velvet.getClass().getDeclaredMethod("killAll", boolean.class).invoke(velvet, full));
+
+            } else {
+                env.close();
+            }
+        }
+
+        if (!isDynamo()) {
             for (File file : new File(PATH).listFiles())
                 file.delete();
         }
+    }
+
+    private static boolean isDynamo() {
+        return env != null && env.getClass().getName().toLowerCase().contains("dynamo");
     }
 }

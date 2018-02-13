@@ -7,5 +7,4 @@ public interface IQueryAnchor<K, M extends Comparable<? super M>> {
     K getKey();
 
     M getMetric();
-
 }

@@ -15,7 +15,7 @@ import com.zakgof.db.velvet.link.Links;
 
 public class ConcurrentWriteTest extends AVelvetTest {
 
-    private static final int CHUNK_SIZE = 1000;
+    private static final int CHUNK_SIZE = 100;
     private static final int THREADS = 5;
     private static final int TXN_PER_THREAD = 10;
 

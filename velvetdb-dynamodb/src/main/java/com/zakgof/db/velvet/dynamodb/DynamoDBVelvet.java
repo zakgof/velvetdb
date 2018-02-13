@@ -10,9 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import com.amazonaws.services.dynamodbv2.document.*;
-import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
-import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
-import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.*;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.google.common.primitives.Primitives;
 import com.zakgof.db.velvet.IVelvet;
@@ -63,6 +61,10 @@ public class DynamoDBVelvet implements IVelvet {
                 runnable.run();
             } catch (ResourceNotFoundException e2) {
                 System.err.println("ERROR : Table not found again: " + e2);
+                try {
+                    Thread.sleep(8000);
+                } catch (InterruptedException e1) {
+                }
                 runnable.run();
             }
         }
@@ -87,15 +89,10 @@ public class DynamoDBVelvet implements IVelvet {
         return value;
     }
 
-    private Table makeTable(String kind, KeySchemaElement[] keySchemaElements, AttributeDefinition[] attributeDefinitions) {
-        Table table = db.createTable(new CreateTableRequest()
-           .withTableName(kind)
-           .withKeySchema(keySchemaElements)
-           .withAttributeDefinitions(attributeDefinitions)
-           .withProvisionedThroughput(new ProvisionedThroughput(1L, 1L))
-        );
+    private Table makeTable(CreateTableRequest request) {
+        Table table = db.createTable(request);
         try {
-            System.err.print("Creating table " + kind + "... ");
+            System.err.print("Creating table " + request.getTableName() + "... ");
             table.waitForActive();
             System.err.println("done");
         } catch (InterruptedException e) {
@@ -104,15 +101,23 @@ public class DynamoDBVelvet implements IVelvet {
         return table;
     }
 
-    private Table makeTable(String kind, String hashKeyName, ScalarAttributeType hashKeyType) {
-        return makeTable(kind,
+    private CreateTableRequest makeTableRequest(String kind, KeySchemaElement[] keySchemaElements, AttributeDefinition[] attributeDefinitions) {
+        return new CreateTableRequest()
+           .withTableName(kind)
+           .withKeySchema(keySchemaElements)
+           .withAttributeDefinitions(attributeDefinitions)
+           .withProvisionedThroughput(new ProvisionedThroughput(1L, 1L));
+    }
+
+    private CreateTableRequest makeTableRequest(String kind, String hashKeyName, ScalarAttributeType hashKeyType) {
+        return makeTableRequest(kind,
             new KeySchemaElement[] {new KeySchemaElement(hashKeyName, KeyType.HASH)},
             new AttributeDefinition[] {new AttributeDefinition(hashKeyName, hashKeyType)}
         );
     }
 
-    private Table makeTable(String kind, String hashKeyName, ScalarAttributeType hashKeyType, String rangeKeyName, ScalarAttributeType rangeKeyType) {
-        return makeTable(kind,
+    private CreateTableRequest makeTableRequest(String kind, String hashKeyName, ScalarAttributeType hashKeyType, String rangeKeyName, ScalarAttributeType rangeKeyType) {
+        return makeTableRequest(kind,
             new KeySchemaElement[] {new KeySchemaElement(hashKeyName, KeyType.HASH), new KeySchemaElement(rangeKeyName, KeyType.RANGE)},
             new AttributeDefinition[] {new AttributeDefinition(hashKeyName, hashKeyType), new AttributeDefinition(rangeKeyName, rangeKeyType)}
         );
@@ -135,33 +140,66 @@ public class DynamoDBVelvet implements IVelvet {
 
     @Override
     public <HK, CK> ILink<HK, CK> simpleIndex(HK hostKey, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind, LinkType type) {
-        return type == LinkType.Single ? new SingleLink<>(hostKey, hostKeyClass, childKeyClass, edgekind) : new MultiLink(hostKey, hostKeyClass, childKeyClass, edgekind);
+        return type == LinkType.Single ? new SingleLink<>(hostKey, hostKeyClass, childKeyClass, edgekind) : new MultiLink<>(hostKey, hostKeyClass, childKeyClass, edgekind);
     }
 
     @Override
     public <HK, CK extends Comparable<? super CK>> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(HK hk, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
-        return new MultiLink<>(hk, hostKeyClass, childKeyClass, edgekind);
+        return new PrimaryMultiLink<>(hk, hostKeyClass, childKeyClass, edgekind);
     }
 
     @Override
-    public <HK, CK, T, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex(HK key1, Class<HK> hostKeyClass, String edgekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<CK> keyClazz, IStore<CK, T> childStore) {
-        // TODO Auto-generated method stub
-        return null;
+    public <HK, CK, CV, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex(HK hk, Class<HK> hostKeyClass, String edgekind, Function<CV, M> nodeMetric, Class<M> mclazz, Class<CK> childKeyClazz, IStore<CK, CV> childStore) {
+        return new SecondaryMultiLink<>(hk, hostKeyClass, edgekind, nodeMetric, mclazz, childKeyClazz, childStore);
     }
 
-    public void killAll() {
+    public void killAll(boolean full) {
         TableCollection<ListTablesResult> listTables = db.listTables();
+
         for (Table table : listTables) {
-            System.err.print("Deleting " + table.getTableName() + "... ");
-            table.delete();
-            try {
-                table.waitForDelete();
-                // db.batchWriteItem(tableWriteItems)
-                System.err.println("done!");
-            } catch (InterruptedException e) {
-                throw new VelvetException(e);
+            if (full) {
+                System.err.print("Deleting " + table.getTableName() + "... ");
+                table.delete();
+                try {
+                    table.waitForDelete();
+                    System.err.println("done.");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
+            cleanTable(table);
         }
+        System.err.println("----------------");
+    }
+
+    private void cleanTable(Table table) {
+        List<TableWriteItems> writes = new ArrayList<>();
+        System.err.print("Cleaning up " + table.getTableName() + "... ");
+
+        if (table.getDescription() == null)
+            table.describe();
+        List<KeySchemaElement> keySchema = table.getDescription().getKeySchema();
+        String[] attrs = keySchema.stream().map(KeySchemaElement::getAttributeName).toArray(String[]::new);
+        TableWriteItems tableWriteItems = new TableWriteItems(table.getTableName());
+        ItemCollection<ScanOutcome> itemCollection = table.scan(new ScanSpec().withAttributesToGet(attrs));
+        StreamSupport.stream(itemCollection.spliterator(), false)
+            .map((Item item) -> itemToPrimaryKey(item))
+            .forEach(pk -> tableWriteItems.addPrimaryKeyToDelete(pk));
+
+        if (tableWriteItems.getPrimaryKeysToDelete() != null && !tableWriteItems.getPrimaryKeysToDelete().isEmpty()) {
+            writes.add(tableWriteItems);
+            System.err.println("batched (" + tableWriteItems.getPrimaryKeysToDelete().size() + " items)");
+        } else {
+            System.err.println("no items.");
+        }
+        if (!writes.isEmpty()) {
+            db.batchWriteItem(new BatchWriteItemSpec().withTableWriteItems(writes.toArray(new TableWriteItems[0])));
+        }
+    }
+
+    private PrimaryKey itemToPrimaryKey(Item item) {
+        KeyAttribute[] keyAttributes = item.asMap().entrySet().stream().map(e -> new KeyAttribute(e.getKey(), e.getValue())).toArray(KeyAttribute[]::new);
+        return new PrimaryKey(keyAttributes);
     }
 
     private class Store<K, V> implements IStore<K, V> {
@@ -258,7 +296,7 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
         protected void createTable() {
-            table = makeTable(kind, "id",  keyType(keyClass));
+            table = makeTable(makeTableRequest(kind, "id",  keyType(keyClass)));
         }
 
         protected Item createPutItem(K key, Object v) {
@@ -302,33 +340,48 @@ public class DynamoDBVelvet implements IVelvet {
                 .withHashKey("partition", 1);
 
             IQueryAnchor<K, K> lowAnchor = query.getLowAnchor();
-            if (lowAnchor != null) {
-                K k = lowAnchor.getKey() == null ? lowAnchor.getMetric() : lowAnchor.getKey();
-                RangeKeyCondition condition = new RangeKeyCondition("id");
-                condition = lowAnchor.isIncluding() ? condition.ge(k) : condition.gt(k);
-                qs.withRangeKeyCondition(condition);
-            }
             IQueryAnchor<K, K> highAnchor = query.getHighAnchor();
+            K lowKey = null;
+            K highKey = null;
+            Predicate<K> fixBeetween = (ck) -> true;
+            if (lowAnchor != null) {
+                lowKey = lowAnchor.getKey() == null ? lowAnchor.getMetric() : lowAnchor.getKey(); // TODO create single-arg queries
+            }
             if (highAnchor != null) {
-                K k = highAnchor.getKey() == null ? highAnchor.getMetric() : highAnchor.getKey();
+                highKey = highAnchor.getKey() == null ? highAnchor.getMetric() : highAnchor.getKey();
+            }
+            if (lowKey != null && highKey == null) {
                 RangeKeyCondition condition = new RangeKeyCondition("id");
-                condition = highAnchor.isIncluding() ? condition.le(k) : condition.lt(k);
+                condition = lowAnchor.isIncluding() ? condition.ge(lowKey) : condition.gt(lowKey);
                 qs.withRangeKeyCondition(condition);
+            } else if (lowKey == null && highKey != null) {
+                RangeKeyCondition condition = new RangeKeyCondition("id");
+                condition = highAnchor.isIncluding() ? condition.le(highKey) : condition.lt(highKey);
+                qs.withRangeKeyCondition(condition);
+            } else if (lowKey != null && highKey != null) {
+                if (lowKey.compareTo(highKey) > 0)
+                    return Collections.emptyList();
+                RangeKeyCondition condition = new RangeKeyCondition("id").between(lowKey, highKey);
+                qs.withRangeKeyCondition(condition);
+                K lowKey2 = lowKey;
+                K highKey2 = highKey;
+                fixBeetween = (ck) -> (lowAnchor.isIncluding() || !ck.equals(lowKey2)) && (highAnchor.isIncluding() || !ck.equals(highKey2));
             }
             if (query.getLimit() > 0) {
                 int number = query.getLimit() + query.getOffset();
-                qs.withMaxResultSize(number);
+                qs.withMaxResultSize(number + 2); // possible exclusion
             }
             if (!query.isAscending()) {
                 qs.withScanIndexForward(false);
             }
-
+            Predicate<K> fixBeetween2 = fixBeetween;
             List<K> keys = calcOnTable(() ->  {
-
                 ItemCollection<QueryOutcome> itemCollection = table.query(qs);
                 return StreamSupport.stream(itemCollection.spliterator(), false)
-                    .skip(query.getOffset())
                     .map(this::keyFromItem)
+                    .filter(fixBeetween2)
+                    .skip(query.getOffset())
+                    .limit(query.getLimit() >= 0 ? query.getLimit() : Integer.MAX_VALUE)
                     .collect(Collectors.toList());
 
             }, this::createTable);
@@ -337,7 +390,7 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         protected void createTable() {
-            table = makeTable(kind, "partition", ScalarAttributeType.N, "id", keyType(keyClass));
+            table = makeTable(makeTableRequest(kind, "partition", ScalarAttributeType.N, "id", keyType(keyClass)));
         }
 
 
@@ -408,8 +461,12 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         public boolean contains(CK ck) {
-            List<CK> keys = keys();
-            return !keys.isEmpty() && keys.get(0).equals(ck);
+            Item item = calcOnTable(() -> table.getItem(keyFor()), this::createTable);
+            if (item != null) {
+                CK actual = valueFromItem(item, childKeyClass, "ck", true);
+                return actual.equals(ck);
+            }
+            return false;
         }
 
         protected Item createPutItem(CK ck) {
@@ -419,7 +476,7 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
         protected void createTable() {
-            table = makeTable(tableName, "hk", keyType(hostKeyClass));
+            table = makeTable(makeTableRequest(tableName, "hk", keyType(hostKeyClass)));
         }
 
         protected KeyAttribute keyFor() {
@@ -433,7 +490,7 @@ public class DynamoDBVelvet implements IVelvet {
      * Hash key: hk
      * Range key: ck
      */
-    private class MultiLink<HK, CK extends Comparable<? super CK>> extends SingleLink<HK, CK> implements IKeyIndexLink<HK, CK, CK> {
+    private class MultiLink<HK, CK> extends SingleLink<HK, CK> {
 
         public MultiLink(HK hostKey, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
             super(hostKey, hostKeyClass, childKeyClass, edgekind);
@@ -461,6 +518,11 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
         @Override
+        public boolean contains(CK ck) {
+            return calcOnTable(() -> table.getItem(keyFor(ck)) != null, this::createTable);
+        }
+
+        @Override
         protected Item createPutItem(CK ck) {
             return new Item()
                .withKeyComponents(keyFor(ck));
@@ -468,17 +530,23 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         protected void createTable() {
-            table = makeTable(tableName, "hk", keyType(hostKeyClass), "ck", keyType(childKeyClass));
+            table = makeTable(makeTableRequest(tableName, "hk", keyType(hostKeyClass), "ck", keyType(childKeyClass)));
         }
 
         private KeyAttribute[] keyFor(CK ck) {
             return new KeyAttribute[] {new KeyAttribute("hk", hk), new KeyAttribute("ck", ck)};
         }
+    }
+
+    private class PrimaryMultiLink<HK, CK extends Comparable<? super CK>> extends MultiLink<HK, CK> implements IKeyIndexLink<HK, CK, CK> {
+
+        public PrimaryMultiLink(HK hostKey, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+            super(hostKey, hostKeyClass, childKeyClass, edgekind);
+        }
 
         @Override
         public void update(CK ck) {
-           delete(ck);
-           put(ck);
+            // NOOP for primaries
         }
 
         @Override
@@ -519,7 +587,7 @@ public class DynamoDBVelvet implements IVelvet {
             }
             if (query.getLimit() > 0) {
                 int number = query.getLimit() + query.getOffset();
-                qs.withMaxResultSize(number);
+                qs.withMaxResultSize(number + 2); // possible exclusion
             }
             if (!query.isAscending()) {
                 qs.withScanIndexForward(false);
@@ -527,15 +595,157 @@ public class DynamoDBVelvet implements IVelvet {
             Predicate<CK> fixBeetween2 = fixBeetween;
             List<CK> cks = calcOnTable(() -> {
                 ItemCollection<QueryOutcome> itemCollection = table.query(qs);
+
+                // List<Item> debug = StreamSupport.stream(itemCollection.spliterator(), false).collect(Collectors.toList());
+
                 return StreamSupport.stream(itemCollection.spliterator(), false)
                     .map(item -> valueFromItem(item, childKeyClass, "ck", true))
                     .filter(fixBeetween2)
                     .skip(query.getOffset())
+                    .limit(query.getLimit() >= 0 ? query.getLimit() : Integer.MAX_VALUE)
                     .collect(Collectors.toList());
             }, this::createTable);
             return cks;
         }
 
     }
+
+    /**
+     * Hash key : hk
+     * Sort key : ck
+     * LSI      :  m
+     */
+    private class SecondaryMultiLink<HK, CK, CV, M extends Comparable<? super M>> extends MultiLink<HK, CK> implements IKeyIndexLink<HK, CK, M> {
+
+        private Function<CV, M> nodeMetric;
+        private IStore<CK, CV> childStore;
+        private Class<M> mclazz;
+
+        public SecondaryMultiLink(HK hk, Class<HK> hostKeyClass, String edgekind, Function<CV, M> nodeMetric, Class<M> mclazz, Class<CK> childKeyClass, IStore<CK, CV> childStore) {
+            super(hk, hostKeyClass, childKeyClass, edgekind);
+            this.nodeMetric = nodeMetric;
+            this.childStore = childStore;
+            this.mclazz = mclazz;
+        }
+
+        @Override
+        protected Item createPutItem(CK ck) {
+            M m = metricForCK(ck);
+            return super.createPutItem(ck).with("m", m);
+        }
+
+        /** TODO: This is an additional request. Introduce cache
+         */
+        private M metricForCK(CK ck) {
+            CV cv = childStore.get(ck);
+            if (cv == null) {
+                throw new VelvetException("Connecting to node with key " + ck + " that does not exist.");
+            }
+            M m = nodeMetric.apply(cv);
+            return m;
+        }
+
+        @Override
+        protected void createTable() {
+            LocalSecondaryIndex localSecondaryIndex = new LocalSecondaryIndex()
+                .withIndexName("metric")
+                .withKeySchema(new KeySchemaElement("hk", KeyType.HASH), new KeySchemaElement("m", KeyType.RANGE))
+                .withProjection(new Projection().withProjectionType(ProjectionType.KEYS_ONLY));
+
+            table = makeTable(makeTableRequest(tableName, "hk", keyType(hostKeyClass), "ck", keyType(childKeyClass)) // TODO copied from multilink
+                .withLocalSecondaryIndexes(localSecondaryIndex)
+                .withAttributeDefinitions(new AttributeDefinition("m", keyType(mclazz)))
+            );
+        }
+
+        @Override
+        public void update(CK ck) {
+            // TODO: better solution is possible
+           delete(ck);
+           put(ck);
+        }
+
+        @Override
+        public List<CK> keys(IRangeQuery<CK, M> query) {
+            QuerySpec qs = new QuerySpec()
+                    .withAttributesToGet("ck", "m")
+                    .withHashKey(keyFor());
+
+            IQueryAnchor<CK, M> lowAnchor = query.getLowAnchor();
+            IQueryAnchor<CK, M> highAnchor = query.getHighAnchor();
+            M lowM = null;
+            M highM = null;
+            if (lowAnchor != null) {
+                lowM = lowAnchor.getKey() == null ? lowAnchor.getMetric() : metricForCK(lowAnchor.getKey());
+            }
+            if (highAnchor != null) {
+                highM = highAnchor.getKey() == null ? highAnchor.getMetric() : metricForCK(highAnchor.getKey());
+            }
+            if (lowM != null && highM == null) {
+                RangeKeyCondition condition = new RangeKeyCondition("m");
+                condition = lowAnchor.isIncluding() ? condition.ge(lowM) : condition.gt(lowM);
+                qs.withRangeKeyCondition(condition);
+            } else if (lowM == null && highM != null) {
+                RangeKeyCondition condition = new RangeKeyCondition("m");
+                condition = highAnchor.isIncluding() ? condition.le(highM) : condition.lt(highM);
+                qs.withRangeKeyCondition(condition);
+            } else if (lowM != null && highM != null) {
+                if (lowM.compareTo(highM) > 0)
+                    return Collections.emptyList();
+                RangeKeyCondition condition = new RangeKeyCondition("m").between(lowM, highM);
+                qs.withRangeKeyCondition(condition);
+            }
+//            TODO: perf: is any limit possible ?
+//            if (query.getLimit() > 0) {
+//                int number = query.getLimit() + query.getOffset();
+//                qs.withMaxResultSize(number + 2); // possible exclusion
+//            }
+            if (!query.isAscending()) {
+                qs.withScanIndexForward(false);
+            }
+            M lowM2 = lowM;
+            M highM2 = highM;
+            List<CK> cks = calcOnTable(() -> {
+                Index index = table.getIndex("metric");
+                ItemCollection<QueryOutcome> itemCollection = index.query(qs);
+
+                List<Item> debug = StreamSupport.stream(itemCollection.spliterator(), false).collect(Collectors.toList());
+
+                return StreamSupport.stream(itemCollection.spliterator(), false)
+                    .filter(item -> filterM(item, query, lowM2, highM2))
+                    .skip(query.getOffset())
+                    .limit(query.getLimit() >= 0 ? query.getLimit() : Integer.MAX_VALUE)
+                    .map(item -> valueFromItem(item, childKeyClass, "ck", true))
+                    .collect(Collectors.toList());
+            }, this::createTable);
+            return cks;
+        }
+
+        private boolean filterM(Item item, IRangeQuery<CK, M> query, M lowM2, M highM2) {
+            CK ck = valueFromItem(item, childKeyClass, "ck", true);
+            M m = valueFromItem(item, mclazz, "m", true);
+            IQueryAnchor<CK, M> lowAnchor = query.getLowAnchor();
+            if (lowAnchor != null) {
+                int c = m.compareTo(lowM2);
+                if (c < 0 || c == 0 && !lowAnchor.isIncluding())
+                    return false;
+                if (lowAnchor.getKey() != null && !lowAnchor.isIncluding() && lowAnchor.getKey().equals(ck)) {
+                    return false;
+                }
+            }
+            IQueryAnchor<CK, M> highAnchor = query.getHighAnchor();
+            if (highAnchor != null) {
+                int c = m.compareTo(highM2);
+                if (c > 0 || c == 0 && !highAnchor.isIncluding())
+                    return false;
+                if (highAnchor.getKey() != null && !highAnchor.isIncluding() && highAnchor.getKey().equals(ck)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+    }
+
 
 }

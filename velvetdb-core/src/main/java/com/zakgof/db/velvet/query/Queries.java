@@ -245,7 +245,6 @@ public class Queries {
         public K getKey() {
             return key;
         }
-
     }
 
 }
