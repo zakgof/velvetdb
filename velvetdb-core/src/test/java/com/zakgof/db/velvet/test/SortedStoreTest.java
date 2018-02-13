@@ -5,7 +5,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.ISortableEntityDef;
@@ -46,7 +49,6 @@ public class SortedStoreTest extends AVelvetTxnTest {
         final ISortableEntityDef<String, TestEnt> ENTITY = Entities.from(TestEnt.class).kind("testentsorted").makeSorted();
         ENTITY.put(velvet, new TestEnt("Aaa", 7.1f));
         ENTITY.put(velvet, new TestEnt("ab", 9.1f));
-        ENTITY.put(velvet, new TestEnt("", 0.1f));
         ENTITY.put(velvet, new TestEnt("Az", 6.1f));
         ENTITY.put(velvet, new TestEnt("b", 1.1f));
         ENTITY.put(velvet, new TestEnt("Aa", 5.1f));
@@ -55,7 +57,7 @@ public class SortedStoreTest extends AVelvetTxnTest {
         ENTITY.put(velvet, new TestEnt("Aaa", 7.1f));
         ENTITY.put(velvet, new TestEnt("ab", 9.1f));
         List<String> list = ENTITY.get(velvet).stream().map(TestEnt::getKey).collect(Collectors.toList());
-        Assert.assertEquals(Arrays.asList("", "Aa", "Aaa", "Az", "a", "aaaa", "ab", "b"), list);
+        Assert.assertEquals(Arrays.asList("Aa", "Aaa", "Az", "a", "aaaa", "ab", "b"), list);
     }
 
     @Test

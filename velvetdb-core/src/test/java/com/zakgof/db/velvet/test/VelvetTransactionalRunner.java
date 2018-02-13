@@ -19,7 +19,6 @@ public class VelvetTransactionalRunner extends BlockJUnit4ClassRunner {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                System.err.println("VelvetTestSuite.velvetProvider = " + VelvetTestSuite.velvetProvider);
                 VelvetTestSuite.velvetProvider.get().execute(velvet -> {
                     Field velvetField = target.getClass().getField("velvet");
                     velvetField.set(target, velvet);
