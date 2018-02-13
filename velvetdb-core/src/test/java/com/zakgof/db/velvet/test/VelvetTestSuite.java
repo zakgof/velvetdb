@@ -19,19 +19,18 @@ import com.zakgof.db.velvet.VelvetFactory;
 
 @SuiteClasses({
 
+
     PrimarySortedLinkTest.class,
     PrimarySortedLinkTest2.class,
     SortedStoreTest.class,
+    SimpleLinkTest.class,
     KeylessTest.class,
     PutGetTest.class,
-    SimpleLinkTest.class,
 
-  /*
+    /*
     StoreIndexesTest.class,
     SecondarySortedLinkTest.class,
     PerformanceTest.class,
-    ConcurrentWriteTest.class,
-
     */
 })
 
@@ -53,11 +52,14 @@ public abstract class VelvetTestSuite {
     private static IVelvetEnvironment createVelvet(String providerName) {
         tearDownClass();
         if (providerName.equals("datastore")) {
-            String url =  StrSubstitutor.replaceSystemProperties("velvetdb://datastore/${velvetdb.datastore.projectId}/?credentialPath=${velvetdb.datastore.credentialPath}&proxyHost=${velvetdb.datastore.proxyHost}&proxyPort=${velvetdb.datastore.proxyPort}&proxyUser=${velvetdb.datastore.proxyUser}&proxyPassword=${velvetdb.datastore.proxyPassword}");
+            String url =  StrSubstitutor.replaceSystemProperties("velvetdb://datastore/${velvetdb.datastore.projectId}/?credentialPath=${velvetdb.datastore.credentialPath}&proxyHost=${velvetdb.proxyHost}&proxyPort=${velvetdb.proxyPort}&proxyUser=${velvetdb.proxyUser}&proxyPassword=${velvetdb.proxyPassword}");
             env = VelvetFactory.open(url);
         } else if (providerName.equals("dynamodb")) {
-            String url =  StrSubstitutor.replaceSystemProperties("velvetdb://dynamodb/us-west-2?awsAccessKeyId=${velvetdb.aws.accessKeyId}&awsSecretKey=${velvetdb.aws.secretKey}");
+            String url =  StrSubstitutor.replaceSystemProperties("velvetdb://dynamodb/us-west-2?awsAccessKeyId=${velvetdb.aws.accessKeyId}&awsSecretKey=${velvetdb.aws.secretKey}&proxyHost=${velvetdb.proxyHost}&proxyPort=${velvetdb.proxyPort}&proxyUser=${velvetdb.proxyUser}&proxyPassword=${velvetdb.proxyPassword}");
             env = VelvetFactory.open(url);
+            env.execute(velvet -> {
+                velvet.getClass().getDeclaredMethod("killAll").invoke(velvet);
+            });
         } else{
             new File(PATH).mkdirs();
             env = VelvetFactory.open("velvetdb://" + providerName + "/" + PATH.replace(File.separatorChar, '/'));
