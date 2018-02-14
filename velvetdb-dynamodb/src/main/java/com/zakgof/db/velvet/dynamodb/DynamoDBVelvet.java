@@ -1,7 +1,13 @@
 package com.zakgof.db.velvet.dynamodb;
 
 import java.io.ByteArrayInputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -9,9 +15,34 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.amazonaws.services.dynamodbv2.document.*;
-import com.amazonaws.services.dynamodbv2.document.spec.*;
-import com.amazonaws.services.dynamodbv2.model.*;
+import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Index;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
+import com.amazonaws.services.dynamodbv2.document.KeyAttribute;
+import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
+import com.amazonaws.services.dynamodbv2.document.RangeKeyCondition;
+import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
+import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.TableCollection;
+import com.amazonaws.services.dynamodbv2.document.TableWriteItems;
+import com.amazonaws.services.dynamodbv2.document.spec.BatchWriteItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
+import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
+import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
+import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.GlobalSecondaryIndex;
+import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
+import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
+import com.amazonaws.services.dynamodbv2.model.LocalSecondaryIndex;
+import com.amazonaws.services.dynamodbv2.model.Projection;
+import com.amazonaws.services.dynamodbv2.model.ProjectionType;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
+import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.primitives.Primitives;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
@@ -32,7 +63,7 @@ public class DynamoDBVelvet implements IVelvet {
         throw new VelvetException("Unsupported key class for dynamodb velvet: " + cl);
     }
 
-    private <T> T calcOnTable(Callable<T> callable, Runnable tableCreator) {
+    private static <T> T calcOnTable(Callable<T> callable, Runnable tableCreator) {
         try {
             try {
                 return callable.call();
@@ -123,6 +154,129 @@ public class DynamoDBVelvet implements IVelvet {
         );
     }
 
+    private <CK, M extends Comparable <? super M>, V> boolean filterM(Item item, IRangeQuery<CK, M> query, M lowM2, M highM2, Class<CK> keyClass, Class<M> mClass, String keyAttr, String mAttr) {
+        CK ck = valueFromItem(item, keyClass, keyAttr, true);
+        M m = valueFromItem(item, mClass, mAttr, true);
+        IQueryAnchor<CK, M> lowAnchor = query.getLowAnchor();
+        if (lowAnchor != null) {
+            int c = m.compareTo(lowM2);
+            if (c < 0 || c == 0 && !lowAnchor.isIncluding())
+                return false;
+            if (lowAnchor.getKey() != null && !lowAnchor.isIncluding() && lowAnchor.getKey().equals(ck)) {
+                return false;
+            }
+        }
+        IQueryAnchor<CK, M> highAnchor = query.getHighAnchor();
+        if (highAnchor != null) {
+            int c = m.compareTo(highM2);
+            if (c > 0 || c == 0 && !highAnchor.isIncluding())
+                return false;
+            if (highAnchor.getKey() != null && !highAnchor.isIncluding() && highAnchor.getKey().equals(ck)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static <K, V, M extends Comparable<? super M>> M scanKeyMetric(IStore<K, V> store, Function<V, M> metric, K key) {
+        V v = store.get(key);
+        if (v == null) {
+            throw new VelvetException("Attempting to get index from node with key " + key + " that does not exist.");
+        }
+        M m = metric.apply(v);
+        return m;
+    }
+
+    private <K, V, M extends Comparable<? super M>> List<K> scanSecondary(IRangeQuery<K, M> query, Index index, IStore<K, V> store, Function<V, M> metric, KeyAttribute hashKey, Class<K> keyClass, Class<M> mClass, String keyAttr, String mAttr, Runnable tableCreator) {
+
+            QuerySpec qs = new QuerySpec()
+                    .withAttributesToGet(keyAttr, mAttr)
+                    .withHashKey(hashKey);
+
+            IQueryAnchor<K, M> lowAnchor = query.getLowAnchor();
+            IQueryAnchor<K, M> highAnchor = query.getHighAnchor();
+            M lowM = null;
+            M highM = null;
+            if (lowAnchor != null) {
+                lowM = lowAnchor.getKey() == null ? lowAnchor.getMetric() : scanKeyMetric(store, metric, lowAnchor.getKey());
+            }
+            if (highAnchor != null) {
+                highM = highAnchor.getKey() == null ? highAnchor.getMetric() : scanKeyMetric(store, metric, highAnchor.getKey());
+            }
+            if (lowM != null && highM == null) {
+                RangeKeyCondition condition = new RangeKeyCondition(mAttr);
+                condition = lowAnchor.isIncluding() ? condition.ge(lowM) : condition.gt(lowM);
+                qs.withRangeKeyCondition(condition);
+            } else if (lowM == null && highM != null) {
+                RangeKeyCondition condition = new RangeKeyCondition(mAttr);
+                condition = highAnchor.isIncluding() ? condition.le(highM) : condition.lt(highM);
+                qs.withRangeKeyCondition(condition);
+            } else if (lowM != null && highM != null) {
+                if (lowM.compareTo(highM) > 0)
+                    return Collections.emptyList();
+                RangeKeyCondition condition = new RangeKeyCondition(mAttr).between(lowM, highM);
+                qs.withRangeKeyCondition(condition);
+            }
+    //        TODO: perf: is any limit possible ?
+    //        if (query.getLimit() > 0) {
+    //            int number = query.getLimit() + query.getOffset();
+    //            qs.withMaxResultSize(number + 2); // possible exclusion
+    //        }
+            if (!query.isAscending()) {
+                qs.withScanIndexForward(false);
+            }
+            M lowM2 = lowM;
+            M highM2 = highM;
+            List<K> cks = calcOnTable(() -> {
+                ItemCollection<QueryOutcome> itemCollection = index.query(qs);
+
+                List<Item> debug = StreamSupport.stream(itemCollection.spliterator(), false).collect(Collectors.toList());
+
+                return StreamSupport.stream(itemCollection.spliterator(), false)
+                    .filter(item -> filterM(item, query, lowM2, highM2, keyClass, mClass, keyAttr, mAttr))
+                    .skip(query.getOffset())
+                    .limit(query.getLimit() >= 0 ? query.getLimit() : Integer.MAX_VALUE)
+                    .map(item -> valueFromItem(item, keyClass, keyAttr, true))
+                    .collect(Collectors.toList());
+            }, tableCreator);
+            return cks;
+        }
+
+    private void cleanTable(Table table) {
+        List<TableWriteItems> writes = new ArrayList<>();
+        System.err.print("Cleaning up " + table.getTableName() + "... ");
+
+        try {
+
+            if (table.getDescription() == null)
+                table.describe();
+            List<KeySchemaElement> keySchema = table.getDescription().getKeySchema();
+            String[] attrs = keySchema.stream().map(KeySchemaElement::getAttributeName).toArray(String[]::new);
+            TableWriteItems tableWriteItems = new TableWriteItems(table.getTableName());
+            ItemCollection<ScanOutcome> itemCollection = table.scan(new ScanSpec().withAttributesToGet(attrs));
+            StreamSupport.stream(itemCollection.spliterator(), false)
+                .map((Item item) -> itemToPrimaryKey(item))
+                .forEach(pk -> tableWriteItems.addPrimaryKeyToDelete(pk));
+
+            if (tableWriteItems.getPrimaryKeysToDelete() != null && !tableWriteItems.getPrimaryKeysToDelete().isEmpty()) {
+                writes.add(tableWriteItems);
+                System.err.println("batched (" + tableWriteItems.getPrimaryKeysToDelete().size() + " items)");
+            } else {
+                System.err.println("no items.");
+            }
+            if (!writes.isEmpty()) {
+                db.batchWriteItem(new BatchWriteItemSpec().withTableWriteItems(writes.toArray(new TableWriteItems[0])));
+            }
+        } catch (ResourceNotFoundException e) {
+            System.err.println("error " + e);
+        }
+    }
+
+    private PrimaryKey itemToPrimaryKey(Item item) {
+        KeyAttribute[] keyAttributes = item.asMap().entrySet().stream().map(e -> new KeyAttribute(e.getKey(), e.getValue())).toArray(KeyAttribute[]::new);
+        return new PrimaryKey(keyAttributes);
+    }
+
     DynamoDBVelvet(DynamoDB db, Supplier<ISerializer> serializerSupplier) {
         this.db = db;
         this.serializerSupplier = serializerSupplier;
@@ -166,40 +320,11 @@ public class DynamoDBVelvet implements IVelvet {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+            } else {
+                cleanTable(table);
             }
-            cleanTable(table);
         }
         System.err.println("----------------");
-    }
-
-    private void cleanTable(Table table) {
-        List<TableWriteItems> writes = new ArrayList<>();
-        System.err.print("Cleaning up " + table.getTableName() + "... ");
-
-        if (table.getDescription() == null)
-            table.describe();
-        List<KeySchemaElement> keySchema = table.getDescription().getKeySchema();
-        String[] attrs = keySchema.stream().map(KeySchemaElement::getAttributeName).toArray(String[]::new);
-        TableWriteItems tableWriteItems = new TableWriteItems(table.getTableName());
-        ItemCollection<ScanOutcome> itemCollection = table.scan(new ScanSpec().withAttributesToGet(attrs));
-        StreamSupport.stream(itemCollection.spliterator(), false)
-            .map((Item item) -> itemToPrimaryKey(item))
-            .forEach(pk -> tableWriteItems.addPrimaryKeyToDelete(pk));
-
-        if (tableWriteItems.getPrimaryKeysToDelete() != null && !tableWriteItems.getPrimaryKeysToDelete().isEmpty()) {
-            writes.add(tableWriteItems);
-            System.err.println("batched (" + tableWriteItems.getPrimaryKeysToDelete().size() + " items)");
-        } else {
-            System.err.println("no items.");
-        }
-        if (!writes.isEmpty()) {
-            db.batchWriteItem(new BatchWriteItemSpec().withTableWriteItems(writes.toArray(new TableWriteItems[0])));
-        }
-    }
-
-    private PrimaryKey itemToPrimaryKey(Item item) {
-        KeyAttribute[] keyAttributes = item.asMap().entrySet().stream().map(e -> new KeyAttribute(e.getKey(), e.getValue())).toArray(KeyAttribute[]::new);
-        return new PrimaryKey(keyAttributes);
     }
 
     private class Store<K, V> implements IStore<K, V> {
@@ -208,12 +333,24 @@ public class DynamoDBVelvet implements IVelvet {
         protected String kind;
         protected Class<V> valueClass;
         protected Table table;
+        protected Collection<IStoreIndexDef<?, V>> indexes;
+        private Map<String, StoreIndex<?>> indexMap;
 
+        /**
+         * hash key: id
+         * attribute: v
+         *
+         * indexes:
+         * common hash key: ipartition
+         * range key: index-indexname
+         */
         public Store(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes) {
             this.keyClass = keyClass;
             this.valueClass = valueClass;
             this.kind = kind;
             this.table = db.getTable(kind);
+            this.indexes = indexes;
+            this.indexMap = indexes.stream().collect(Collectors.toMap(IStoreIndexDef::name, StoreIndex::new));
         }
 
         @Override
@@ -234,7 +371,7 @@ public class DynamoDBVelvet implements IVelvet {
         @Override
         public void put(K key, V value) {
             Object v = valueToObject(value);
-            Item item = createPutItem(key, v);
+            Item item = createPutItem(key, v, value);
             doOnTable(() -> table.putItem(item), this::createTable);
         }
 
@@ -283,24 +420,48 @@ public class DynamoDBVelvet implements IVelvet {
             return keys().size();
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public <M extends Comparable<? super M>> IStoreIndex<K, M> index(String name) {
-            // TODO Auto-generated method stub
-            return null;
+            IStoreIndex<K, M> index = (IStoreIndex<K, M>) indexMap.get(name);
+            if (index == null) {
+                throw new VelvetException("Index not found " + name);
+            }
+            return index;
         }
-
-
 
         protected Item getByKey(K key) {
             return table.getItem("id", key);
         }
 
         protected void createTable() {
-            table = makeTable(makeTableRequest(kind, "id",  keyType(keyClass)));
+            CreateTableRequest tableRequest = makeTableRequest(kind, "id",  keyType(keyClass));
+            if (!indexes.isEmpty()) {
+                tableRequest.withAttributeDefinitions(new AttributeDefinition("ipartition", ScalarAttributeType.N));
+                for (IStoreIndexDef<?, V> index : indexes) {
+                    GlobalSecondaryIndex gsi = new GlobalSecondaryIndex()
+                        .withIndexName("index-" + index.name())
+                        .withProvisionedThroughput(new ProvisionedThroughput(1L, 1L))
+                        .withProjection(new Projection().withProjectionType(ProjectionType.KEYS_ONLY))
+                        .withKeySchema(new KeySchemaElement("ipartition", KeyType.HASH),
+                                       new KeySchemaElement("i-" + index.name(), KeyType.RANGE));
+
+                    tableRequest.withAttributeDefinitions(new AttributeDefinition("i-" + index.name(), keyType(index.clazz())))
+                        .withGlobalSecondaryIndexes(gsi);
+                }
+            }
+            table = makeTable(tableRequest);
         }
 
-        protected Item createPutItem(K key, Object v) {
-            return new Item().with("v", v).withKeyComponents(keyFor(key));
+        protected Item createPutItem(K key, Object v, V value) {
+            Item item = new Item().with("v", v).withKeyComponents(keyFor(key));
+            if (!indexes.isEmpty()) {
+                item.with("ipartition", 1);
+                for (IStoreIndexDef<?, V> index: indexes) {
+                    item.with("i-" + index.name(), index.metric().apply(value));
+                }
+            }
+            return item;
         }
 
         protected KeyAttribute[] keyFor(K key) {
@@ -323,7 +484,21 @@ public class DynamoDBVelvet implements IVelvet {
             throw new VelvetException("Unsupported key class for dynamodb velvet: " + keyClass);
         }
 
+        private class StoreIndex<M extends Comparable<? super M>> implements IStoreIndex<K, M> {
 
+            private IStoreIndexDef<M, V> indexDef;
+
+            private StoreIndex(IStoreIndexDef<M, V> indexDef) {
+                this.indexDef = indexDef;
+            }
+
+            @Override
+            public List<K> keys(IRangeQuery<K, M> query) {
+                Index index = table.getIndex("index-" + indexDef.name());
+                KeyAttribute hashKey = new KeyAttribute("ipartition", 1);
+                return scanSecondary(query, index, Store.this, indexDef.metric(), hashKey, keyClass, indexDef.clazz(), "id", "i-" + indexDef.name(), Store.this::createTable);
+            }
+        }
     }
 
     private class SortedStore <K extends Comparable<? super K>, V> extends Store<K, V> implements ISortedStore<K, V> {
@@ -405,7 +580,7 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
         @Override
-        protected Item createPutItem(K key, Object v) {
+        protected Item createPutItem(K key, Object v, V value) {
             return new Item()
                .with("v", v)
                .withKeyComponent("partition", 1)
@@ -630,19 +805,8 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         protected Item createPutItem(CK ck) {
-            M m = metricForCK(ck);
+            M m = scanKeyMetric(childStore, nodeMetric, ck);
             return super.createPutItem(ck).with("m", m);
-        }
-
-        /** TODO: This is an additional request. Introduce cache
-         */
-        private M metricForCK(CK ck) {
-            CV cv = childStore.get(ck);
-            if (cv == null) {
-                throw new VelvetException("Connecting to node with key " + ck + " that does not exist.");
-            }
-            M m = nodeMetric.apply(cv);
-            return m;
         }
 
         @Override
@@ -667,85 +831,13 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         public List<CK> keys(IRangeQuery<CK, M> query) {
-            QuerySpec qs = new QuerySpec()
-                    .withAttributesToGet("ck", "m")
-                    .withHashKey(keyFor());
-
-            IQueryAnchor<CK, M> lowAnchor = query.getLowAnchor();
-            IQueryAnchor<CK, M> highAnchor = query.getHighAnchor();
-            M lowM = null;
-            M highM = null;
-            if (lowAnchor != null) {
-                lowM = lowAnchor.getKey() == null ? lowAnchor.getMetric() : metricForCK(lowAnchor.getKey());
-            }
-            if (highAnchor != null) {
-                highM = highAnchor.getKey() == null ? highAnchor.getMetric() : metricForCK(highAnchor.getKey());
-            }
-            if (lowM != null && highM == null) {
-                RangeKeyCondition condition = new RangeKeyCondition("m");
-                condition = lowAnchor.isIncluding() ? condition.ge(lowM) : condition.gt(lowM);
-                qs.withRangeKeyCondition(condition);
-            } else if (lowM == null && highM != null) {
-                RangeKeyCondition condition = new RangeKeyCondition("m");
-                condition = highAnchor.isIncluding() ? condition.le(highM) : condition.lt(highM);
-                qs.withRangeKeyCondition(condition);
-            } else if (lowM != null && highM != null) {
-                if (lowM.compareTo(highM) > 0)
-                    return Collections.emptyList();
-                RangeKeyCondition condition = new RangeKeyCondition("m").between(lowM, highM);
-                qs.withRangeKeyCondition(condition);
-            }
-//            TODO: perf: is any limit possible ?
-//            if (query.getLimit() > 0) {
-//                int number = query.getLimit() + query.getOffset();
-//                qs.withMaxResultSize(number + 2); // possible exclusion
-//            }
-            if (!query.isAscending()) {
-                qs.withScanIndexForward(false);
-            }
-            M lowM2 = lowM;
-            M highM2 = highM;
-            List<CK> cks = calcOnTable(() -> {
-                Index index = table.getIndex("metric");
-                ItemCollection<QueryOutcome> itemCollection = index.query(qs);
-
-                List<Item> debug = StreamSupport.stream(itemCollection.spliterator(), false).collect(Collectors.toList());
-
-                return StreamSupport.stream(itemCollection.spliterator(), false)
-                    .filter(item -> filterM(item, query, lowM2, highM2))
-                    .skip(query.getOffset())
-                    .limit(query.getLimit() >= 0 ? query.getLimit() : Integer.MAX_VALUE)
-                    .map(item -> valueFromItem(item, childKeyClass, "ck", true))
-                    .collect(Collectors.toList());
-            }, this::createTable);
-            return cks;
-        }
-
-        private boolean filterM(Item item, IRangeQuery<CK, M> query, M lowM2, M highM2) {
-            CK ck = valueFromItem(item, childKeyClass, "ck", true);
-            M m = valueFromItem(item, mclazz, "m", true);
-            IQueryAnchor<CK, M> lowAnchor = query.getLowAnchor();
-            if (lowAnchor != null) {
-                int c = m.compareTo(lowM2);
-                if (c < 0 || c == 0 && !lowAnchor.isIncluding())
-                    return false;
-                if (lowAnchor.getKey() != null && !lowAnchor.isIncluding() && lowAnchor.getKey().equals(ck)) {
-                    return false;
-                }
-            }
-            IQueryAnchor<CK, M> highAnchor = query.getHighAnchor();
-            if (highAnchor != null) {
-                int c = m.compareTo(highM2);
-                if (c > 0 || c == 0 && !highAnchor.isIncluding())
-                    return false;
-                if (highAnchor.getKey() != null && !highAnchor.isIncluding() && highAnchor.getKey().equals(ck)) {
-                    return false;
-                }
-            }
-            return true;
+            Index index = table.getIndex("metric");
+            return scanSecondary(query, index, childStore, nodeMetric, keyFor(), childKeyClass, mclazz, "ck", "m", this::createTable);
         }
 
     }
+
+
 
 
 }

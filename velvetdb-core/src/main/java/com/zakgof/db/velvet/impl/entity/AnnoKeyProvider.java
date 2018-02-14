@@ -51,7 +51,8 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
                 FieldProperty<Object, V> fieldProperty = new FieldProperty<>(field);
                 Index indexAnno = field.getAnnotation(Index.class);
                 if (indexAnno != null) {
-                    secIndexMap.put(indexAnno.name(), fieldProperty);
+                    String indexName = indexAnno.name().isEmpty() ? field.getName() : indexAnno.name();
+                    secIndexMap.put(indexName, fieldProperty);
                 }
                 propMap.put(field.getName(), fieldProperty);
             }
@@ -73,12 +74,20 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
                 Index indexAnno = method.getAnnotation(Index.class);
                 if (indexAnno != null) {
                     MethodProperty<Object, V> indexProp = new MethodProperty<>(method);
-                    secIndexMap.put(indexAnno.name(), indexProp);
+                    String indexName = indexAnno.name().isEmpty() ? indexNameFromMethod(method.getName()) : indexAnno.name();
+                    secIndexMap.put(indexName, indexProp);
                 }
             }
 
         }
         // throw new VelvetException("No annotation for key found in " + valueClass);
+    }
+
+    private String indexNameFromMethod(String methodName) {
+        if (methodName.startsWith("get") && methodName.length() > 3) {
+            return Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);
+        }
+        return methodName;
     }
 
     // TODO skip static and transient ?
@@ -134,7 +143,8 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
 
     @SuppressWarnings("unchecked")
     private IStoreIndexDef<?, V> createIndexDefX(Entry<String, IProperty<?, V>> e) {
-        return createIndexDef((Map.Entry)e);
+        IStoreIndexDef<?, V> indexDef = createIndexDef((Map.Entry)e);
+        return indexDef;
     }
 
     private <M extends Comparable<M>> IStoreIndexDef<M, V> createIndexDef(Map.Entry<String, IProperty<M, V>> entry) {
@@ -148,6 +158,13 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
             public Function<V, M> metric() {
                 return v -> entry.getValue().get(v);
             }
+
+            @Override
+            public Class<M> clazz() {
+                return entry.getValue().getType();
+            }
+
+
         };
     }
 

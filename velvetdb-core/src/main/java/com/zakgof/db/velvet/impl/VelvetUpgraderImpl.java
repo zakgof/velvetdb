@@ -49,8 +49,8 @@ class VelvetUpgraderImpl implements IVelvetUpgrader, IUpgrader {
     private Map<Class<?>, Byte> actualVersions = new HashMap<>();
 
     private IEntityDef<String, ClassVersion> CLASS_VERSION = Entities.from(ClassVersion.class)
-        .index("class", ClassVersion::getClassName)
-        .index("version", ClassVersion::getVersion)
+        .index("class", ClassVersion::getClassName, String.class)
+        .index("version", ClassVersion::getVersion, byte.class)
         .make();
 
     private Map<Class<?>, Mode> classMap = new HashMap<>();
