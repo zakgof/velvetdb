@@ -46,6 +46,7 @@ public interface IVelvet {
     public interface IStoreIndexDef<M extends Comparable<? super M>, V> {
         public String name();
         public Function<V, M> metric();
+        public Class<M> clazz();
     }
 
     public interface ISortedStore<K extends Comparable<? super K>, V> extends IStore<K, V>, IStoreIndex<K, K> {

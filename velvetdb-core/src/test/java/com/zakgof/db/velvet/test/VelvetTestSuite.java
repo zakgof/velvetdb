@@ -19,6 +19,7 @@ import com.zakgof.db.velvet.VelvetFactory;
 
 @SuiteClasses({
 
+    StoreIndexesAnnoTest.class,
     StoreIndexesTest.class,
 
     /*
@@ -60,7 +61,7 @@ public abstract class VelvetTestSuite {
             env = VelvetFactory.open(url);
         } else if (providerName.equals("dynamodb")) {
             if (env == null) {
-                String url =  StrSubstitutor.replaceSystemProperties("velvetdb://dynamodb/us-west-2?awsAccessKeyId=${velvetdb.aws.accessKeyId}&awsSecretKey=${velvetdb.aws.secretKey}"); // &proxyHost=${velvetdb.proxyHost}&proxyPort=${velvetdb.proxyPort}&proxyUser=${velvetdb.proxyUser}&proxyPassword=${velvetdb.proxyPassword}");            )
+                String url =  StrSubstitutor.replaceSystemProperties("velvetdb://dynamodb/us-west-2?awsAccessKeyId=${velvetdb.aws.accessKeyId}&awsSecretKey=${velvetdb.aws.secretKey}&proxyHost=${velvetdb.proxyHost}&proxyPort=${velvetdb.proxyPort}&proxyUser=${velvetdb.proxyUser}&proxyPassword=${velvetdb.proxyPassword}");
                 env = VelvetFactory.open(url);
                 env.execute(velvet -> {
                     velvet.getClass().getDeclaredMethod("killAll", boolean.class).invoke(velvet, false);
