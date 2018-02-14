@@ -142,7 +142,7 @@ public class IslandModel {
     }
 
     public <K, V> List<DataWrap<K, V>> getAll(IVelvet velvet, IEntityDef<K, V> entityDef) {
-        Stream<DataWrap<K, V>> stream = entityDef.get(velvet)
+        Stream<DataWrap<K, V>> stream = entityDef.getAll(velvet)
           .stream()
           .map(node -> createWrap(velvet, entityDef, node, null));
         stream = sortTheseWraps(entityDef, stream);
@@ -273,7 +273,7 @@ public class IslandModel {
     }
 
     public static <K, V> List<DataWrap<K, V>> rawRetchAll(IVelvet velvet, IEntityDef<K, V> entityDef) {
-        List<DataWrap<K, V>> nodes = entityDef.get(velvet).stream().map(node -> new DataWrap<>(node, entityDef.keyOf(node))).collect(Collectors.toList());
+        List<DataWrap<K, V>> nodes = entityDef.getAll(velvet).stream().map(node -> new DataWrap<>(node, entityDef.keyOf(node))).collect(Collectors.toList());
         return nodes;
     }
 

@@ -38,14 +38,14 @@ public class KeylessTest extends AVelvetTxnTest {
 
     @Test
     public void testGetAll() {
-        List<Integer> all = ENTITY.get(velvet).stream().map(KeylessEnt::getNum).collect(Collectors.toList());
+        List<Integer> all = ENTITY.getAll(velvet).stream().map(KeylessEnt::getNum).collect(Collectors.toList());
         Assert.assertEquals(new HashSet<>(Arrays.asList(7, 5, 2, 3, 1)), new HashSet<>(all));
     }
 
     @Test
     public void testTraverse() {
 
-        List<Integer> order = ENTITY.get(velvet).stream().map(KeylessEnt::getNum).collect(Collectors.toList());
+        List<Integer> order = ENTITY.getAll(velvet).stream().map(KeylessEnt::getNum).collect(Collectors.toList());
 
         KeylessEnt first = ENTITY.get(velvet, Queries.first());
         Assert.assertEquals(order.get(0).intValue(), first.getNum());
