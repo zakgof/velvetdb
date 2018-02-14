@@ -43,6 +43,7 @@ public class DynamoDBVelvetEnv extends AVelvetEnvironment {
                 clientConfig.withProxyPassword(proxyPassword);
             }
         }
+        clientConfig.withMaxErrorRetry(24);
 
         AmazonDynamoDB dynamodb = AmazonDynamoDBClientBuilder
            .standard()

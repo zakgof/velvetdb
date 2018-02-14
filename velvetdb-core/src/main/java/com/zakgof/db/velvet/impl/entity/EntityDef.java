@@ -71,8 +71,13 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     }
 
     @Override
-    public byte[] getRaw(IVelvet velvet, K key) {
-        return store(velvet).getRaw(key);
+    public List<V> get(IVelvet velvet, Collection<K> keys) {
+        return store(velvet).get(keys);
+    }
+
+    @Override
+    public List<V> getAll(IVelvet velvet) {
+        return store(velvet).getAll();
     }
 
     @Override

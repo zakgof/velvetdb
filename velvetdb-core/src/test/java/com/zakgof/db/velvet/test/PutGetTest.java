@@ -27,7 +27,7 @@ public class PutGetTest extends AVelvetTxnTest {
             Assert.assertEquals(d * 0.001f, ent.getVal(), 1e-5);
         }
         Assert.assertNull(ENTITY.get(velvet, "key1001"));
-        List<TestEnt> allValues = ENTITY.get(velvet);
+        List<TestEnt> allValues = ENTITY.getAll(velvet);
         Assert.assertEquals(COUNT, allValues.size());
         // cleanup
         for (int d = 0; d < COUNT; d++) {
@@ -51,7 +51,7 @@ public class PutGetTest extends AVelvetTxnTest {
             Assert.assertEquals("key" + d, ent.getKey());
             Assert.assertEquals(d * 0.002f, ent.getVal(), 1e-5);
         }
-        List<TestEnt> allValues = ENTITY.get(velvet);
+        List<TestEnt> allValues = ENTITY.getAll(velvet);
         Assert.assertEquals(COUNT, allValues.size());
      // cleanup
         for (int d = 0; d < COUNT; d++) {
@@ -68,7 +68,7 @@ public class PutGetTest extends AVelvetTxnTest {
         for (int d = 0; d < HALFCOUNT; d++) {
             ENTITY.deleteKey(velvet, "key" + d);
         }
-        List<TestEnt> allValues = ENTITY.get(velvet);
+        List<TestEnt> allValues = ENTITY.getAll(velvet);
         Assert.assertEquals(HALFCOUNT, allValues.size());
         for (int d = 0; d < HALFCOUNT; d++) {
             TestEnt ent = ENTITY.get(velvet, "key" + d);

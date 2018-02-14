@@ -56,7 +56,7 @@ public class SortedStoreTest extends AVelvetTxnTest {
         ENTITY.put(velvet, new TestEnt("aaaa", 8.1f));
         ENTITY.put(velvet, new TestEnt("Aaa", 7.1f));
         ENTITY.put(velvet, new TestEnt("ab", 9.1f));
-        List<String> list = ENTITY.get(velvet).stream().map(TestEnt::getKey).collect(Collectors.toList());
+        List<String> list = ENTITY.getAll(velvet).stream().map(TestEnt::getKey).collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList("Aa", "Aaa", "Az", "a", "aaaa", "ab", "b"), list);
     }
 

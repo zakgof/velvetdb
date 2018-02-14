@@ -3,6 +3,7 @@ package com.zakgof.db.velvet;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
@@ -20,15 +21,16 @@ public interface IVelvet {
     public <HK, CK, T, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex(HK key1, Class<HK> hostKeyClass, String edgekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<CK> keyClazz, IStore<CK, T> childStore);
 
     public interface IStore<K, V> {
+
         V get(K key);
 
-        byte[] getRaw(K key);
+        default List<V> get(Collection<K> keys) {
+            return keys.stream().map(k -> get(k)).collect(Collectors.toList());
+        }
 
-        void put(K key, V value);
-
-        K put(V value);
-
-        void delete(K key);
+        default List<V> getAll() {
+            return get(keys());
+        }
 
         List<K> keys();
 
@@ -36,7 +38,16 @@ public interface IVelvet {
 
         long size();
 
+        void put(K key, V value);
+
+        K put(V value);
+
+        void delete(K key);
+
         <M extends Comparable<? super M>> IStoreIndex<K, M> index(String name);
+
+        @Deprecated
+        byte[] getRaw(K key);
     }
 
     public interface IStoreIndex<K, M extends Comparable<? super M>> {
