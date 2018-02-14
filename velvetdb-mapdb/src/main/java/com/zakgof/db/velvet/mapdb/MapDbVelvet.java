@@ -416,7 +416,7 @@ public class MapDbVelvet implements IVelvet {
     // kinds.remove(kind);
     // }
     //
-    
+
     @Override
     public <HK, CK> ILink<HK, CK> simpleIndex(HK key1, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind, LinkType type) {
         if (type == LinkType.Single) {
@@ -426,12 +426,12 @@ public class MapDbVelvet implements IVelvet {
         }
         return null;
     }
-    
+
     @Override
-    public <HK, CK extends Comparable<? super CK>, T> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(HK key1, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+    public <HK, CK extends Comparable<? super CK>> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(HK key1, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
         return new PriMultiLink<>(key1, edgekind);
     }
-    
+
     @Override
     public <HK, CK, T, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex(HK key1, Class<HK> hostKeyClass, String edgekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<CK> keyClazz, IStore<CK, T> childStore) {
         return new SecMultiLink<>(key1, edgekind, nodeMetric, keyClazz, childStore);

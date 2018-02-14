@@ -17,7 +17,7 @@ repositories {
 compileTestJava.dependsOn tasks.getByPath(':velvetdb-core:testClasses')
 
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core:0.4.0-SNAPSHOT'
+    compile 'com.github.zakgof:velvetdb-core:0.4.1-SNAPSHOT'
     compile 'com.google.cloud:google-cloud-datastore:1.14.0'
     compile 'org.apache.httpcomponents:httpclient:4.2'
     
