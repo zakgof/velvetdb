@@ -41,6 +41,8 @@ public interface IEntityDef<K, V> {
 
     public K put(IVelvet velvet, K key, V value);
 
+    // TODO: performance batch put and delete
+
     // Delete
 
     public void deleteKey(IVelvet velvet, K key);
