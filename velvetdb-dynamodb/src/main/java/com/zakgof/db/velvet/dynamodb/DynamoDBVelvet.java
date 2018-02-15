@@ -406,7 +406,7 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         public boolean contains(K key) {
-            Item item = table.getItem("id", key);
+            Item item = calcOnTable(() -> table.getItem(keyFor(key)), this::createTable);
             return item != null;
         }
 
