@@ -1,6 +1,7 @@
 package com.zakgof.db.velvet;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -24,7 +25,7 @@ public interface IVelvet {
 
         V get(K key);
 
-        default List<V> get(Collection<K> keys) {
+        default List<V> get(List<K> keys) {
             return keys.stream().map(k -> get(k)).collect(Collectors.toList());
         }
 
@@ -42,7 +43,23 @@ public interface IVelvet {
 
         K put(V value);
 
+        default void put(List<K> keys, List<V> values) {
+            Iterator<K> keyit = keys.iterator();
+            Iterator<V> valit = values.iterator();
+            while(keyit.hasNext()) {
+                put(keyit.next(), valit.next());
+            }
+        }
+
+        default List<K> put(Collection<V> values) {
+            return values.stream().map(v -> put(v)).collect(Collectors.toList());
+        }
+
         void delete(K key);
+
+        default void delete(Collection<K> keys) {
+            keys.stream().forEach(this::delete);
+        }
 
         <M extends Comparable<? super M>> IStoreIndex<K, M> index(String name);
 

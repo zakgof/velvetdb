@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IStore;
@@ -71,7 +72,7 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     }
 
     @Override
-    public List<V> get(IVelvet velvet, Collection<K> keys) {
+    public List<V> get(IVelvet velvet, List<K> keys) {
         return store(velvet).get(keys);
     }
 
@@ -92,7 +93,8 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
 
     @Override
     public K put(IVelvet velvet, V value) {
-        return put(velvet, keyOf(value), value);
+        K key = keyOf(value);
+        return put(velvet, key, value);
     }
 
     @Override
@@ -102,8 +104,25 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     }
 
     @Override
+    public List<K> put(IVelvet velvet, List<V> values) {
+        List<K> keys = values.stream().map(this::keyOf).collect(Collectors.toList());
+        return put(velvet, keys, values);
+    }
+
+    @Override
+    public List<K> put(IVelvet velvet, List<K> keys, List<V> values) {
+        store(velvet).put(keys, values);
+        return keys;
+    }
+
+    @Override
     public void deleteKey(IVelvet velvet, K key) {
         store(velvet).delete(key);
+    }
+
+    @Override
+    public void deleteKeys(IVelvet velvet, List<K> keys) {
+        store(velvet).delete(keys);
     }
 
     @Override

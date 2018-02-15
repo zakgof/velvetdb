@@ -1,7 +1,7 @@
 package com.zakgof.db.velvet.entity;
 
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
@@ -24,7 +24,7 @@ public interface IEntityDef<K, V> {
 
     public V get(IVelvet velvet, K key);
 
-    public List<V> get(IVelvet velvet, Collection<K> keys);
+    public List<V> get(IVelvet velvet, List<K> keys);
 
     public List<V> getAll(IVelvet velvet);
 
@@ -41,14 +41,22 @@ public interface IEntityDef<K, V> {
 
     public K put(IVelvet velvet, K key, V value);
 
-    // TODO: performance batch put and delete
+    public List<K> put(IVelvet velvet, List<V> value);
+
+    public List<K> put(IVelvet velvet, List<K> keys, List<V> value);
 
     // Delete
 
     public void deleteKey(IVelvet velvet, K key);
 
+    public void deleteKeys(IVelvet velvet, List<K> keys);
+
     public default void deleteValue(IVelvet velvet, V value) {
         deleteKey(velvet, keyOf(value));
+    }
+
+    public default void deleteValues(IVelvet velvet, List<V> values) {
+        deleteKeys(velvet, values.stream().map(this::keyOf).collect(Collectors.toList()));
     }
 
     // Index
