@@ -1,8 +1,7 @@
 package com.zakgof.db.velvet;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -31,6 +30,22 @@ public interface IVelvet {
 
         default List<V> getAll() {
             return get(keys());
+        }
+
+        default Map<K, V> getAllAsMap() {
+            List<K> keys = keys();
+            List<V> vals = get(keys);
+            Map<K, V> map = new LinkedHashMap<>();
+            forboth(keys, vals, (k, v) -> map.put(k, v));
+            return map;
+        }
+
+        static <A, B> void forboth(Collection<A> collA, Collection<B> collB, BiConsumer<A, B> action) {
+            Iterator<A> itA = collA.iterator();
+            Iterator<B> itB = collB.iterator();
+            while(itA.hasNext()) {
+                action.accept(itA.next(), itB.next());
+            }
         }
 
         List<K> keys();

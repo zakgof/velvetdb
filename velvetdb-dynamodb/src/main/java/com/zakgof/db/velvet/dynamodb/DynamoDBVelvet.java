@@ -313,6 +313,7 @@ public class DynamoDBVelvet implements IVelvet {
          * common hash key: ipartition
          * range key: index-indexname
          */
+        @SuppressWarnings({ "rawtypes", "unchecked" })
         public Store(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes) {
             this.keyClass = keyClass;
             this.valueClass = valueClass;
@@ -342,6 +343,32 @@ public class DynamoDBVelvet implements IVelvet {
             Object v = valueToObject(value);
             Item item = createPutItem(key, v, value);
             doOnTable(() -> table.putItem(item), this::createTable);
+        }
+
+        @Override
+        public void put(List<K> keys, List<V> values) {
+            Iterator<V> iterator = values.iterator();
+            Iterator<K> kiterator = keys.iterator();
+            Map<String, List<WriteRequest>> unprocessedItems = new HashMap<>();
+            while (iterator.hasNext()) {
+                TableWriteItems twi = new TableWriteItems(kind);
+                List<Item> items = new ArrayList<>(25);
+                for (int i = unprocessedItems.size(); i < 25 && iterator.hasNext(); i++) {
+                    V value = iterator.next();
+                    Object v = valueToObject(value);
+                    Item item = createPutItem(kiterator.next(), v, value);
+                    items.add(item);
+                }
+                twi.withItemsToPut(items);
+                BatchWriteItemSpec bwis = new BatchWriteItemSpec().withTableWriteItems(twi);
+                if (!unprocessedItems.isEmpty())
+                    bwis.withUnprocessedItems(new HashMap<>(unprocessedItems));
+                System.err.print("Writing a batch: " + items.size() + " items + " + unprocessedItems.size() + " unprocessed items...");
+                BatchWriteItemOutcome outcome = calcOnTable(() -> db.batchWriteItem(bwis), this::createTable);
+                Map<String, List<WriteRequest>> newUnprocessedItems = outcome.getUnprocessedItems();
+                System.err.println("   ...done with " + newUnprocessedItems.size() + " unprocessed");
+                unprocessedItems.putAll(newUnprocessedItems);
+            }
         }
 
         private Object valueToObject(V value) {
