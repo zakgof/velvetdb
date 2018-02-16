@@ -1,14 +1,23 @@
 package com.zakgof.db.velvet.island;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.link.*;
+import com.zakgof.db.velvet.link.IMultiGetter;
+import com.zakgof.db.velvet.link.IMultiLinkDef;
+import com.zakgof.db.velvet.link.ISingleGetter;
+import com.zakgof.db.velvet.link.ISingleLinkDef;
 
 public class IslandModel {
 
@@ -135,16 +144,19 @@ public class IslandModel {
         return wrap(velvet, entityDef, entityDef.get(velvet, key));
     }
 
-    public <K, V> List<DataWrap<K, V>> getByKeys(IVelvet velvet, IEntityDef<K, V> entityDef, Collection<K> keys) {
-        Stream<DataWrap<K, V>> stream = keys.stream().map(key -> get(velvet, entityDef, key));
+    public <K, V> List<DataWrap<K, V>> getByKeys(IVelvet velvet, IEntityDef<K, V> entityDef, List<K> keys) {
+        Stream<DataWrap<K, V>> stream = entityDef.get(velvet, keys)
+            .stream()
+            .map(node -> createWrap(velvet, entityDef, node, null));
         stream = sortTheseWraps(entityDef, stream);
-        return stream.collect(Collectors.toList());
+        List<DataWrap<K, V>> wrapList = stream.collect(Collectors.toList());
+        return wrapList;
     }
 
     public <K, V> List<DataWrap<K, V>> getAll(IVelvet velvet, IEntityDef<K, V> entityDef) {
         Stream<DataWrap<K, V>> stream = entityDef.getAll(velvet)
-          .stream()
-          .map(node -> createWrap(velvet, entityDef, node, null));
+            .stream()
+            .map(node -> createWrap(velvet, entityDef, node, null));
         stream = sortTheseWraps(entityDef, stream);
         List<DataWrap<K, V>> wrapList = stream.collect(Collectors.toList());
         return wrapList;
@@ -170,7 +182,7 @@ public class IslandModel {
     private <K, V, CK, CV> void killChild(IVelvet velvet, ISingleGetter<K, V, CK, CV> singleGetter, K key) {
         if (singleGetter instanceof ISingleLinkDef<?, ?, ?, ?>) {
             ISingleLinkDef<K, V, CK, CV> singleLinkDef = (ISingleLinkDef<K, V, CK, CV>)singleGetter;
-            CK childKey = singleLinkDef.singleKey(velvet, key);
+            CK childKey = singleLinkDef.key(velvet, key);
             if (childKey != null) {
                 singleLinkDef.disconnectKeys(velvet, key, childKey);
                 delete(velvet, singleLinkDef.getChildEntity(), childKey);
@@ -181,7 +193,7 @@ public class IslandModel {
     private <K, V, CK, CV> void killChildren(IVelvet velvet, IMultiGetter<K, V, CK, CV> multiGetter, K key) {
         if (multiGetter instanceof IMultiLinkDef<?, ?, ?, ?>) {
             IMultiLinkDef<K, V, CK, CV> multiLinkDef = (IMultiLinkDef<K, V, CK, CV>)multiGetter;
-            List<CK> childKeys = multiLinkDef.multiKeys(velvet, key);
+            List<CK> childKeys = multiLinkDef.keys(velvet, key);
             for (CK childKey : childKeys) {
                 multiLinkDef.disconnectKeys(velvet, key, childKey);
             }
@@ -192,7 +204,7 @@ public class IslandModel {
     }
 
     private <K, V, CK, CV> void detachParent(IVelvet velvet, ISingleLinkDef<K, V, CK, CV> parentLinkDef, K key) {
-        CK parentKey = parentLinkDef.singleKey(velvet, key);
+        CK parentKey = parentLinkDef.key(velvet, key);
         if (parentKey != null) {
             parentLinkDef.disconnectKeys(velvet, key, parentKey);
         }
@@ -254,7 +266,7 @@ public class IslandModel {
     }
 
     private <K, V, CK, CV> DataWrap<CK, CV> wrapChild(IVelvet velvet, Context<K, V> context, V node, ISingleGetter<K, V, CK, CV> singleGetter) {
-        CV childValue = singleGetter.single(velvet, node);
+        CV childValue = singleGetter.get(velvet, node);
         if (childValue == null)
             return null;
         return createWrap(velvet, singleGetter.getChildEntity(), childValue, context);
@@ -264,7 +276,7 @@ public class IslandModel {
         @SuppressWarnings("unchecked")
         FetcherEntity<CK, CV> childFetcher = (FetcherEntity<CK, CV>) entities.get(multiGetter.getChildEntity());
         Comparator<DataWrap<CK, CV>> comparator = (childFetcher == null) ?  null : childFetcher.sort;
-        Stream<DataWrap<CK, CV>> stream = multiGetter.multi(velvet, node).stream()
+        Stream<DataWrap<CK, CV>> stream = multiGetter.get(velvet, node).stream()
             .map(o -> createWrap(velvet, multiGetter.getChildEntity(), o, context));
         if (comparator != null) {
             stream = stream.sorted(comparator);

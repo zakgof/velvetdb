@@ -4,8 +4,8 @@ import com.zakgof.db.velvet.IVelvet;
 
 public interface ISingleGetter<HK, HV, CK, CV> extends IRelation<HK, HV, CK, CV> {
 
-    public CV single(IVelvet velvet, HV node);
+    public CV get(IVelvet velvet, HV node);
 
-    public CK singleKey(IVelvet velvet, HK key);
+    public CK key(IVelvet velvet, HK key);
 
 }

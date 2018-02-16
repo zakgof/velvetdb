@@ -3,8 +3,7 @@ package com.zakgof.db.velvet.impl.link;
 import java.util.List;
 
 import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.IVelvet.ILink;
-import com.zakgof.db.velvet.IVelvet.LinkType;
+import com.zakgof.db.velvet.IVelvet.ISingleLink;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.link.ISingleLinkDef;
 
@@ -19,20 +18,20 @@ public class SingleLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV
     }
 
     @Override
-    public CV single(IVelvet velvet, HV node) {
-        CK bkey = singleKey(velvet, getHostEntity().keyOf(node));
+    public CV get(IVelvet velvet, HV node) {
+        CK bkey = key(velvet, getHostEntity().keyOf(node));
         return bkey == null ? null : getChildEntity().get(velvet, bkey);
     }
 
     @Override
-    public CK singleKey(IVelvet velvet, HK key) {
-        List<CK> linkKeys = index(velvet, key).keys();
+    public CK key(IVelvet velvet, HK key) {
+        List<CK> linkKeys = index(velvet).keys(key);
         return linkKeys.isEmpty() ? null : linkKeys.get(0);
     }
 
     @Override
-    ILink<HK, CK> index(IVelvet velvet, HK akey) {
-        return velvet.simpleIndex(akey, getHostEntity().getKeyClass(), getChildEntity().getKeyClass(), getKind(), LinkType.Single);
+    ISingleLink<HK, CK> index(IVelvet velvet) {
+        return velvet.singleLink(getHostEntity().getKeyClass(), getChildEntity().getKeyClass(), getKind());
     }
 
     @Override

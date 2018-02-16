@@ -110,9 +110,9 @@ public class SimpleLinkTest extends AVelvetTxnTest {
         Assert.assertFalse(ONE_TO_ONE.isConnected(velvet, parent1, child));
         Assert.assertTrue(ONE_TO_ONE.back().isConnected(velvet, child, parent2));
         Assert.assertFalse(ONE_TO_ONE.back().isConnected(velvet, child, parent1));
-        Assert.assertNull(ONE_TO_ONE.single(velvet, parent1));
-        Assert.assertEquals(child, ONE_TO_ONE.single(velvet, parent2));
-        Assert.assertEquals(parent2, ONE_TO_ONE.back().single(velvet, child));
+        Assert.assertNull(ONE_TO_ONE.get(velvet, parent1));
+        Assert.assertEquals(child, ONE_TO_ONE.get(velvet, parent2));
+        Assert.assertEquals(parent2, ONE_TO_ONE.back().get(velvet, child));
     }
 
     @Test
@@ -127,8 +127,8 @@ public class SimpleLinkTest extends AVelvetTxnTest {
 
         Assert.assertFalse(ONE_TO_ONE.isConnected(velvet, parent, child));
         Assert.assertFalse(ONE_TO_ONE.back().isConnected(velvet, child, parent));
-        Assert.assertNull(ONE_TO_ONE.single(velvet, parent));
-        Assert.assertNull(ONE_TO_ONE.back().single(velvet, child));
+        Assert.assertNull(ONE_TO_ONE.get(velvet, parent));
+        Assert.assertNull(ONE_TO_ONE.back().get(velvet, child));
     }
 
     @Test
@@ -144,9 +144,9 @@ public class SimpleLinkTest extends AVelvetTxnTest {
         ONE_TO_MANY.connect(velvet, parent, child2);
         ONE_TO_MANY.connect(velvet, parent, child3);
 
-        Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child1));
-        Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child2));
-        Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child3));
+        Assert.assertEquals(parent, ONE_TO_MANY.back().get(velvet, child1));
+        Assert.assertEquals(parent, ONE_TO_MANY.back().get(velvet, child2));
+        Assert.assertEquals(parent, ONE_TO_MANY.back().get(velvet, child3));
     }
 
     @Test
@@ -162,11 +162,11 @@ public class SimpleLinkTest extends AVelvetTxnTest {
         ONE_TO_MANY.connect(velvet, parent, child2);
         ONE_TO_MANY.back().connect(velvet, child3, parent);
 
-        Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child1));
-        Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child2));
-        Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child3));
+        Assert.assertEquals(parent, ONE_TO_MANY.back().get(velvet, child1));
+        Assert.assertEquals(parent, ONE_TO_MANY.back().get(velvet, child2));
+        Assert.assertEquals(parent, ONE_TO_MANY.back().get(velvet, child3));
 
-        List<TestEnt2> children = ONE_TO_MANY.multi(velvet, parent);
+        List<TestEnt2> children = ONE_TO_MANY.get(velvet, parent);
 
         Assert.assertEquals(3, children.size());
         Assert.assertTrue(children.contains(child1));
@@ -188,11 +188,11 @@ public class SimpleLinkTest extends AVelvetTxnTest {
         ONE_TO_MANY.connect(velvet, parent, child3);
         ONE_TO_MANY.disconnect(velvet, parent, child2);
 
-        Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child1));
-        Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child3));
-        Assert.assertNull(ONE_TO_MANY.back().single(velvet, child2));
+        Assert.assertEquals(parent, ONE_TO_MANY.back().get(velvet, child1));
+        Assert.assertEquals(parent, ONE_TO_MANY.back().get(velvet, child3));
+        Assert.assertNull(ONE_TO_MANY.back().get(velvet, child2));
 
-        List<TestEnt2> children = ONE_TO_MANY.multi(velvet, parent);
+        List<TestEnt2> children = ONE_TO_MANY.get(velvet, parent);
 
         Assert.assertEquals(2, children.size());
         Assert.assertTrue(children.contains(child1));
@@ -214,11 +214,11 @@ public class SimpleLinkTest extends AVelvetTxnTest {
         ONE_TO_MANY.connect(velvet, parent, child3);
         ONE_TO_MANY.back().disconnect(velvet, child2, parent);
 
-        Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child1));
-        Assert.assertEquals(parent, ONE_TO_MANY.back().single(velvet, child3));
-        Assert.assertNull(ONE_TO_MANY.back().single(velvet, child2));
+        Assert.assertEquals(parent, ONE_TO_MANY.back().get(velvet, child1));
+        Assert.assertEquals(parent, ONE_TO_MANY.back().get(velvet, child3));
+        Assert.assertNull(ONE_TO_MANY.back().get(velvet, child2));
 
-        List<TestEnt2> children = ONE_TO_MANY.multi(velvet, parent);
+        List<TestEnt2> children = ONE_TO_MANY.get(velvet, parent);
 
         Assert.assertEquals(2, children.size());
         Assert.assertTrue(children.contains(child1));
@@ -241,8 +241,8 @@ public class SimpleLinkTest extends AVelvetTxnTest {
         ONE_TO_MANY.connect(velvet, parent1, child3);
         ONE_TO_MANY.back().connect(velvet, child3, parent2);
 
-        List<TestEnt2> children1 = ONE_TO_MANY.multi(velvet, parent1);
-        List<TestEnt2> children2 = ONE_TO_MANY.multi(velvet, parent2);
+        List<TestEnt2> children1 = ONE_TO_MANY.get(velvet, parent1);
+        List<TestEnt2> children2 = ONE_TO_MANY.get(velvet, parent2);
 
         Assert.assertTrue(children1.containsAll(Arrays.asList(child1, child2)));
         Assert.assertTrue(children2.containsAll(Arrays.asList(child3)));
@@ -294,16 +294,16 @@ public class SimpleLinkTest extends AVelvetTxnTest {
         single.connect(velvet, e, e2);
         single.connect(velvet, xe, xe2);
 
-        TestEnt2 t2 = single.single(velvet, e);
+        TestEnt2 t2 = single.get(velvet, e);
         Assert.assertNotNull(t2);
         Assert.assertEquals("v5", t2.getVal());
 
-        Integer t2key = single.singleKey(velvet, "key2");
+        Integer t2key = single.key(velvet, "key2");
         Assert.assertEquals(new Integer(4), t2key);
 
-        TestEnt2 tz = single.single(velvet, ze);
+        TestEnt2 tz = single.get(velvet, ze);
         Assert.assertNull(tz);
-        Integer tzkey = single.singleKey(velvet, "key5");
+        Integer tzkey = single.key(velvet, "key5");
         Assert.assertNull(tzkey);
     }
 
@@ -317,7 +317,7 @@ public class SimpleLinkTest extends AVelvetTxnTest {
         single.connect(velvet, parent, child1);
         single.connect(velvet, parent, child2);
 
-        TestEnt2 child = single.single(velvet, parent);
+        TestEnt2 child = single.get(velvet, parent);
         Assert.assertNotNull(child);
         Assert.assertEquals(child2.getKey(), child.getKey());
 
@@ -334,7 +334,7 @@ public class SimpleLinkTest extends AVelvetTxnTest {
         single.connect(velvet, parent, child1);
         single.disconnect(velvet, parent, child1);
 
-        TestEnt2 child = single.single(velvet, parent);
+        TestEnt2 child = single.get(velvet, parent);
         Assert.assertNull(child);
         Assert.assertFalse(single.isConnected(velvet, parent, child1));
     }
@@ -359,7 +359,7 @@ public class SimpleLinkTest extends AVelvetTxnTest {
         Assert.assertTrue(multi.isConnectedKeys(velvet, "key3", 4));
         Assert.assertFalse(multi.isConnectedKeys(velvet, "key3", 0));
 
-        List<TestEnt2> multis = multi.multi(velvet, parent);
+        List<TestEnt2> multis = multi.get(velvet, parent);
         Assert.assertEquals(3, multis.size());
         Assert.assertTrue(multis.contains(child1));
         Assert.assertTrue(multis.contains(child2));
@@ -388,7 +388,7 @@ public class SimpleLinkTest extends AVelvetTxnTest {
         Assert.assertTrue(multi.isConnectedKeys(velvet, "key3", 1));
         Assert.assertFalse(multi.isConnectedKeys(velvet, "key3", 5));
 
-        List<TestEnt2> multis = multi.multi(velvet, parent);
+        List<TestEnt2> multis = multi.get(velvet, parent);
         Assert.assertEquals(2, multis.size());
         Assert.assertTrue(multis.contains(child1));
         Assert.assertFalse(multis.contains(child2));
@@ -411,7 +411,7 @@ public class SimpleLinkTest extends AVelvetTxnTest {
         multi.disconnect(velvet, parent, child2);
         multi.disconnect(velvet, parent, child3);
 
-        List<TestEnt2> multis = multi.multi(velvet, parent);
+        List<TestEnt2> multis = multi.get(velvet, parent);
         Assert.assertTrue(multis.isEmpty());
     }
 
@@ -429,7 +429,7 @@ public class SimpleLinkTest extends AVelvetTxnTest {
         multi.connect(velvet, parent, child3);
         multi.connect(velvet, parent, child3);
 
-        List<TestEnt2> multis = multi.multi(velvet, parent);
+        List<TestEnt2> multis = multi.get(velvet, parent);
         Assert.assertEquals(3, multis.size());
 
     }
