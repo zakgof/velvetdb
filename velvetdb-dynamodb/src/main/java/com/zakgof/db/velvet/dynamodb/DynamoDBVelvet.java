@@ -1,7 +1,15 @@
 package com.zakgof.db.velvet.dynamodb;
 
 import java.io.ByteArrayInputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -9,9 +17,36 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.amazonaws.services.dynamodbv2.document.*;
-import com.amazonaws.services.dynamodbv2.document.spec.*;
-import com.amazonaws.services.dynamodbv2.model.*;
+import com.amazonaws.services.dynamodbv2.document.BatchWriteItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Index;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
+import com.amazonaws.services.dynamodbv2.document.KeyAttribute;
+import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
+import com.amazonaws.services.dynamodbv2.document.RangeKeyCondition;
+import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
+import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.TableCollection;
+import com.amazonaws.services.dynamodbv2.document.TableWriteItems;
+import com.amazonaws.services.dynamodbv2.document.spec.BatchWriteItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
+import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
+import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
+import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.GlobalSecondaryIndex;
+import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
+import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
+import com.amazonaws.services.dynamodbv2.model.LocalSecondaryIndex;
+import com.amazonaws.services.dynamodbv2.model.Projection;
+import com.amazonaws.services.dynamodbv2.model.ProjectionType;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
+import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.primitives.Primitives;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
@@ -310,7 +345,7 @@ public class DynamoDBVelvet implements IVelvet {
          * attribute: v
          *
          * indexes:
-         * common hash key: ipartition
+         * common hash key: partition
          * range key: index-indexname
          */
         @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -353,11 +388,14 @@ public class DynamoDBVelvet implements IVelvet {
             while (iterator.hasNext()) {
                 TableWriteItems twi = new TableWriteItems(kind);
                 List<Item> items = new ArrayList<>(25);
-                for (int i = unprocessedItems.size(); i < 25 && iterator.hasNext(); i++) {
-                    V value = iterator.next();
-                    Object v = valueToObject(value);
-                    Item item = createPutItem(kiterator.next(), v, value);
-                    items.add(item);
+                // TODO: workaround for an AWS SDK bug:
+                if (unprocessedItems.isEmpty()) {
+                    for (int i = unprocessedItems.size(); i < 25 && iterator.hasNext(); i++) {
+                        V value = iterator.next();
+                        Object v = valueToObject(value);
+                        Item item = createPutItem(kiterator.next(), v, value);
+                        items.add(item);
+                    }
                 }
                 twi.withItemsToPut(items);
                 BatchWriteItemSpec bwis = new BatchWriteItemSpec().withTableWriteItems(twi);
@@ -433,13 +471,13 @@ public class DynamoDBVelvet implements IVelvet {
         protected void createTable() {
             CreateTableRequest tableRequest = makeTableRequest(kind, "id",  keyType(keyClass));
             if (!indexes.isEmpty()) {
-                tableRequest.withAttributeDefinitions(new AttributeDefinition("ipartition", ScalarAttributeType.N));
+                tableRequest.withAttributeDefinitions(new AttributeDefinition("partition", ScalarAttributeType.N));
                 for (IStoreIndexDef<?, V> index : indexes) {
                     GlobalSecondaryIndex gsi = new GlobalSecondaryIndex()
                         .withIndexName("index-" + index.name())
                         .withProvisionedThroughput(new ProvisionedThroughput(1L, 1L))
                         .withProjection(new Projection().withProjectionType(ProjectionType.KEYS_ONLY))
-                        .withKeySchema(new KeySchemaElement("ipartition", KeyType.HASH),
+                        .withKeySchema(new KeySchemaElement("partition", KeyType.HASH),
                                        new KeySchemaElement("i-" + index.name(), KeyType.RANGE));
 
                     tableRequest.withAttributeDefinitions(new AttributeDefinition("i-" + index.name(), keyType(index.clazz())))
@@ -452,7 +490,7 @@ public class DynamoDBVelvet implements IVelvet {
         protected Item createPutItem(K key, Object v, V value) {
             Item item = new Item().with("v", v).withKeyComponents(keyFor(key));
             if (!indexes.isEmpty()) {
-                item.with("ipartition", 1);
+                item.with("partition", 1);
                 for (IStoreIndexDef<?, V> index: indexes) {
                     item.with("i-" + index.name(), index.metric().apply(value));
                 }
@@ -491,12 +529,21 @@ public class DynamoDBVelvet implements IVelvet {
             @Override
             public List<K> keys(IRangeQuery<K, M> query) {
                 Index index = table.getIndex("index-" + indexDef.name());
-                KeyAttribute hashKey = new KeyAttribute("ipartition", 1);
+                KeyAttribute hashKey = new KeyAttribute("partition", 1);
                 return scanSecondary(query, index, Store.this, indexDef.metric(), hashKey, keyClass, indexDef.clazz(), "id", "i-" + indexDef.name(), Store.this::createTable);
             }
         }
     }
 
+    /**
+     * hash key: partition = 1
+     * range key: id = key
+     * attribute: v = value
+     *
+     * indexes:
+     * LSI
+     * range key: index-indexname
+     */
     private class SortedStore <K extends Comparable<? super K>, V> extends Store<K, V> implements ISortedStore<K, V> {
 
         public SortedStore(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes) {
@@ -561,7 +608,18 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         protected void createTable() {
-            table = makeTable(makeTableRequest(kind, "partition", ScalarAttributeType.N, "id", keyType(keyClass)));
+            CreateTableRequest tableRequest = makeTableRequest(kind, "partition", ScalarAttributeType.N, "id", keyType(keyClass));
+            for (IStoreIndexDef<?, V> index : indexes) {
+                LocalSecondaryIndex lsi = new LocalSecondaryIndex()
+                    .withIndexName("index-" + index.name())
+                    .withProjection(new Projection().withProjectionType(ProjectionType.KEYS_ONLY))
+                    .withKeySchema(new KeySchemaElement("partition", KeyType.HASH),
+                                   new KeySchemaElement("i-" + index.name(), KeyType.RANGE));
+
+                tableRequest.withAttributeDefinitions(new AttributeDefinition("i-" + index.name(), keyType(index.clazz())))
+                    .withLocalSecondaryIndexes(lsi);
+            }
+            table = makeTable(tableRequest);
         }
 
 
@@ -577,12 +635,15 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         protected Item createPutItem(K key, Object v, V value) {
-            return new Item()
-               .with("v", v)
-               .withKeyComponent("partition", 1)
-               .withKeyComponent("id", key);
+            Item item = new Item()
+                .with("v", v)
+                .withKeyComponent("partition", 1)
+                .withKeyComponent("id", key);
+            for (IStoreIndexDef<?, V> index : indexes) {
+                item.with("i-" + index.name(), index.metric().apply(value));
+            }
+            return item;
         }
-
     }
 
     /**
