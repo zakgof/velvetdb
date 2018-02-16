@@ -1,5 +1,6 @@
 package com.zakgof.db.velvet.test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -28,7 +29,7 @@ public class SecondarySortedLinkTest extends AVelvetTxnTest {
 
     @Before
     public void init() {
-        TestEnt3[] vals = new TestEnt3[] {
+        vals = new TestEnt3[] {
                new TestEnt3(54, 1L, "one-A"),
                new TestEnt3(44, 1L, "one-B"),
                new TestEnt3(33, 2L, "two"),
@@ -51,6 +52,7 @@ public class SecondarySortedLinkTest extends AVelvetTxnTest {
     private static final Object rOne = r("one-A", "one-B");
     private static final Object rSix = r("six-A", "six-B");
     private static final Object rFour = r("four-A", "four-B", "four-C");
+    private TestEnt3[] vals;
 
     @Test
     public void testGreaterOrEq() {
@@ -268,6 +270,50 @@ public class SecondarySortedLinkTest extends AVelvetTxnTest {
     public void testAllKeys() {
         List<String> result = MULTI.multi(velvet, root).stream().map(TestEnt3::getStr).collect(Collectors.toList());
         checkData(result, new Object[] { rOne, "two", "three", rFour, rSix }); // TODO: arguable !
+    }
+
+    @Test
+    public void testTraverseForward() {
+        List<TestEnt3> entities = new ArrayList<>();
+        TestEnt3 entity = MULTI.indexedSingle(Queries.first()).single(velvet, root);
+        while (entity != null) {
+            entities.add(entity);
+            entity = MULTI.indexedSingle(Queries.<Integer, Long>nextKey(entity.getKey())).single(velvet, root);
+        }
+
+        // Check if all present
+        Assert.assertEquals(new HashSet<>(Arrays.asList(vals)), new HashSet<>(entities));
+        TestEnt3 prevte = null;
+
+        // Check order
+        for (TestEnt3 te : entities) {
+            if (prevte != null) {
+                Assert.assertTrue(prevte.getWeight() <= te.getWeight());
+                prevte = te;
+            }
+        }
+    }
+
+    @Test
+    public void testTraverseBackward() {
+        List<TestEnt3> entities = new ArrayList<>();
+        TestEnt3 entity = MULTI.indexedSingle(Queries.last()).single(velvet, root);
+        while (entity != null) {
+            entities.add(entity);
+            entity = MULTI.indexedSingle(Queries.<Integer, Long>prevKey(entity.getKey())).single(velvet, root);
+        }
+
+        // Check if all present
+        Assert.assertEquals(new HashSet<>(Arrays.asList(vals)), new HashSet<>(entities));
+        TestEnt3 prevte = null;
+
+        // Check order
+        for (TestEnt3 te : entities) {
+            if (prevte != null) {
+                Assert.assertTrue(prevte.getWeight() >= te.getWeight());
+                prevte = te;
+            }
+        }
     }
 
     private static Object r(String... s) {
