@@ -5,10 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.ISortableEntityDef;
@@ -56,7 +53,7 @@ public class SortedStoreTest extends AVelvetTxnTest {
         ENTITY.put(velvet, new TestEnt("aaaa", 8.1f));
         ENTITY.put(velvet, new TestEnt("Aaa", 7.1f));
         ENTITY.put(velvet, new TestEnt("ab", 9.1f));
-        List<String> list = ENTITY.getAll(velvet).stream().map(TestEnt::getKey).collect(Collectors.toList());
+        List<String> list = ENTITY.batchGetAllList(velvet).stream().map(TestEnt::getKey).collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList("Aa", "Aaa", "Az", "a", "aaaa", "ab", "b"), list);
     }
 

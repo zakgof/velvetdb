@@ -1,8 +1,6 @@
 package com.zakgof.db.velvet.impl.entity;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -72,12 +70,12 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     }
 
     @Override
-    public List<V> get(IVelvet velvet, List<K> keys) {
-        return store(velvet).get(keys);
+    public Map<K, V> batchGet(IVelvet velvet, List<K> keys) {
+        return store(velvet).batchGet(keys);
     }
 
     @Override
-    public List<V> getAll(IVelvet velvet) {
+    public Map<K, V> batchGetAll(IVelvet velvet) {
         return store(velvet).getAll();
     }
 
@@ -153,7 +151,7 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     @Override
     public <M extends Comparable<? super M>> List<V> index(IVelvet velvet, String indexName, IRangeQuery<K, M> query) {
         List<K> keys = indexKeys(velvet, indexName, query);
-        return get(velvet, keys);
+        return new ArrayList<>(batchGet(velvet, keys).values());
     }
 
     @Override

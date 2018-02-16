@@ -13,7 +13,7 @@ public interface ISortableEntityDef<K extends Comparable<? super K>, V> extends 
     public K key(IVelvet velvet, ISingleReturnRangeQuery<K, K> query);
 
     public default List<V> get(IVelvet velvet, IRangeQuery<K, K> query) {
-        return get(velvet, keys(velvet, query));
+        return batchGetList(velvet, keys(velvet, query));
     }
 
     public default V get(IVelvet velvet, ISingleReturnRangeQuery<K, K> query) {

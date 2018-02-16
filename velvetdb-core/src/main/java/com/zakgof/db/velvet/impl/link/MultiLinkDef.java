@@ -28,7 +28,7 @@ public class MultiLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV>
 
     @Override
     public List<CV> get(IVelvet velvet, HV node) {
-        return getChildEntity().get(velvet, keys(velvet, getHostEntity().keyOf(node)));
+        return getChildEntity().batchGetList(velvet, keys(velvet, getHostEntity().keyOf(node)));
     }
 
     @Override
