@@ -2,7 +2,6 @@ package com.zakgof.db.velvet.impl.entity;
 
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import com.zakgof.db.velvet.IVelvet;
@@ -40,26 +39,19 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
     }
 
     @Override
-    public List<V> get(IVelvet velvet, List<Long> keys) {
-        List<V> values = super.get(velvet, keys);
-        forboth(keys, values, (k, v) -> this.keys.put(v, k));
+    public Map<Long, V> batchGet(IVelvet velvet, List<Long> keys) {
+        Map<Long, V> values = super.batchGet(velvet, keys);
+        Map<V, Long> map = values.entrySet().stream().collect(Collectors.toMap(Entry::getValue, Entry::getKey));
+        this.keys.putAll(map);
         return values;
     }
 
     @Override
-    public List<V> getAll(IVelvet velvet) {
-        Map<Long, V> values = store(velvet).getAllAsMap();
+    public Map<Long, V> batchGetAll(IVelvet velvet) {
+        Map<Long, V> values = store(velvet).getAll();
         Map<V, Long> map = values.entrySet().stream().collect(Collectors.toMap(Entry::getValue, Entry::getKey));
         this.keys.putAll(map);
-        return new ArrayList<>(values.values());
-    }
-
-    private <A, B> void forboth(Collection<A> collA, Collection<B> collB, BiConsumer<A, B> action) {
-        Iterator<A> itA = collA.iterator();
-        Iterator<B> itB = collB.iterator();
-        while(itA.hasNext()) {
-            action.accept(itA.next(), itB.next());
-        }
+        return values;
     }
 
     @Override

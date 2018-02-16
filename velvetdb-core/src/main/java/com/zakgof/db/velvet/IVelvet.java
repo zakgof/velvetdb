@@ -1,10 +1,6 @@
 package com.zakgof.db.velvet;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -30,20 +26,12 @@ public interface IVelvet {
 
         V get(K key);
 
-        default List<V> get(List<K> keys) {
-            return keys.stream().map(k -> get(k)).collect(Collectors.toList());
+        default Map<K, V> batchGet(List<K> keys) {
+            return keys.stream().collect(Collectors.toMap(k -> k, k -> get(k), (u, v) -> {throw new VelvetException("Duplicate keys");}, LinkedHashMap::new));
         }
 
-        default List<V> getAll() {
-            return get(keys());
-        }
-
-        default Map<K, V> getAllAsMap() {
-            List<K> keys = keys();
-            List<V> vals = get(keys);
-            Map<K, V> map = new LinkedHashMap<>();
-            forboth(keys, vals, (k, v) -> map.put(k, v));
-            return map;
+        default Map<K, V> getAll() {
+            return batchGet(keys());
         }
 
         // TODO

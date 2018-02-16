@@ -88,14 +88,14 @@ public class SortedStoreIndexesTest extends AVelvetTxnTest {
 
     private <K, M extends Comparable<? super M>> void check(String name, IRangeQuery<Integer, M> query, String ref) {
         List<Integer> keys = ENTITY3.<M> indexKeys(velvet, name, query);
-        List<TestEnt3> values = ENTITY3.get(velvet, keys);
+        List<TestEnt3> values = ENTITY3.batchGetList(velvet, keys);
         String result = values.stream().map(TestEnt3::getStr).collect(Collectors.joining(""));
         Assert.assertEquals(ref, result);
     }
 
     private <K, M extends Comparable<? super M>> void checkPri(IRangeQuery<Integer, Integer> query, String ref) {
         List<Integer> keys = ENTITY3.keys(velvet, query);
-        List<TestEnt3> values = ENTITY3.get(velvet, keys);
+        List<TestEnt3> values = ENTITY3.batchGetList(velvet, keys);
         String result = values.stream().map(TestEnt3::getStr).collect(Collectors.joining(""));
         Assert.assertEquals(ref, result);
     }

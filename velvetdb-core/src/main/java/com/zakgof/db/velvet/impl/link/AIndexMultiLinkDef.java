@@ -1,5 +1,6 @@
 package com.zakgof.db.velvet.impl.link;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.zakgof.db.velvet.IVelvet;
@@ -27,7 +28,7 @@ abstract class AIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M
 
             @Override
             public List<CV> get(IVelvet velvet, HV node) {
-                return getChildEntity().get(velvet, keys(velvet, getHostEntity().keyOf(node)));
+                return new ArrayList<>(getChildEntity().batchGet(velvet, keys(velvet, getHostEntity().keyOf(node))).values());
             }
 
             @Override

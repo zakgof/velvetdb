@@ -1,6 +1,8 @@
 package com.zakgof.db.velvet.entity;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.zakgof.db.velvet.IVelvet;
@@ -24,9 +26,17 @@ public interface IEntityDef<K, V> {
 
     public V get(IVelvet velvet, K key);
 
-    public List<V> get(IVelvet velvet, List<K> keys);
+    public Map<K, V> batchGet(IVelvet velvet, List<K> keys);
 
-    public List<V> getAll(IVelvet velvet);
+    default public List<V> batchGetList(IVelvet velvet, List<K> keys) {
+        return new ArrayList<>(batchGet(velvet, keys).values());
+    }
+
+    public Map<K, V> batchGetAll(IVelvet velvet);
+
+    default public List<V> batchGetAllList(IVelvet velvet) {
+        return new ArrayList<>(batchGetAll(velvet).values());
+    }
 
     public List<K> keys(IVelvet velvet);
 
