@@ -1,15 +1,7 @@
 package com.zakgof.db.velvet.dynamodb;
 
 import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -17,36 +9,10 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.amazonaws.services.dynamodbv2.document.BatchWriteItemOutcome;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Index;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.KeyAttribute;
-import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
-import com.amazonaws.services.dynamodbv2.document.RangeKeyCondition;
-import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.TableCollection;
-import com.amazonaws.services.dynamodbv2.document.TableWriteItems;
-import com.amazonaws.services.dynamodbv2.document.spec.BatchWriteItemSpec;
-import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
-import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
-import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
-import com.amazonaws.services.dynamodbv2.model.GlobalSecondaryIndex;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.KeyType;
-import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
-import com.amazonaws.services.dynamodbv2.model.LocalSecondaryIndex;
-import com.amazonaws.services.dynamodbv2.model.Projection;
-import com.amazonaws.services.dynamodbv2.model.ProjectionType;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+import com.amazonaws.services.dynamodbv2.document.*;
+import com.amazonaws.services.dynamodbv2.document.spec.*;
+import com.amazonaws.services.dynamodbv2.model.*;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Primitives;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
@@ -374,6 +340,36 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
         @Override
+        public Map<K, V> batchGet(List<K> keys) {
+            Iterator<K> kiterator = keys.iterator();
+            Map<K, V> result = new LinkedHashMap<>();
+            Map<String, KeysAndAttributes> unprocessedKeys = new HashMap<>();
+            while (kiterator.hasNext()) {
+                TableKeysAndAttributes tableKeyAndAttributes = new TableKeysAndAttributes(kind).withAttributeNames("id", "v");
+                // TODO: workaround for an AWS SDK bug:
+                if (unprocessedKeys.isEmpty()) {
+                    for (int i = unprocessedKeys.size(); i < 25 && kiterator.hasNext(); i++) {
+                        K key = kiterator.next();
+                        tableKeyAndAttributes.addPrimaryKey(new PrimaryKey().addComponents(keyFor(key)));
+                    }
+                }
+                BatchGetItemSpec bgis = new BatchGetItemSpec().withTableKeyAndAttributes(tableKeyAndAttributes);
+                if (!unprocessedKeys.isEmpty())
+                    bgis.withUnprocessedKeys(unprocessedKeys);
+                System.err.print("Reading a batch: " + tableKeyAndAttributes.getPrimaryKeys().size() + " items + " + unprocessedKeys.size() + " unprocessed items...");
+                BatchGetItemOutcome outcome = calcOnTable(() -> db.batchGetItem(bgis), this::createTable);
+                Map<String, KeysAndAttributes> newUnprocessedItems = outcome.getUnprocessedKeys();
+                System.err.println("   ...done with " + newUnprocessedItems.size() + " unprocessed");
+                unprocessedKeys.putAll(newUnprocessedItems);
+                Map<K, V> partialResult = outcome.getTableItems().values().iterator().next().stream().collect(Collectors.toMap(
+                   item -> valueFromItem(item, keyClass, "id", true),
+                   item -> valueFromItem(item, valueClass, "v", false)));
+                result.putAll(partialResult);
+            }
+            return result;
+        }
+
+        @Override
         public byte[] getRaw(K key) {
             return null;
         }
@@ -389,28 +385,46 @@ public class DynamoDBVelvet implements IVelvet {
         public void put(List<K> keys, List<V> values) {
             Iterator<V> iterator = values.iterator();
             Iterator<K> kiterator = keys.iterator();
-            Map<String, List<WriteRequest>> unprocessedItems = new HashMap<>();
+            List<WriteRequest> unprocessedItems = new ArrayList<>();
+            System.err.println("Writing a batch of " + keys.size());
+            int current = 0;
+            long backoff = 100L;
             while (iterator.hasNext()) {
-                TableWriteItems twi = new TableWriteItems(kind);
-                List<Item> items = new ArrayList<>(25);
+                BatchWriteItemSpec bwis = new BatchWriteItemSpec();
                 // TODO: workaround for an AWS SDK bug:
                 if (unprocessedItems.isEmpty()) {
+                    TableWriteItems twi = new TableWriteItems(kind);
+                    List<Item> items = new ArrayList<>(25);
                     for (int i = unprocessedItems.size(); i < 25 && iterator.hasNext(); i++) {
                         V value = iterator.next();
                         Object v = valueToObject(value);
                         Item item = createPutItem(kiterator.next(), v, value);
+                        current++;
                         items.add(item);
                     }
+                    twi.withItemsToPut(items);
+                    bwis.withTableWriteItems(twi);
                 }
-                twi.withItemsToPut(items);
-                BatchWriteItemSpec bwis = new BatchWriteItemSpec().withTableWriteItems(twi);
+
                 if (!unprocessedItems.isEmpty())
-                    bwis.withUnprocessedItems(new HashMap<>(unprocessedItems));
-                System.err.print("Writing a batch: " + items.size() + " items + " + unprocessedItems.size() + " unprocessed items...");
+                    bwis.withUnprocessedItems(ImmutableMap.of(kind, unprocessedItems));
+                System.err.print("Writing a batch: " + (bwis.getTableWriteItems() == null ? 0 : bwis.getTableWriteItems().iterator().next().getItemsToPut().size()) + " items + " + unprocessedItems.size() + " unprocessed items...");
                 BatchWriteItemOutcome outcome = calcOnTable(() -> db.batchWriteItem(bwis), this::createTable);
-                Map<String, List<WriteRequest>> newUnprocessedItems = outcome.getUnprocessedItems();
-                System.err.println("   ...done with " + newUnprocessedItems.size() + " unprocessed");
-                unprocessedItems.putAll(newUnprocessedItems);
+                List<WriteRequest> newUnprocessedItems = outcome.getUnprocessedItems().get(kind);
+                if (newUnprocessedItems == null)
+                    newUnprocessedItems = new ArrayList<>();
+                System.err.println("   ...done with " + newUnprocessedItems.size() + " unprocessed, still pending = " + (keys.size() - current));
+                if (newUnprocessedItems.isEmpty()) {
+                    backoff = 100L;
+                } else {
+                    try {
+                        System.err.println("Backing off " + backoff);
+                        Thread.sleep(backoff);
+                    } catch (InterruptedException e) {
+                    }
+                    backoff = backoff << 1;
+                }
+                unprocessedItems = newUnprocessedItems;
             }
         }
 
