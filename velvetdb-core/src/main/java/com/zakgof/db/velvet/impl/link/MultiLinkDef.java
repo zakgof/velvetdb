@@ -1,6 +1,7 @@
 package com.zakgof.db.velvet.impl.link;
 
 import java.util.List;
+import java.util.Map;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IMultiLink;
@@ -28,6 +29,11 @@ public class MultiLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV>
     @Override
     public List<CV> get(IVelvet velvet, HV node) {
         return getChildEntity().get(velvet, keys(velvet, getHostEntity().keyOf(node)));
+    }
+
+    @Override
+    public Map<HK, List<CK>> batchKeys(IVelvet velvet, List<HK> hks) {
+        return index(velvet).batchGetM(hks);
     }
 
     @Override

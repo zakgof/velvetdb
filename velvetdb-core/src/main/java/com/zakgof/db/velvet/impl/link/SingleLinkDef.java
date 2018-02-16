@@ -1,6 +1,7 @@
 package com.zakgof.db.velvet.impl.link;
 
 import java.util.List;
+import java.util.Map;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.ISingleLink;
@@ -27,6 +28,11 @@ public class SingleLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV
     public CK key(IVelvet velvet, HK key) {
         List<CK> linkKeys = index(velvet).keys(key);
         return linkKeys.isEmpty() ? null : linkKeys.get(0);
+    }
+
+    @Override
+    public Map<HK, CK> batchKeys(IVelvet velvet, List<HK> keys) {
+        return index(velvet).batchGet(keys);
     }
 
     @Override

@@ -145,11 +145,8 @@ public class IslandModel {
     }
 
     public <K, V> List<DataWrap<K, V>> getByKeys(IVelvet velvet, IEntityDef<K, V> entityDef, List<K> keys) {
-        Stream<DataWrap<K, V>> stream = entityDef.get(velvet, keys)
-            .stream()
-            .map(node -> createWrap(velvet, entityDef, node, null));
-        stream = sortTheseWraps(entityDef, stream);
-        List<DataWrap<K, V>> wrapList = stream.collect(Collectors.toList());
+        List<V> nodes = entityDef.get(velvet, keys);
+        List<DataWrap<K, V>> wrapList = new BatchBuilder<>(velvet, entityDef, nodes).make();
         return wrapList;
     }
 
@@ -265,6 +262,7 @@ public class IslandModel {
         return wrap;
     }
 
+
     private <K, V, CK, CV> DataWrap<CK, CV> wrapChild(IVelvet velvet, Context<K, V> context, V node, ISingleGetter<K, V, CK, CV> singleGetter) {
         CV childValue = singleGetter.get(velvet, node);
         if (childValue == null)
@@ -343,6 +341,124 @@ public class IslandModel {
         @Override
         public K currentKey() {
             return currentKey;
+        }
+
+    }
+
+    private class BatchBuilder<KK, VV> {
+
+        private IVelvet velvet;
+        private IEntityDef<KK, VV> startEntity;
+        private List<VV> startNodes;
+
+        private Map<ISingleGetter<?,?,?,?>, Map<?, ?>> singles = new HashMap<>();
+        private Map<IMultiGetter<?,?,?,?>, Map<?, List<?>>> multis = new HashMap<>();
+
+        public BatchBuilder(IVelvet velvet, IEntityDef<KK, VV> startEntity, List<VV> startNodes) {
+            this.velvet = velvet;
+            this.startEntity = startEntity;
+            this.startNodes = startNodes;
+        }
+
+        private List<DataWrap<KK, VV>> make() {
+            preFetch(startEntity, startNodes);
+            return startNodes.stream()
+                .map(node -> wrap(startEntity, node, null))
+                .collect(Collectors.toList());
+        }
+
+        private <K, V> void preFetch(IEntityDef<K, V> entity, List<V> nodes) {
+            @SuppressWarnings("unchecked")
+            FetcherEntity<K, V> fentity = (FetcherEntity<K, V>) entities.get(entity);
+            if (entity == null) {
+                return;
+            }
+
+            for (Entry<String, ? extends IMultiGetter<K, V, ?, ?>> entry : fentity.multis.entrySet()) {
+                IMultiGetter<K, V, ?, ?> multi = entry.getValue();
+                preFetchMulti(multi, nodes);
+            }
+            for (Entry<String, ? extends ISingleGetter<K, V, ?, ?>> entry : fentity.singles.entrySet()) {
+                ISingleGetter<K, V, ?, ?> single = entry.getValue();
+                preFetchSingle(single, nodes);
+            }
+        }
+
+        private <K, V, CK, CV> void preFetchSingle(ISingleGetter<K, V, CK, CV> single, List<V> nodes) {
+            Map<K, CV> children = single.batchGet(velvet, nodes);
+            singles.computeIfAbsent(single, s -> new HashMap<>()).putAll((Map)children);
+            List<CV> childnodes = children.values().stream().collect(Collectors.toList());
+            preFetch(single.getChildEntity(), childnodes);
+        }
+
+        private <K, V, CK, CV> void preFetchMulti(IMultiGetter<K, V, CK, CV> multi, List<V> nodes) {
+            Map<K, List<CV>> children = multi.batchGet(velvet, nodes);
+            multis.computeIfAbsent(multi, m -> new HashMap<>()).putAll((Map)children);
+            List<CV> childnodes = children.values().stream().flatMap(List::stream).collect(Collectors.toList());
+            preFetch(multi.getChildEntity(), childnodes);
+        }
+
+        private <K, V> DataWrap<K, V> wrap(IEntityDef<K, V> entityDef, V node, Context<?, ?> parentContext) {
+            Context<K, V> context = new Context<>(parentContext, entityDef, node);
+            DataWrap.Builder<K, V> wrapBuilder = new DataWrap.Builder<>(node);
+            @SuppressWarnings("unchecked")
+            FetcherEntity<K, V> entity = (FetcherEntity<K, V>) entities.get(entityDef);
+            if (entity == null) {
+                return wrapBuilder.build();
+            }
+            K key = entity.entityDef.keyOf(node);
+            wrapBuilder.key(key);
+            context.setKey(key);
+
+            if (entity != null) {
+                for (Entry<String, ? extends IMultiGetter<K, V, ?, ?>> entry : entity.multis.entrySet()) {
+                    IMultiGetter<K, V, ?, ?> multiLinkDef = entry.getValue();
+                    List<? extends DataWrap<?, ?>> wrappedLinks = wrapChildren(context, key, multiLinkDef);
+                    wrapBuilder.addList(entry.getKey(), wrappedLinks);
+                }
+                for (Entry<String, ? extends ISingleGetter<K, V, ?, ?>> entry : entity.singles.entrySet()) {
+                    ISingleGetter<K, V, ?, ?> singleConn = entry.getValue();
+                    DataWrap<?,?> wrappedLink = wrapChild(context, key, singleConn);
+                    if (wrappedLink != null)
+                        wrapBuilder.add(entry.getKey(), wrappedLink);
+                }
+                for (Entry<String, IContextSingleGetter<K, V, ?>> entry : entity.attrs.entrySet()) {
+                    Object link = entry.getValue().single(velvet, context);
+                    if (link != null) {
+                        wrapBuilder.attr(entry.getKey(), link);
+                    }
+                }
+                DataWrap<K, V> wrap = wrapBuilder.build();
+                wrapBuilder = new DataWrap.Builder<>(wrap);
+                for (Entry<String, Function<DataWrap<K, V>, ?>> entry : entity.postattrs.entrySet()) {
+                    wrapBuilder.attr(entry.getKey(), entry.getValue().apply(wrap));
+                }
+            }
+            DataWrap<K, V> wrap = wrapBuilder.build();
+            context.addWrap(wrap);
+            return wrap;
+        }
+
+        private <K, V, CK, CV> DataWrap<CK, CV> wrapChild(Context<K, V> context, K key, ISingleGetter<K, V, CK, CV> single) {
+            @SuppressWarnings("unchecked")
+            CV childValue = (CV) singles.get(single).get(key);
+            if (childValue == null)
+                return null;
+            return createWrap(velvet, single.getChildEntity(), childValue, context);
+        }
+
+        private <K, V, CK, CV> List<DataWrap<CK, CV>> wrapChildren(Context<K, V> context, K key, IMultiGetter<K, V, CK, CV> multi) {
+            @SuppressWarnings("unchecked")
+            FetcherEntity<CK, CV> childFetcher = (FetcherEntity<CK, CV>) entities.get(multi.getChildEntity());
+            Comparator<DataWrap<CK, CV>> comparator = (childFetcher == null) ?  null : childFetcher.sort;
+            @SuppressWarnings("unchecked")
+            List<CV> cvs = (List<CV>) multis.get(multi).get(key);
+            Stream<DataWrap<CK, CV>> stream = cvs.stream()
+                .map(o -> wrap(multi.getChildEntity(), o, context));
+            if (comparator != null) {
+                stream = stream.sorted(comparator);
+            }
+            return stream.collect(Collectors.toList());
         }
 
     }
