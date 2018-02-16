@@ -149,7 +149,7 @@ public class PrimarySortedLinkTest2 extends AVelvetTxnTest {
     }
 
     private void check(IRangeQuery<Integer, Integer> query, int... v) {
-        int[] keys = MULTI.indexed(query).multi(velvet, root).stream().mapToInt(TestEnt2::getKey).toArray();
+        int[] keys = MULTI.indexed(query).get(velvet, root).stream().mapToInt(TestEnt2::getKey).toArray();
         Assert.assertArrayEquals(v, keys);
     }
 

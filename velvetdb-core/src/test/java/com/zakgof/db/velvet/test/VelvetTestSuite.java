@@ -19,11 +19,9 @@ import com.zakgof.db.velvet.VelvetFactory;
 
 @SuiteClasses({
 
+    SortedStoreIndexesTest.class,
     StoreIndexesAnnoTest.class,
     StoreIndexesTest.class,
-
-    /*
-
     SecondarySortedLinkTest.class,
     PrimarySortedLinkTest.class,
     PrimarySortedLinkTest2.class,
@@ -33,6 +31,7 @@ import com.zakgof.db.velvet.VelvetFactory;
     PutGetTest.class,
 
 
+    /*
     ConcurrentWriteTest.class,
     PerformanceTest.class,
 
@@ -57,7 +56,7 @@ public abstract class VelvetTestSuite {
     private static IVelvetEnvironment createVelvet(String providerName) {
         cleanup(false);
         if (providerName.equals("datastore")) {
-            String url =  StrSubstitutor.replaceSystemProperties("velvetdb://datastore/${velvetdb.datastore.projectId}/?credentialPath=${velvetdb.datastore.credentialPath}&proxyHost=${velvetdb.proxyHost}&proxyPort=${velvetdb.proxyPort}&proxyUser=${velvetdb.proxyUser}&proxyPassword=${velvetdb.proxyPassword}");
+            String url = StrSubstitutor.replaceSystemProperties("velvetdb://datastore/${velvetdb.datastore.projectId}/?credentialPath=${velvetdb.datastore.credentialPath}&proxyHost=${velvetdb.proxyHost}&proxyPort=${velvetdb.proxyPort}&proxyUser=${velvetdb.proxyUser}&proxyPassword=${velvetdb.proxyPassword}");
             env = VelvetFactory.open(url);
         } else if (providerName.equals("dynamodb")) {
             if (env == null) {

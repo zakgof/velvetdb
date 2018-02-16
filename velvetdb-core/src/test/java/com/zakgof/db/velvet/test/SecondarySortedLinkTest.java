@@ -268,17 +268,17 @@ public class SecondarySortedLinkTest extends AVelvetTxnTest {
 
     @Test
     public void testAllKeys() {
-        List<String> result = MULTI.multi(velvet, root).stream().map(TestEnt3::getStr).collect(Collectors.toList());
+        List<String> result = MULTI.get(velvet, root).stream().map(TestEnt3::getStr).collect(Collectors.toList());
         checkData(result, new Object[] { rOne, "two", "three", rFour, rSix }); // TODO: arguable !
     }
 
     @Test
     public void testTraverseForward() {
         List<TestEnt3> entities = new ArrayList<>();
-        TestEnt3 entity = MULTI.indexedSingle(Queries.first()).single(velvet, root);
+        TestEnt3 entity = MULTI.indexedSingle(Queries.first()).get(velvet, root);
         while (entity != null) {
             entities.add(entity);
-            entity = MULTI.indexedSingle(Queries.<Integer, Long>nextKey(entity.getKey())).single(velvet, root);
+            entity = MULTI.indexedSingle(Queries.<Integer, Long>nextKey(entity.getKey())).get(velvet, root);
         }
 
         // Check if all present
@@ -297,10 +297,10 @@ public class SecondarySortedLinkTest extends AVelvetTxnTest {
     @Test
     public void testTraverseBackward() {
         List<TestEnt3> entities = new ArrayList<>();
-        TestEnt3 entity = MULTI.indexedSingle(Queries.last()).single(velvet, root);
+        TestEnt3 entity = MULTI.indexedSingle(Queries.last()).get(velvet, root);
         while (entity != null) {
             entities.add(entity);
-            entity = MULTI.indexedSingle(Queries.<Integer, Long>prevKey(entity.getKey())).single(velvet, root);
+            entity = MULTI.indexedSingle(Queries.<Integer, Long>prevKey(entity.getKey())).get(velvet, root);
         }
 
         // Check if all present
@@ -321,7 +321,7 @@ public class SecondarySortedLinkTest extends AVelvetTxnTest {
     }
 
     private void check(IRangeQuery<Integer, Long> query, Object... ref) {
-        List<String> result = MULTI.indexed(query).multi(velvet, root).stream().map(TestEnt3::getStr).collect(Collectors.toList());
+        List<String> result = MULTI.indexed(query).get(velvet, root).stream().map(TestEnt3::getStr).collect(Collectors.toList());
         checkData(result, ref);
     }
 

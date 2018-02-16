@@ -178,7 +178,7 @@ public class PrimarySortedLinkTest extends AVelvetTxnTest {
 
     @Test
     public void testAllKeys() {
-        int[] keys = MULTI.multi(velvet, root).stream().mapToInt(TestEnt2::getKey).toArray();
+        int[] keys = MULTI.get(velvet, root).stream().mapToInt(TestEnt2::getKey).toArray();
         Assert.assertArrayEquals(new int[] { 1, 2, 3, 4, 6, 7, 8, 9 }, keys);
     }
 
@@ -201,7 +201,7 @@ public class PrimarySortedLinkTest extends AVelvetTxnTest {
     }
 
     private void check(IRangeQuery<Integer, Integer> query, int... v) {
-        int[] keys = MULTI.indexed(query).multi(velvet, root).stream().mapToInt(TestEnt2::getKey).toArray();
+        int[] keys = MULTI.indexed(query).get(velvet, root).stream().mapToInt(TestEnt2::getKey).toArray();
         Assert.assertArrayEquals(v, keys);
     }
 

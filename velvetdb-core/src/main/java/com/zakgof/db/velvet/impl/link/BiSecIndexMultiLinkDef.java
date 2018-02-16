@@ -29,13 +29,13 @@ public class BiSecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super
     }
 
     @Override
-    public List<CV> multi(IVelvet velvet, HV node) {
-        return oneWay.multi(velvet, node);
+    public List<CV> get(IVelvet velvet, HV node) {
+        return oneWay.get(velvet, node);
     }
 
     @Override
-    public List<CK> multiKeys(IVelvet velvet, HK key) {
-        return oneWay.multiKeys(velvet, key);
+    public List<CK> keys(IVelvet velvet, HK key) {
+        return oneWay.keys(velvet, key);
     }
 
     @Override

@@ -1,6 +1,10 @@
 package com.zakgof.db.velvet;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -14,11 +18,13 @@ public interface IVelvet {
 
     public <K extends Comparable<? super K>, V> ISortedStore<K, V> sortedStore(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes);
 
-    public <HK, CK> ILink<HK, CK> simpleIndex(HK key1, Class<HK> hostKeyClass,  Class<CK> childKeyClass, String edgekind, LinkType type);
+    public <HK, CK> ISingleLink<HK, CK> singleLink(Class<HK> hostKeyClass,  Class<CK> childKeyClass, String edgekind);
 
-    public <HK, CK extends Comparable<? super CK>> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(HK key1, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind);
+    public <HK, CK> IMultiLink<HK, CK> multiLink(Class<HK> hostKeyClass,  Class<CK> childKeyClass, String edgekind);
 
-    public <HK, CK, T, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex(HK key1, Class<HK> hostKeyClass, String edgekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<CK> keyClazz, IStore<CK, T> childStore);
+    public <HK, CK extends Comparable<? super CK>> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind);
+
+    public <HK, CK, CV, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex(Class<HK> hostKeyClass, String edgekind, Function<CV, M> nodeMetric, Class<M> metricClass, Class<CK> keyClass, IStore<CK, CV> childStore);
 
     public interface IStore<K, V> {
 
@@ -40,6 +46,7 @@ public interface IVelvet {
             return map;
         }
 
+        // TODO
         static <A, B> void forboth(Collection<A> collA, Collection<B> collB, BiConsumer<A, B> action) {
             Iterator<A> itA = collA.iterator();
             Iterator<B> itB = collB.iterator();
@@ -96,33 +103,43 @@ public interface IVelvet {
     }
 
     public interface ILink<HK, CK> {
-        void put(CK key2);
-
-        void delete(CK key2);
-
-        List<CK> keys();
-
-        boolean contains(CK key2);
+        void put(HK hk, CK ck);
+        void delete(HK hk, CK ck);
+        List<CK> keys(HK hk);
+        boolean contains(HK hk, CK ck);
     }
 
-    public interface IKeyIndexLink<HK, CK, M extends Comparable<? super M>> extends ILink<HK, CK> {
+    public interface ISingleLink<HK, CK> extends ILink<HK, CK> {
+        // batch
+        default void batchPut(Map<HK, CK> map)      {throw new UnsupportedOperationException();} // TODO
+        default Map<HK, CK> batchGet(List<HK> hks)  {throw new UnsupportedOperationException();} // TODO
+        default void batchDelete(List<HK> map)      {throw new UnsupportedOperationException();} // TODO
+    }
 
-        void update(CK key2);
+    public interface IMultiLink<HK, CK> extends ILink<HK, CK> {
+        // batch
+        default void batchPutM(Map<HK, List<CK>> map)        {throw new UnsupportedOperationException();} // TODO
+        default Map<HK, List<CK>> batchGetM(List<HK> hks)    {throw new UnsupportedOperationException();} // TODO:  no support in backend ? -> to check
+        default void batchDelete(Map<HK, List<CK>> map)     {throw new UnsupportedOperationException();} // TODO
+        default void deleteAll(HK hk)                       {throw new UnsupportedOperationException();} // TODO
+        default void batchDeleteAll(List<HK> map)           {throw new UnsupportedOperationException();} // TODO
+    }
 
-        List<CK> keys(IRangeQuery<CK, M> query);
+    public interface IKeyIndexLink<HK, CK, M extends Comparable<? super M>> extends IMultiLink<HK, CK> {
 
-        default CK key(ISingleReturnRangeQuery<CK, M> query) {
+        void update(HK hk, CK ck);
+
+        List<CK> keys(HK hk, IRangeQuery<CK, M> query);
+
+        // TODO not here
+        default CK key(HK hk, ISingleReturnRangeQuery<CK, M> query) {
             // TODO
-            List<CK> keys = keys(query);
+            List<CK> keys = keys(hk, query);
             if (keys.isEmpty())
                 return null;
             if (keys.size() > 1)
                 throw new VelvetException("");
             return keys.get(0);
         }
-    }
-
-    public enum LinkType {
-        Single, Multi,
     }
 }

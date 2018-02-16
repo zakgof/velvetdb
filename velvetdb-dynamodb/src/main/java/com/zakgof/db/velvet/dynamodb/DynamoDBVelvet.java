@@ -297,18 +297,23 @@ public class DynamoDBVelvet implements IVelvet {
     }
 
     @Override
-    public <HK, CK> ILink<HK, CK> simpleIndex(HK hostKey, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind, LinkType type) {
-        return type == LinkType.Single ? new SingleLink<>(hostKey, hostKeyClass, childKeyClass, edgekind) : new MultiLink<>(hostKey, hostKeyClass, childKeyClass, edgekind);
+    public <HK, CK> ISingleLink<HK, CK> singleLink(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+        return new SingleLink<>(hostKeyClass, childKeyClass, edgekind);
     }
 
     @Override
-    public <HK, CK extends Comparable<? super CK>> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(HK hk, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
-        return new PrimaryMultiLink<>(hk, hostKeyClass, childKeyClass, edgekind);
+    public <HK, CK> IMultiLink<HK, CK> multiLink(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+        return new MultiLink<>(hostKeyClass, childKeyClass, edgekind);
     }
 
     @Override
-    public <HK, CK, CV, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex(HK hk, Class<HK> hostKeyClass, String edgekind, Function<CV, M> nodeMetric, Class<M> mclazz, Class<CK> childKeyClazz, IStore<CK, CV> childStore) {
-        return new SecondaryMultiLink<>(hk, hostKeyClass, edgekind, nodeMetric, mclazz, childKeyClazz, childStore);
+    public <HK, CK extends Comparable<? super CK>> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+        return new PrimaryMultiLink<>(hostKeyClass, childKeyClass, edgekind);
+    }
+
+    @Override
+    public <HK, CK, CV, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex( Class<HK> hostKeyClass, String edgekind, Function<CV, M> nodeMetric, Class<M> mclazz, Class<CK> childKeyClazz, IStore<CK, CV> childStore) {
+        return new SecondaryMultiLink<>(hostKeyClass, edgekind, nodeMetric, mclazz, childKeyClazz, childStore);
     }
 
     public void killAll(boolean full) {
@@ -650,17 +655,15 @@ public class DynamoDBVelvet implements IVelvet {
      * Hash key: hk
      * Value: ck
      */
-    private class SingleLink<HK, CK> implements ILink<HK, CK> {
+    private class SingleLink<HK, CK> implements ISingleLink<HK, CK> {
 
         protected Table table;
         protected String tableName;
-        protected HK hk;
         protected Class<HK> hostKeyClass;
         protected Class<CK> childKeyClass;
 
-        public SingleLink(HK hostKey, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+        public SingleLink(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
             this.tableName = prefix() + edgekind;
-            this.hk = hostKey;
             this.hostKeyClass = hostKeyClass;
             this.childKeyClass = childKeyClass;
             this.table = db.getTable(tableName);
@@ -671,18 +674,18 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
         @Override
-        public void put(CK ck) {
-            Item item = createPutItem(ck);
+        public void put(HK hk, CK ck) {
+            Item item = createPutItem(hk, ck);
             doOnTable(() -> table.putItem(item), this::createTable);
         }
 
         @Override
-        public void delete(CK ck) {
-            doOnTable(() -> table.deleteItem(keyFor()), this::createTable);
+        public void delete(HK hk, CK ck) {
+            doOnTable(() -> table.deleteItem(keyFor(hk)), this::createTable);
         }
 
         @Override
-        public List<CK> keys() {
+        public List<CK> keys(HK hk) {
             Item item = calcOnTable(() -> table.getItem(new KeyAttribute("hk", hk)), this::createTable);
             if (item == null) {
                 return Collections.emptyList();
@@ -692,8 +695,8 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
         @Override
-        public boolean contains(CK ck) {
-            Item item = calcOnTable(() -> table.getItem(keyFor()), this::createTable);
+        public boolean contains(HK hk, CK ck) {
+            Item item = calcOnTable(() -> table.getItem(keyFor(hk)), this::createTable);
             if (item != null) {
                 CK actual = valueFromItem(item, childKeyClass, "ck", true);
                 return actual.equals(ck);
@@ -701,9 +704,9 @@ public class DynamoDBVelvet implements IVelvet {
             return false;
         }
 
-        protected Item createPutItem(CK ck) {
+        protected Item createPutItem(HK hk, CK ck) {
             return new Item()
-               .withKeyComponents(keyFor())
+               .withKeyComponents(keyFor(hk))
                .with("ck", ck);
         }
 
@@ -711,7 +714,7 @@ public class DynamoDBVelvet implements IVelvet {
             table = makeTable(makeTableRequest(tableName, "hk", keyType(hostKeyClass)));
         }
 
-        protected KeyAttribute keyFor() {
+        protected KeyAttribute keyFor(HK hk) {
             return new KeyAttribute("hk", hk);
         }
 
@@ -722,10 +725,10 @@ public class DynamoDBVelvet implements IVelvet {
      * Hash key: hk
      * Range key: ck
      */
-    private class MultiLink<HK, CK> extends SingleLink<HK, CK> {
+    private class MultiLink<HK, CK> extends SingleLink<HK, CK> implements IMultiLink<HK, CK> {
 
-        public MultiLink(HK hostKey, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
-            super(hostKey, hostKeyClass, childKeyClass, edgekind);
+        public MultiLink(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+            super(hostKeyClass, childKeyClass, edgekind);
         }
 
         @Override
@@ -734,14 +737,14 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
         @Override
-        public void delete(CK ck) {
-            doOnTable(() -> table.deleteItem(keyFor(ck)), this::createTable);
+        public void delete(HK hk, CK ck) {
+            doOnTable(() -> table.deleteItem(keyFor(hk, ck)), this::createTable);
         }
 
         @Override
-        public List<CK> keys() {
+        public List<CK> keys(HK hk) {
             List<CK> cks = calcOnTable(() -> {
-                ItemCollection<QueryOutcome> itemCollection = table.query(keyFor());
+                ItemCollection<QueryOutcome> itemCollection = table.query(keyFor(hk));
                 return StreamSupport.stream(itemCollection.spliterator(), false)
                     .map(item -> valueFromItem(item, childKeyClass, "ck", true))
                     .collect(Collectors.toList());
@@ -750,14 +753,14 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
         @Override
-        public boolean contains(CK ck) {
-            return calcOnTable(() -> table.getItem(keyFor(ck)) != null, this::createTable);
+        public boolean contains(HK hk, CK ck) {
+            return calcOnTable(() -> table.getItem(keyFor(hk, ck)) != null, this::createTable);
         }
 
         @Override
-        protected Item createPutItem(CK ck) {
+        protected Item createPutItem(HK hk, CK ck) {
             return new Item()
-               .withKeyComponents(keyFor(ck));
+               .withKeyComponents(keyFor(hk, ck));
         }
 
         @Override
@@ -765,28 +768,28 @@ public class DynamoDBVelvet implements IVelvet {
             table = makeTable(makeTableRequest(tableName, "hk", keyType(hostKeyClass), "ck", keyType(childKeyClass)));
         }
 
-        private KeyAttribute[] keyFor(CK ck) {
+        private KeyAttribute[] keyFor(HK hk, CK ck) {
             return new KeyAttribute[] {new KeyAttribute("hk", hk), new KeyAttribute("ck", ck)};
         }
     }
 
     private class PrimaryMultiLink<HK, CK extends Comparable<? super CK>> extends MultiLink<HK, CK> implements IKeyIndexLink<HK, CK, CK> {
 
-        public PrimaryMultiLink(HK hostKey, Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
-            super(hostKey, hostKeyClass, childKeyClass, edgekind);
+        public PrimaryMultiLink(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+            super(hostKeyClass, childKeyClass, edgekind);
         }
 
         @Override
-        public void update(CK ck) {
+        public void update(HK hk, CK ck) {
             // NOOP for primaries
         }
 
         @Override
-        public List<CK> keys(IRangeQuery<CK, CK> query) {
+        public List<CK> keys(HK hk, IRangeQuery<CK, CK> query) {
 
             QuerySpec qs = new QuerySpec()
                     .withAttributesToGet("ck")
-                    .withHashKey(keyFor());
+                    .withHashKey(keyFor(hk));
 
 
             IQueryAnchor<CK, CK> lowAnchor = query.getLowAnchor();
@@ -853,17 +856,17 @@ public class DynamoDBVelvet implements IVelvet {
         private IStore<CK, CV> childStore;
         private Class<M> mclazz;
 
-        public SecondaryMultiLink(HK hk, Class<HK> hostKeyClass, String edgekind, Function<CV, M> nodeMetric, Class<M> mclazz, Class<CK> childKeyClass, IStore<CK, CV> childStore) {
-            super(hk, hostKeyClass, childKeyClass, edgekind);
+        public SecondaryMultiLink(Class<HK> hostKeyClass, String edgekind, Function<CV, M> nodeMetric, Class<M> mclazz, Class<CK> childKeyClass, IStore<CK, CV> childStore) {
+            super(hostKeyClass, childKeyClass, edgekind);
             this.nodeMetric = nodeMetric;
             this.childStore = childStore;
             this.mclazz = mclazz;
         }
 
         @Override
-        protected Item createPutItem(CK ck) {
+        protected Item createPutItem(HK hk, CK ck) {
             M m = scanKeyMetric(childStore, nodeMetric, ck);
-            return super.createPutItem(ck).with("m", m);
+            return super.createPutItem(hk, ck).with("m", m);
         }
 
         @Override
@@ -880,16 +883,16 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
         @Override
-        public void update(CK ck) {
+        public void update(HK hk, CK ck) {
             // TODO: better solution is possible
-           delete(ck);
-           put(ck);
+           delete(hk, ck);
+           put(hk, ck);
         }
 
         @Override
-        public List<CK> keys(IRangeQuery<CK, M> query) {
+        public List<CK> keys(HK hk, IRangeQuery<CK, M> query) {
             Index index = table.getIndex("metric");
-            return scanSecondary(query, index, childStore, nodeMetric, keyFor(), childKeyClass, mclazz, "ck", "m", this::createTable);
+            return scanSecondary(query, index, childStore, nodeMetric, keyFor(hk), childKeyClass, mclazz, "ck", "m", this::createTable);
         }
 
     }

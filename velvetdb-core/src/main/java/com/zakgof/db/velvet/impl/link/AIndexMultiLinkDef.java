@@ -18,7 +18,7 @@ abstract class AIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M
     }
 
     @Override
-    abstract protected IKeyIndexLink<HK, CK, M> index(IVelvet velvet, HK akey);
+    abstract protected IKeyIndexLink<HK, CK, M> index(IVelvet velvet);
 
     @Override
     public IMultiGetter<HK, HV, CK, CV> indexed(IRangeQuery<CK, M> indexQuery) {
@@ -26,13 +26,13 @@ abstract class AIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M
         return new IMultiGetter<HK, HV, CK, CV>() {
 
             @Override
-            public List<CV> multi(IVelvet velvet, HV node) {
-                return getChildEntity().get(velvet, multiKeys(velvet, getHostEntity().keyOf(node)));
+            public List<CV> get(IVelvet velvet, HV node) {
+                return getChildEntity().get(velvet, keys(velvet, getHostEntity().keyOf(node)));
             }
 
             @Override
-            public List<CK> multiKeys(IVelvet velvet, HK akey) {
-                return index(velvet, akey).keys(indexQuery);
+            public List<CK> keys(IVelvet velvet, HK akey) {
+                return index(velvet).keys(akey, indexQuery);
             }
 
             @Override
@@ -51,14 +51,14 @@ abstract class AIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M
     public ISingleGetter<HK, HV, CK, CV> indexedSingle(ISingleReturnRangeQuery<CK, M> indexQuery) {
         return new ISingleGetter<HK, HV, CK, CV>() {
             @Override
-            public CV single(IVelvet velvet, HV node) {
-                CK singleKey = singleKey(velvet, getHostEntity().keyOf(node));
+            public CV get(IVelvet velvet, HV node) {
+                CK singleKey = key(velvet, getHostEntity().keyOf(node));
                 return singleKey == null ? null : getChildEntity().get(velvet, singleKey);
             }
 
             @Override
-            public CK singleKey(IVelvet velvet, HK akey) {
-                return index(velvet, akey).key(indexQuery);
+            public CK key(IVelvet velvet, HK akey) {
+                return index(velvet).key(akey, indexQuery);
             }
 
             @Override

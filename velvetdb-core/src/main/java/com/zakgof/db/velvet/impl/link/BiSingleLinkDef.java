@@ -31,18 +31,18 @@ public class BiSingleLinkDef<HK, HV, CK, CV> extends ABiLinkDef<HK, HV, CK, CV, 
   }
 
   @Override
-  public CV single(IVelvet velvet, HV node) {
-    return oneWay.single(velvet, node);
+  public CV get(IVelvet velvet, HV node) {
+    return oneWay.get(velvet, node);
   }
 
   @Override
-  public CK singleKey(IVelvet velvet, HK key) {
-    return oneWay.singleKey(velvet, key);
+  public CK key(IVelvet velvet, HK key) {
+    return oneWay.key(velvet, key);
   }
   
   @Override
   public void connectKeys(IVelvet velvet, HK akey, CK bkey) {
-    CK oldChildKey = singleKey(velvet, akey);
+    CK oldChildKey = key(velvet, akey);
     if (oldChildKey != null)
       backLink.disconnectKeys(velvet, oldChildKey, akey);
     super.connectKeys(velvet, akey, bkey);
