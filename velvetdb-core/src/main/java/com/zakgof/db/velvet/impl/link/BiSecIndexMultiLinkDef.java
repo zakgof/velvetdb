@@ -1,6 +1,7 @@
 package com.zakgof.db.velvet.impl.link;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import com.zakgof.db.velvet.IVelvet;
@@ -17,12 +18,12 @@ public class BiSecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super
         implements IBiMultiLinkDef<HK, HV, CK, CV>, ISecSortedMultiLinkDef<HK, HV, CK, CV, M> {
 
     private BiSecIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
-        super(new SecIndexMultiLinkDef<HK, HV, CK, CV, M>(hostEntity, childEntity, mclazz, metric));
+        super(new SecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric));
     }
 
     public static <HK, HV, CK, CV, M extends Comparable<? super M>> BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> create(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
         BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> link = new BiSecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric);
-        BiParentLinkDef<CK, CV, HK, HV> backLink = new BiParentLinkDef<CK, CV, HK, HV>(childEntity, hostEntity);
+        BiParentLinkDef<CK, CV, HK, HV> backLink = new BiParentLinkDef<>(childEntity, hostEntity);
         link.setBackLink(backLink);
         backLink.setBackLink(link);
         return link;
@@ -39,6 +40,16 @@ public class BiSecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super
     }
 
     @Override
+    public Map<HK, List<CV>> batchGet(IVelvet velvet, List<HV> nodes) {
+        return oneWay.batchGet(velvet, nodes);
+    }
+
+    @Override
+    public Map<HK, List<CK>> batchKeys(IVelvet velvet, List<HK> keys) {
+        return oneWay.batchKeys(velvet, keys);
+    }
+
+    @Override
     public IMultiGetter<HK, HV, CK, CV> indexed(IRangeQuery<CK, M> indexQuery) {
         return oneWay.indexed(indexQuery);
     }
@@ -48,6 +59,7 @@ public class BiSecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super
         return oneWay.indexedSingle(indexQuery);
     }
 
+    @Override
     public Function<CV, M> getMetric() {
         return oneWay.getMetric();
     }
