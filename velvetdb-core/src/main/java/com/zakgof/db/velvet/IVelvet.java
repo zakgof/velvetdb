@@ -104,10 +104,14 @@ public interface IVelvet {
             return keys(hk).stream().findFirst().orElse(null);
         }
         // TODO: poor signature, map is bad
-        default void batchPut(Map<HK, CK> map) {throw new UnsupportedOperationException();} // TODO
-        default Map<HK, CK> batchGet(List<HK> hks)  {
-          return hks.stream().map(hk -> Pair.create(hk, key(hk))).filter(p -> p.second() != null).collect(Collectors.toMap(p -> p.first(), p -> p.second()));
+        default void batchPut(Map<HK, CK> map) {
+            throw new UnsupportedOperationException();
+        } // TODO
+
+        default Map<HK, CK> batchGet(List<HK> hks) {
+            return hks.stream().map(hk -> Pair.create(hk, key(hk))).filter(p -> p.second() != null).collect(Collectors.toMap(p -> p.first(), p -> p.second()));
         }
+
         default void batchDelete(List<HK> map)      {throw new UnsupportedOperationException();} // TODO
     }
 
