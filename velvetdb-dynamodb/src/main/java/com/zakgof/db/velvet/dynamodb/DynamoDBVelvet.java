@@ -303,6 +303,33 @@ public class DynamoDBVelvet implements IVelvet {
         System.err.println("----------------");
     }
 
+    private <K, V> Map<K, V> batchGet(List<K> keys, String kind, Function<K, KeyAttribute[]> keyFunc, List<String> attrs, Function<Item, K> kGetter, Function<Item, V> vGetter, Runnable tableCreator) {
+        Iterator<K> kiterator = keys.iterator();
+        Map<K, V> result = new LinkedHashMap<>();
+        Map<String, KeysAndAttributes> unprocessedKeys = new HashMap<>();
+        while (kiterator.hasNext()) {
+            TableKeysAndAttributes tableKeyAndAttributes = new TableKeysAndAttributes(kind).withAttributeNames(attrs);
+            // TODO: workaround for an AWS SDK bug:
+            if (unprocessedKeys.isEmpty()) {
+                for (int i = unprocessedKeys.size(); i < 25 && kiterator.hasNext(); i++) {
+                    K key = kiterator.next();
+                    tableKeyAndAttributes.addPrimaryKey(new PrimaryKey().addComponents(keyFunc.apply(key)));
+                }
+            }
+            BatchGetItemSpec bgis = new BatchGetItemSpec().withTableKeyAndAttributes(tableKeyAndAttributes);
+            if (!unprocessedKeys.isEmpty())
+                bgis.withUnprocessedKeys(unprocessedKeys);
+            System.err.print("  reading a chunk: " + tableKeyAndAttributes.getPrimaryKeys().size() + " items + " + unprocessedKeys.size() + " unprocessed items...");
+            BatchGetItemOutcome outcome = calcOnTable(() -> db.batchGetItem(bgis), tableCreator);
+            Map<String, KeysAndAttributes> newUnprocessedItems = outcome.getUnprocessedKeys();
+            System.err.println("   done with " + newUnprocessedItems.size() + " unprocessed");
+            unprocessedKeys.putAll(newUnprocessedItems);
+            Map<K, V> partialResult = outcome.getTableItems().get(kind).stream().collect(Collectors.toMap(kGetter, vGetter));
+            result.putAll(partialResult);
+        }
+        return result;
+    }
+
     private class Store<K, V> implements IStore<K, V> {
 
         protected Class<K> keyClass;
@@ -332,6 +359,7 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         public V get(K key) {
+            System.err.println("DynamoDB get " + kind + "/" + key);
             Item item = calcOnTable(() -> getByKey(key), this::createTable);
             if (item == null) {
                 return null;
@@ -342,32 +370,10 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         public Map<K, V> batchGet(List<K> keys) {
-            Iterator<K> kiterator = keys.iterator();
-            Map<K, V> result = new LinkedHashMap<>();
-            Map<String, KeysAndAttributes> unprocessedKeys = new HashMap<>();
-            while (kiterator.hasNext()) {
-                TableKeysAndAttributes tableKeyAndAttributes = new TableKeysAndAttributes(kind).withAttributeNames("id", "v");
-                // TODO: workaround for an AWS SDK bug:
-                if (unprocessedKeys.isEmpty()) {
-                    for (int i = unprocessedKeys.size(); i < 25 && kiterator.hasNext(); i++) {
-                        K key = kiterator.next();
-                        tableKeyAndAttributes.addPrimaryKey(new PrimaryKey().addComponents(keyFor(key)));
-                    }
-                }
-                BatchGetItemSpec bgis = new BatchGetItemSpec().withTableKeyAndAttributes(tableKeyAndAttributes);
-                if (!unprocessedKeys.isEmpty())
-                    bgis.withUnprocessedKeys(unprocessedKeys);
-                System.err.print("Reading a batch: " + tableKeyAndAttributes.getPrimaryKeys().size() + " items + " + unprocessedKeys.size() + " unprocessed items...");
-                BatchGetItemOutcome outcome = calcOnTable(() -> db.batchGetItem(bgis), this::createTable);
-                Map<String, KeysAndAttributes> newUnprocessedItems = outcome.getUnprocessedKeys();
-                System.err.println("   ...done with " + newUnprocessedItems.size() + " unprocessed");
-                unprocessedKeys.putAll(newUnprocessedItems);
-                Map<K, V> partialResult = outcome.getTableItems().values().iterator().next().stream().collect(Collectors.toMap(
-                   item -> valueFromItem(item, keyClass, "id", true),
-                   item -> valueFromItem(item, valueClass, "v", false)));
-                result.putAll(partialResult);
-            }
-            return result;
+            System.err.println("DynamoDB batch get " + kind + "/" + keys);
+            return DynamoDBVelvet.this.batchGet(keys, kind, this::keyFor, Arrays.asList("id", "v"),
+                                                item -> valueFromItem(item, keyClass, "id", true),
+                                                item -> valueFromItem(item, valueClass, "v", false),  this::createTable);
         }
 
         @Override
@@ -457,6 +463,7 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         public List<K> keys() {
+            System.err.println("DynamoDB Store scan: " + kind);
             ItemCollection<ScanOutcome> itemCollection = calcOnTable(() -> table.scan(new ScanSpec().withAttributesToGet("id")), this::createTable);
             List<K> keys = StreamSupport.stream(itemCollection.spliterator(), false).map(this::keyFromItem).collect(Collectors.toList());
             return keys;
@@ -572,6 +579,8 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         public List<K> keys(IRangeQuery<K, K> query) {
+
+            System.err.println("DynamoDB SortedStore query: " + kind);
 
             QuerySpec qs = new QuerySpec()
                 .withAttributesToGet("id")
@@ -701,12 +710,20 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         public List<CK> keys(HK hk) {
+            System.err.println("DynamoDB SingleLink get " + tableName + "/" + hk);
             Item item = calcOnTable(() -> table.getItem(new KeyAttribute("hk", hk)), this::createTable);
             if (item == null) {
                 return Collections.emptyList();
             }
             CK ck = valueFromItem(item, childKeyClass, "ck", true);
             return Arrays.asList(ck);
+        }
+
+        @Override
+        public Map<HK, CK> batchGet(List<HK> hks) {
+            return DynamoDBVelvet.this.<HK, CK>batchGet(hks, tableName, k -> new KeyAttribute[]{keyFor(k)}, Arrays.asList("hk", "ck"),
+                item -> valueFromItem(item, hostKeyClass, "hk", true),
+                item -> valueFromItem(item, childKeyClass, "ck", true),  this::createTable);
         }
 
         @Override
@@ -758,6 +775,7 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         public List<CK> keys(HK hk) {
+            System.err.println("DynamoDB MultiLink query " + tableName + "/" + hk);
             List<CK> cks = calcOnTable(() -> {
                 ItemCollection<QueryOutcome> itemCollection = table.query(keyFor(hk));
                 return StreamSupport.stream(itemCollection.spliterator(), false)
@@ -801,6 +819,8 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         public List<CK> keys(HK hk, IRangeQuery<CK, CK> query) {
+
+            System.err.println("DynamoDB PriMultiLink range query: " + tableName + "/" + hk);
 
             QuerySpec qs = new QuerySpec()
                     .withAttributesToGet("ck")
@@ -906,6 +926,9 @@ public class DynamoDBVelvet implements IVelvet {
 
         @Override
         public List<CK> keys(HK hk, IRangeQuery<CK, M> query) {
+
+            System.err.println("DynamoDB SecMultiLink range query: " + tableName + "/" + hk);
+
             Index index = table.getIndex("metric");
             return scanSecondary(query, index, childStore, nodeMetric, keyFor(hk), childKeyClass, mclazz, "ck", "m", this::createTable);
         }

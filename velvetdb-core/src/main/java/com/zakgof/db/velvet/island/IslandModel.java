@@ -132,21 +132,20 @@ public class IslandModel {
     }
 
     public <K, V> DataWrap<K, V> get(IVelvet velvet, IEntityDef<K, V> entityDef, K key) {
-        return wrap(velvet, entityDef, entityDef.get(velvet, key));
+        V node = entityDef.get(velvet, key);
+        DataWrap<K, V> wrap = new BatchBuilder<>(velvet, entityDef).make(node);
+        return wrap;
     }
 
     public <K, V> List<DataWrap<K, V>> getByKeys(IVelvet velvet, IEntityDef<K, V> entityDef, List<K> keys) {
         List<V> nodes = entityDef.batchGetList(velvet, keys);
-        List<DataWrap<K, V>> wrapList = new BatchBuilder<>(velvet, entityDef, nodes).make();
+        List<DataWrap<K, V>> wrapList = new BatchBuilder<>(velvet, entityDef).make(nodes);
         return wrapList;
     }
 
     public <K, V> List<DataWrap<K, V>> getAll(IVelvet velvet, IEntityDef<K, V> entityDef) {
-        Stream<DataWrap<K, V>> stream = entityDef.batchGetAllList(velvet)
-            .stream()
-            .map(node -> createWrap(velvet, entityDef, node, null));
-        stream = sortTheseWraps(entityDef, stream);
-        List<DataWrap<K, V>> wrapList = stream.collect(Collectors.toList());
+        List<V> nodes = entityDef.batchGetAllList(velvet);
+        List<DataWrap<K, V>> wrapList = new BatchBuilder<>(velvet, entityDef).make(nodes);
         return wrapList;
     }
 
@@ -340,18 +339,22 @@ public class IslandModel {
 
         private IVelvet velvet;
         private IEntityDef<KK, VV> startEntity;
-        private List<VV> startNodes;
 
         private Map<ISingleGetter<?,?,?,?>, Map<?, ?>> singles = new HashMap<>();
         private Map<IMultiGetter<?,?,?,?>, Map<?, List<?>>> multis = new HashMap<>();
 
-        public BatchBuilder(IVelvet velvet, IEntityDef<KK, VV> startEntity, List<VV> startNodes) {
+        public BatchBuilder(IVelvet velvet, IEntityDef<KK, VV> startEntity) {
             this.velvet = velvet;
             this.startEntity = startEntity;
-            this.startNodes = startNodes;
         }
 
-        private List<DataWrap<KK, VV>> make() {
+        public DataWrap<KK, VV> make(VV node) {
+            preFetch(startEntity, Arrays.asList(node));
+            DataWrap<KK, VV> wrap = wrap(startEntity, node, null);
+            return wrap;
+        }
+
+        private List<DataWrap<KK, VV>> make(List<VV> startNodes) {
             preFetch(startEntity, startNodes);
             return startNodes.stream()
                 .map(node -> wrap(startEntity, node, null))
@@ -377,14 +380,14 @@ public class IslandModel {
 
         private <K, V, CK, CV> void preFetchSingle(ISingleGetter<K, V, CK, CV> single, List<V> nodes) {
             Map<K, CV> children = single.batchGet(velvet, nodes);
-            singles.computeIfAbsent(single, s -> new HashMap<>()).putAll((Map)children);
+            singles.computeIfAbsent(single, s -> new LinkedHashMap<>()).putAll((Map)children);
             List<CV> childnodes = children.values().stream().collect(Collectors.toList());
             preFetch(single.getChildEntity(), childnodes);
         }
 
         private <K, V, CK, CV> void preFetchMulti(IMultiGetter<K, V, CK, CV> multi, List<V> nodes) {
             Map<K, List<CV>> children = multi.batchGet(velvet, nodes);
-            multis.computeIfAbsent(multi, m -> new HashMap<>()).putAll((Map)children);
+            multis.computeIfAbsent(multi, m -> new LinkedHashMap<>()).putAll((Map)children);
             List<CV> childnodes = children.values().stream().flatMap(List::stream).collect(Collectors.toList());
             preFetch(multi.getChildEntity(), childnodes);
         }
