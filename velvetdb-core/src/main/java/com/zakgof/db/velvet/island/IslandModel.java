@@ -361,7 +361,7 @@ public class IslandModel {
         private <K, V> void preFetch(IEntityDef<K, V> entity, List<V> nodes) {
             @SuppressWarnings("unchecked")
             FetcherEntity<K, V> fentity = (FetcherEntity<K, V>) entities.get(entity);
-            if (entity == null) {
+            if (fentity == null) {
                 return;
             }
 

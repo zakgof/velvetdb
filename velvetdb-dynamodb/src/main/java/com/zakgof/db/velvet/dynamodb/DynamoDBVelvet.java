@@ -48,6 +48,7 @@ public class DynamoDBVelvet implements IVelvet {
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             throw new VelvetException(e);
         }
     }
