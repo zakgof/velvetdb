@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
+import com.zakgof.tools.generic.Pair;
 
 public interface IVelvet {
 
@@ -99,15 +100,24 @@ public interface IVelvet {
 
     public interface ISingleLink<HK, CK> extends ILink<HK, CK> {
         // batch
-        default void batchPut(Map<HK, CK> map)      {throw new UnsupportedOperationException();} // TODO
-        default Map<HK, CK> batchGet(List<HK> hks)  {throw new UnsupportedOperationException();} // TODO
+        default CK key(HK hk) {
+            return keys(hk).stream().findFirst().orElse(null);
+        }
+        // TODO: poor signature, map is bad
+        default void batchPut(Map<HK, CK> map) {throw new UnsupportedOperationException();} // TODO
+        default Map<HK, CK> batchGet(List<HK> hks)  {
+          return hks.stream().map(hk -> Pair.create(hk, key(hk))).filter(p -> p.second() != null).collect(Collectors.toMap(p -> p.first(), p -> p.second()));
+        }
         default void batchDelete(List<HK> map)      {throw new UnsupportedOperationException();} // TODO
     }
 
     public interface IMultiLink<HK, CK> extends ILink<HK, CK> {
         // batch
         default void batchPutM(Map<HK, List<CK>> map)        {throw new UnsupportedOperationException();} // TODO
-        default Map<HK, List<CK>> batchGetM(List<HK> hks)    {throw new UnsupportedOperationException();} // TODO:  no support in backend ? -> to check
+        default Map<HK, List<CK>> batchGetM(List<HK> hks)    {
+            // TODO:  no support in backend ? -> to check
+            return hks.stream().collect(Collectors.toMap(hk -> hk, hk -> keys(hk)));
+        }
         default void batchDelete(Map<HK, List<CK>> map)     {throw new UnsupportedOperationException();} // TODO
         default void deleteAll(HK hk)                       {throw new UnsupportedOperationException();} // TODO
         default void batchDeleteAll(List<HK> map)           {throw new UnsupportedOperationException();} // TODO
