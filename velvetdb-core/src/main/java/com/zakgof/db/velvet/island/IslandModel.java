@@ -139,14 +139,12 @@ public class IslandModel {
 
     public <K, V> List<DataWrap<K, V>> getByKeys(IVelvet velvet, IEntityDef<K, V> entityDef, List<K> keys) {
         List<V> nodes = entityDef.batchGetList(velvet, keys);
-        List<DataWrap<K, V>> wrapList = new BatchBuilder<>(velvet, entityDef).make(nodes);
-        return wrapList;
+        return wrapNodes(velvet, entityDef, nodes);
     }
 
     public <K, V> List<DataWrap<K, V>> getAll(IVelvet velvet, IEntityDef<K, V> entityDef) {
         List<V> nodes = entityDef.batchGetAllList(velvet);
-        List<DataWrap<K, V>> wrapList = new BatchBuilder<>(velvet, entityDef).make(nodes);
-        return wrapList;
+        return wrapNodes(velvet, entityDef, nodes);
     }
 
     public <K, V>  void delete(IVelvet velvet, IEntityDef<K, V> entityDef, K key) {
@@ -164,6 +162,16 @@ public class IslandModel {
             }
         }
         entityDef.deleteKey(velvet, key);
+    }
+
+    public <K, V> DataWrap<K, V> wrap(IVelvet velvet, IEntityDef<K, V> entityDef, V node) {
+        DataWrap<K, V> wrap = new BatchBuilder<>(velvet, entityDef).make(node);
+        return wrap;
+    }
+
+    public <K, V> List<DataWrap<K, V>> wrapNodes(IVelvet velvet, IEntityDef<K, V> entityDef, List<V> nodes) {
+        List<DataWrap<K, V>> wrapList = new BatchBuilder<>(velvet, entityDef).make(nodes);
+        return wrapList;
     }
 
     private <K, V, CK, CV> void killChild(IVelvet velvet, ISingleGetter<K, V, CK, CV> singleGetter, K key) {
@@ -207,9 +215,7 @@ public class IslandModel {
         return stream;
     }
 
-    public <K, V> DataWrap<K, V> wrap(IVelvet velvet, IEntityDef<K, V> entityDef, V node) {
-        return createWrap(velvet, entityDef, node, null);
-    }
+    /*
 
     private <K, V> DataWrap<K, V> createWrap(IVelvet velvet, IEntityDef<K, V> entityDef, V node, Context<?, ?> parentContext) {
         Context<K, V> context = new Context<>(parentContext, entityDef, node);
@@ -271,6 +277,7 @@ public class IslandModel {
         }
         return stream.collect(Collectors.toList());
     }
+    */
 
     public static <K, V> List<DataWrap<K, V>> rawRetchAll(IVelvet velvet, IEntityDef<K, V> entityDef) {
         List<DataWrap<K, V>> nodes = entityDef.batchGetAllList(velvet).stream().map(node -> new DataWrap<>(node, entityDef.keyOf(node))).collect(Collectors.toList());
@@ -438,7 +445,7 @@ public class IslandModel {
             CV childValue = (CV) singles.get(single).get(key);
             if (childValue == null)
                 return null;
-            return createWrap(velvet, single.getChildEntity(), childValue, context);
+            return wrap(single.getChildEntity(), childValue, context);
         }
 
         private <K, V, CK, CV> List<DataWrap<CK, CV>> wrapChildren(Context<K, V> context, K key, IMultiGetter<K, V, CK, CV> multi) {
