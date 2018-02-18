@@ -38,7 +38,7 @@ public interface IVelvet {
         V get(K key);
 
         default Map<K, V> batchGet(List<K> keys) {
-            return keys.stream().collect(Collectors.toMap(k -> k, k -> get(k), (u, v) -> {throw new VelvetException("Duplicate keys");}, LinkedHashMap::new));
+            return keys.stream().distinct().collect(Collectors.toMap(k -> k, k -> get(k), (u, v) -> {throw new VelvetException("Duplicate keys");}, LinkedHashMap::new));
         }
 
         default Map<K, V> getAll() {
@@ -119,7 +119,7 @@ public interface IVelvet {
         } // TODO
 
         default Map<HK, CK> batchGet(List<HK> hks) {
-            return hks.stream().map(hk -> Pair.create(hk, key(hk))).filter(p -> p.second() != null).collect(Collectors.toMap(p -> p.first(), p -> p.second()));
+            return hks.stream().distinct().map(hk -> Pair.create(hk, key(hk))).filter(p -> p.second() != null).collect(Collectors.toMap(p -> p.first(), p -> p.second()));
         }
 
         default void batchDelete(List<HK> map)      {throw new UnsupportedOperationException();} // TODO
