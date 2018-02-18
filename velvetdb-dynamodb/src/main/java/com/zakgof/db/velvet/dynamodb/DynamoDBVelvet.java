@@ -248,6 +248,34 @@ public class DynamoDBVelvet implements IVelvet {
         return new PrimaryKey(keyAttributes);
     }
 
+    private <K, V> Map<K, V> batchGet(List<K> keys, String kind, Function<K, KeyAttribute[]> keyFunc, List<String> attrs, Function<Item, K> kGetter, Function<Item, V> vGetter, Runnable tableCreator) {
+        keys = keys.stream().distinct().collect(Collectors.toList());
+        Iterator<K> kiterator = keys.iterator();
+        Map<K, V> result = new LinkedHashMap<>();
+        Map<String, KeysAndAttributes> unprocessedKeys = new HashMap<>();
+        while (kiterator.hasNext()) {
+            TableKeysAndAttributes tableKeyAndAttributes = new TableKeysAndAttributes(kind).withAttributeNames(attrs);
+            // TODO: workaround for an AWS SDK bug:
+            if (unprocessedKeys.isEmpty()) {
+                for (int i = unprocessedKeys.size(); i < 25 && kiterator.hasNext(); i++) {
+                    K key = kiterator.next();
+                    tableKeyAndAttributes.addPrimaryKey(new PrimaryKey().addComponents(keyFunc.apply(key)));
+                }
+            }
+            BatchGetItemSpec bgis = new BatchGetItemSpec().withTableKeyAndAttributes(tableKeyAndAttributes);
+            if (!unprocessedKeys.isEmpty())
+                bgis.withUnprocessedKeys(unprocessedKeys);
+            System.err.print("  reading a chunk: " + tableKeyAndAttributes.getPrimaryKeys().size() + " items + " + unprocessedKeys.size() + " unprocessed items...");
+            BatchGetItemOutcome outcome = calcOnTable(() -> db.batchGetItem(bgis), tableCreator);
+            Map<String, KeysAndAttributes> newUnprocessedItems = outcome.getUnprocessedKeys();
+            System.err.println("   done with " + newUnprocessedItems.size() + " unprocessed");
+            unprocessedKeys.putAll(newUnprocessedItems);
+            Map<K, V> partialResult = outcome.getTableItems().get(kind).stream().collect(Collectors.toMap(kGetter, vGetter));
+            result.putAll(partialResult);
+        }
+        return result;
+    }
+
     DynamoDBVelvet(DynamoDB db, Supplier<ISerializer> serializerSupplier) {
         this.db = db;
         this.serializerSupplier = serializerSupplier;
@@ -301,33 +329,6 @@ public class DynamoDBVelvet implements IVelvet {
             }
         }
         System.err.println("----------------");
-    }
-
-    private <K, V> Map<K, V> batchGet(List<K> keys, String kind, Function<K, KeyAttribute[]> keyFunc, List<String> attrs, Function<Item, K> kGetter, Function<Item, V> vGetter, Runnable tableCreator) {
-        Iterator<K> kiterator = keys.iterator();
-        Map<K, V> result = new LinkedHashMap<>();
-        Map<String, KeysAndAttributes> unprocessedKeys = new HashMap<>();
-        while (kiterator.hasNext()) {
-            TableKeysAndAttributes tableKeyAndAttributes = new TableKeysAndAttributes(kind).withAttributeNames(attrs);
-            // TODO: workaround for an AWS SDK bug:
-            if (unprocessedKeys.isEmpty()) {
-                for (int i = unprocessedKeys.size(); i < 25 && kiterator.hasNext(); i++) {
-                    K key = kiterator.next();
-                    tableKeyAndAttributes.addPrimaryKey(new PrimaryKey().addComponents(keyFunc.apply(key)));
-                }
-            }
-            BatchGetItemSpec bgis = new BatchGetItemSpec().withTableKeyAndAttributes(tableKeyAndAttributes);
-            if (!unprocessedKeys.isEmpty())
-                bgis.withUnprocessedKeys(unprocessedKeys);
-            System.err.print("  reading a chunk: " + tableKeyAndAttributes.getPrimaryKeys().size() + " items + " + unprocessedKeys.size() + " unprocessed items...");
-            BatchGetItemOutcome outcome = calcOnTable(() -> db.batchGetItem(bgis), tableCreator);
-            Map<String, KeysAndAttributes> newUnprocessedItems = outcome.getUnprocessedKeys();
-            System.err.println("   done with " + newUnprocessedItems.size() + " unprocessed");
-            unprocessedKeys.putAll(newUnprocessedItems);
-            Map<K, V> partialResult = outcome.getTableItems().get(kind).stream().collect(Collectors.toMap(kGetter, vGetter));
-            result.putAll(partialResult);
-        }
-        return result;
     }
 
     private class Store<K, V> implements IStore<K, V> {
