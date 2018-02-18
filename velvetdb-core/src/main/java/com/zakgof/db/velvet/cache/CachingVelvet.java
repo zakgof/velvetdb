@@ -1,6 +1,7 @@
 package com.zakgof.db.velvet.cache;
 
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -15,6 +16,7 @@ import com.zakgof.tools.generic.Pair;
 
 class CachingVelvet implements IVelvet {
 
+    private static final Object NULL_VALUE = new Object();
     private final IVelvet proxy;
     private Map<String, Cache<?, ?>> cacheContainer;
 
@@ -69,19 +71,24 @@ class CachingVelvet implements IVelvet {
         }
 
         @Override
-        public Map<K, V> batchGet(List<K> keys) {
-            Map<K, V> hitMap = keys.stream().distinct()
-                .map(key -> Pair.create(key, cache.getIfPresent(key)))
+        public Map<K, V> batchGet(List<K> hks) {
+            Map<K, V> hitMap = hks.stream()
+                .distinct()
+                .map(hk -> Pair.create(hk, cache.getIfPresent(hk)))
                 .filter(p -> p.second() != null)
                 .collect(Collectors.toMap(Pair::first, Pair::second));
-
-            List<K> remainingKeys = keys.stream().filter(key -> !hitMap.containsKey(key)).collect(Collectors.toList());
-            if (!remainingKeys.isEmpty()) {
-                Map<K, V> missMap = proxyStore.batchGet(remainingKeys);
-                cache.putAll(missMap);
-                hitMap.putAll(missMap);
-            }
-            return hitMap;
+             // hitMap may contain NULL_VALUEs
+             List<K> missKeys = hks.stream()
+                .filter(hk -> !hitMap.containsKey(hk))
+                .collect(Collectors.toList());
+             if (!missKeys.isEmpty()) {
+                 Map<K, V> missMap = proxyStore.batchGet(missKeys);
+                 hitMap.putAll(missMap);
+                 cache.putAll(missMap);
+                 hks.stream().distinct().filter(hk -> !hitMap.containsKey(hk)).forEach(hk -> ((Cache)cache).put(hk, NULL_VALUE));
+             }
+             Map<K, V> fixedHitMap = hitMap.entrySet().stream().filter(e -> e.getValue() != NULL_VALUE).collect(Collectors.toMap(Entry::getKey, Entry::getValue, (u,v) -> {throw new VelvetException("Duplicate key");}, LinkedHashMap::new));
+             return fixedHitMap;
         }
 
         @Override
@@ -150,7 +157,7 @@ class CachingVelvet implements IVelvet {
         @Override
         public Map<K, V> batchGet(List<K> keys) {
             Map<K, V> hitMap = keys.stream().distinct()
-                .map(key -> Pair.create(key, cache.getIfPresent(key)))
+                .map(key -> Pair.create(key, fromCacheIfPresent(cache, key)))
                 .filter(p -> p.second() != null)
                 .collect(Collectors.toMap(Pair::first, Pair::second));
 
@@ -160,7 +167,7 @@ class CachingVelvet implements IVelvet {
                 cache.putAll(missMap);
                 hitMap.putAll(missMap);
             }
-            return hitMap;
+            return keys.stream().distinct().collect(Collectors.toMap(hk -> hk, hitMap::get, (u,v) -> {throw new VelvetException("Duplicate key");}, LinkedHashMap::new));
         }
 
         @Override
@@ -248,16 +255,18 @@ class CachingVelvet implements IVelvet {
                .map(hk -> Pair.create(hk, cache.getIfPresent(hk)))
                .filter(p -> p.second() != null)
                .collect(Collectors.toMap(Pair::first, Pair::second));
+            // hitMap may contain NULL_VALUEs
             List<HK> missKeys = hks.stream()
                .filter(hk -> !hitMap.containsKey(hk))
                .collect(Collectors.toList());
             if (!missKeys.isEmpty()) {
                 Map<HK, CK> missMap = proxyStore.batchGet(missKeys);
                 hitMap.putAll(missMap);
-                // TODO: this misses null values !
                 cache.putAll(missMap);
+                hks.stream().distinct().filter(hk -> !hitMap.containsKey(hk)).forEach(hk -> ((Cache)cache).put(hk, NULL_VALUE));
             }
-            return hitMap;
+            Map<HK, CK> fixedHitMap = hitMap.entrySet().stream().filter(e -> e.getValue() != NULL_VALUE).collect(Collectors.toMap(Entry::getKey, Entry::getValue, (u,v) -> {throw new VelvetException("Duplicate key");}, LinkedHashMap::new));
+            return fixedHitMap;
         }
 
         private <T> T toOne(List<T> list) {
@@ -266,7 +275,7 @@ class CachingVelvet implements IVelvet {
 
         @Override
         public boolean contains(HK hk, CK ck) {
-            CK cachedCK = cache.getIfPresent(hk);
+            CK cachedCK = fromCacheIfPresent(cache, hk);
             if (cachedCK !=null) {
                 return cachedCK.equals(ck);
             }
@@ -289,7 +298,7 @@ class CachingVelvet implements IVelvet {
         @Override
         public void put(HK hk, CK ck) {
             proxyStore.put(hk, ck);
-            List<CK> currSet = cache.getIfPresent(hk);
+            List<CK> currSet = fromCacheIfPresent(cache, hk);
             if (currSet != null) {
                 currSet.add(ck);
                 cache.put(hk, new ArrayList<>(currSet));
@@ -299,7 +308,7 @@ class CachingVelvet implements IVelvet {
         @Override
         public void delete(HK hk, CK ck) {
             proxyStore.put(hk, ck);
-            List<CK> set = cache.getIfPresent(hk);
+            List<CK> set = fromCacheIfPresent(cache, hk);
             if (set != null) {
                 set.remove(ck);
                 cache.put(hk, new ArrayList<>(set));
@@ -313,7 +322,7 @@ class CachingVelvet implements IVelvet {
 
         @Override
         public boolean contains(HK hk, CK ck) {
-            List<CK> set = cache.getIfPresent(hk);
+            List<CK> set = fromCacheIfPresent(cache, hk);
             if (set != null) {
                 return set.contains(ck);
             }
@@ -321,9 +330,21 @@ class CachingVelvet implements IVelvet {
         }
     }
 
+    private <KK, VV> VV fromCacheIfPresent(Cache<KK, VV> cache, KK key) {
+        VV vv = cache.getIfPresent(key);
+        if (vv == NULL_VALUE) {
+            return null;
+        }
+        return vv;
+    }
+
     private <KK, VV> VV fromCache(Cache<KK, VV> cache, KK key, Callable<VV> getter) {
         try {
-            return cache.get(key, getter);
+             VV vv = cache.get(key, getter);
+             if (vv == NULL_VALUE) {
+                 return null;
+             }
+             return vv;
         } catch (ExecutionException e) {
             throw new VelvetException(e);
         }
