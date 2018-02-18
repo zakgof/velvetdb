@@ -13,7 +13,17 @@ public interface IVelvet {
 
     public <K, V> IStore<K, V> store(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> stores);
 
+    // TODO
+    default public <K, V> IStore<K, V> storeWithProxy(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> stores, IStore<K, V> parentStore) {
+        return store(kind, keyClass, valueClass, stores);
+    }
+
     public <K extends Comparable<? super K>, V> ISortedStore<K, V> sortedStore(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes);
+
+    // TODO
+    default public <K extends Comparable<? super K>, V> ISortedStore<K, V> sortedStoreWithProxy(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> stores, IStore<K, V> parentStore) {
+        return sortedStore(kind, keyClass, valueClass, stores);
+    }
 
     public <HK, CK> ISingleLink<HK, CK> singleLink(Class<HK> hostKeyClass,  Class<CK> childKeyClass, String edgekind);
 

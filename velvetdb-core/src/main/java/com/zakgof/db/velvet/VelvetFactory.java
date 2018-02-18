@@ -6,10 +6,16 @@ import java.util.List;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 
+import com.zakgof.db.velvet.cache.CachingVelvetEnvironment;
 import com.zakgof.tools.generic.Functions;
 
 
 public class VelvetFactory {
+
+    public static IVelvetEnvironment openCaching(String url) {
+        return new CachingVelvetEnvironment(open(url));
+    }
+
     public static IVelvetEnvironment open(String url) {
         try {
             URI u = new URI(url);
