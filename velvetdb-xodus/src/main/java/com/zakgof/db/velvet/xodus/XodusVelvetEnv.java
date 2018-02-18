@@ -34,8 +34,14 @@ public class XodusVelvetEnv extends AVelvetEnvironment {
                 exs[0] = e;
             }
         });
-        if (exs[0] != null)
-            throw (exs[0] instanceof RuntimeException) ? (RuntimeException) exs[0] : new VelvetException(exs[0]);
+        if (exs[0] != null) {
+            Throwable e = exs[0];
+            if (e instanceof RuntimeException)
+                throw (RuntimeException)e;
+            else if (e instanceof Error)
+                throw (Error)e;
+            throw new VelvetException(e);
+        }
     }
 
     @Override
