@@ -1,8 +1,6 @@
 package com.zakgof.db.velvet.cache;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -15,12 +13,12 @@ import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.query.IRangeQuery;
 import com.zakgof.tools.generic.Pair;
 
-public class CachingVelvet implements IVelvet {
+class CachingVelvet implements IVelvet {
 
     private final IVelvet proxy;
     private Map<String, Cache<?, ?>> cacheContainer;
 
-    public CachingVelvet(IVelvet proxy, Map<String, Cache<?, ?>> cacheContainer) {
+    CachingVelvet(IVelvet proxy, Map<String, Cache<?, ?>> cacheContainer) {
         this.proxy = proxy;
         this.cacheContainer = cacheContainer;
     }
@@ -37,26 +35,22 @@ public class CachingVelvet implements IVelvet {
 
     @Override
     public <HK, CK> ISingleLink<HK, CK> singleLink(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
-        // TODO Auto-generated method stub
-        return null;
+        return new CachedSingleLink<>(hostKeyClass, childKeyClass, edgekind);
     }
 
     @Override
     public <HK, CK> IMultiLink<HK, CK> multiLink(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
-        // TODO Auto-generated method stub
-        return null;
+        return new CachedMultiLink<>(hostKeyClass, childKeyClass, edgekind);
     }
 
     @Override
     public <HK, CK extends Comparable<? super CK>> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
-        // TODO Auto-generated method stub
-        return null;
+        return proxy.primaryKeyIndex(hostKeyClass, childKeyClass, edgekind);
     }
 
     @Override
     public <HK, CK, CV, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex(Class<HK> hostKeyClass, String edgekind, Function<CV, M> nodeMetric, Class<M> metricClass, Class<CK> keyClass, IStore<CK, CV> childStore) {
-        // TODO Auto-generated method stub
-        return null;
+        return proxy.secondaryKeyIndex(hostKeyClass, edgekind, nodeMetric, metricClass, keyClass, childStore);
     }
 
     private class CachedStore<K, V> implements IStore<K, V> {
@@ -65,7 +59,7 @@ public class CachingVelvet implements IVelvet {
         private Cache<K, V> cache;
 
         public CachedStore(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> stores) {
-            this.proxyStore = proxy.store(kind, keyClass, valueClass, stores);
+            this.proxyStore = proxy.storeWithProxy(kind, keyClass, valueClass, stores, this);
             this.cache = cacheFor(kind);
         }
 
@@ -82,9 +76,11 @@ public class CachingVelvet implements IVelvet {
                 .collect(Collectors.toMap(Pair::first, Pair::second));
 
             List<K> remainingKeys = keys.stream().filter(key -> !hitMap.containsKey(key)).collect(Collectors.toList());
-            Map<K, V> missMap = proxyStore.batchGet(remainingKeys);
-            cache.putAll(missMap);
-            hitMap.putAll(missMap);
+            if (!remainingKeys.isEmpty()) {
+                Map<K, V> missMap = proxyStore.batchGet(remainingKeys);
+                cache.putAll(missMap);
+                hitMap.putAll(missMap);
+            }
             return hitMap;
         }
 
@@ -142,7 +138,7 @@ public class CachingVelvet implements IVelvet {
         private Cache<K, V> cache;
 
         public CachedSortedStore(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> stores) {
-            this.proxyStore = proxy.sortedStore(kind, keyClass, valueClass, stores);
+            this.proxyStore = proxy.sortedStoreWithProxy(kind, keyClass, valueClass, stores, this);
             this.cache = cacheFor(kind);
         }
 
@@ -159,9 +155,11 @@ public class CachingVelvet implements IVelvet {
                 .collect(Collectors.toMap(Pair::first, Pair::second));
 
             List<K> remainingKeys = keys.stream().filter(key -> !hitMap.containsKey(key)).collect(Collectors.toList());
-            Map<K, V> missMap = proxyStore.batchGet(remainingKeys);
-            cache.putAll(missMap);
-            hitMap.putAll(missMap);
+            if (!remainingKeys.isEmpty()) {
+                Map<K, V> missMap = proxyStore.batchGet(remainingKeys);
+                cache.putAll(missMap);
+                hitMap.putAll(missMap);
+            }
             return hitMap;
         }
 
@@ -213,6 +211,113 @@ public class CachingVelvet implements IVelvet {
         @Override
         public List<K> keys(IRangeQuery<K, K> query) {
             return proxyStore.keys(query);
+        }
+    }
+
+    private class CachedSingleLink<HK, CK> implements ISingleLink<HK, CK> {
+        private ISingleLink<HK, CK> proxyStore;
+        private Cache<HK, CK> cache;
+
+        public CachedSingleLink(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+            this.proxyStore = proxy.singleLink(hostKeyClass, childKeyClass, edgekind);
+            this.cache = cacheFor(edgekind);
+        }
+
+        @Override
+        public void put(HK hk, CK ck) {
+            proxyStore.put(hk, ck);
+            cache.put(hk, ck);
+        }
+
+        @Override
+        public void delete(HK hk, CK ck) {
+            proxyStore.delete(hk, ck);
+            cache.invalidate(hk);
+        }
+
+        @Override
+        public List<CK> keys(HK hk) {
+            CK ck = fromCache(cache, hk, () -> toOne(proxyStore.keys(hk)));
+            return ck == null ? null : Arrays.asList(ck);
+        }
+
+        @Override
+        public Map<HK, CK> batchGet(List<HK> hks) {
+            Map<HK, CK> hitMap = hks.stream()
+               .distinct()
+               .map(hk -> Pair.create(hk, cache.getIfPresent(hk)))
+               .filter(p -> p.second() != null)
+               .collect(Collectors.toMap(Pair::first, Pair::second));
+            List<HK> missKeys = hks.stream()
+               .filter(hk -> !hitMap.containsKey(hk))
+               .collect(Collectors.toList());
+            if (!missKeys.isEmpty()) {
+                Map<HK, CK> missMap = proxyStore.batchGet(missKeys);
+                hitMap.putAll(missMap);
+                // TODO: this misses null values !
+                cache.putAll(missMap);
+            }
+            return hitMap;
+        }
+
+        private <T> T toOne(List<T> list) {
+            return list.stream().findFirst().orElse(null);
+        }
+
+        @Override
+        public boolean contains(HK hk, CK ck) {
+            CK cachedCK = cache.getIfPresent(hk);
+            if (cachedCK !=null) {
+                return cachedCK.equals(ck);
+            }
+            return proxyStore.contains(hk, ck);
+        }
+    }
+
+    /**
+     * Only cache full result lists
+     */
+    private class CachedMultiLink<HK, CK> implements IMultiLink<HK, CK> {
+        private IMultiLink<HK, CK> proxyStore;
+        private Cache<HK, List<CK>> cache;
+
+        public CachedMultiLink(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+            this.proxyStore = proxy.multiLink(hostKeyClass, childKeyClass, edgekind);
+            this.cache = cacheFor(edgekind);
+        }
+
+        @Override
+        public void put(HK hk, CK ck) {
+            proxyStore.put(hk, ck);
+            List<CK> currSet = cache.getIfPresent(hk);
+            if (currSet != null) {
+                currSet.add(ck);
+                cache.put(hk, new ArrayList<>(currSet));
+            }
+        }
+
+        @Override
+        public void delete(HK hk, CK ck) {
+            proxyStore.put(hk, ck);
+            List<CK> set = cache.getIfPresent(hk);
+            if (set != null) {
+                set.remove(ck);
+                cache.put(hk, new ArrayList<>(set));
+            }
+        }
+
+        @Override
+        public List<CK> keys(HK hk) {
+            return fromCache(cache, hk, () -> proxyStore.keys(hk));
+        }
+
+        @Override
+        public boolean contains(HK hk, CK ck) {
+            List<CK> set = cache.getIfPresent(hk);
+            if (set != null) {
+                return set.contains(ck);
+            }
+            return proxyStore.contains(hk, ck);
         }
     }
 

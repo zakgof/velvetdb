@@ -201,7 +201,7 @@ public class DynamoDBVelvet implements IVelvet {
             List<K> cks = calcOnTable(() -> {
                 ItemCollection<QueryOutcome> itemCollection = index.query(qs);
 
-                List<Item> debug = StreamSupport.stream(itemCollection.spliterator(), false).collect(Collectors.toList());
+                // List<Item> debug = StreamSupport.stream(itemCollection.spliterator(), false).collect(Collectors.toList());
 
                 return StreamSupport.stream(itemCollection.spliterator(), false)
                     .filter(item -> filterM(item, query, lowM2, highM2, keyClass, mClass, keyAttr, mAttr))
@@ -283,12 +283,22 @@ public class DynamoDBVelvet implements IVelvet {
 
     @Override
     public <K, V> IStore<K, V> store(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes) {
-        return new Store<>(kind, keyClass, valueClass, indexes);
+        return new Store<>(kind, keyClass, valueClass, indexes, null);
+    }
+
+    @Override
+    public <K, V> IStore<K, V> storeWithProxy(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes, IStore<K, V> parentStore) {
+        return new Store<>(kind, keyClass, valueClass, indexes, parentStore);
     }
 
     @Override
     public <K extends Comparable<? super K>, V> ISortedStore<K, V> sortedStore(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes) {
-        return new SortedStore<>(kind, keyClass, valueClass, indexes);
+        return new SortedStore<>(kind, keyClass, valueClass, indexes, null);
+    }
+
+    @Override
+    public <K extends Comparable<? super K>, V> ISortedStore<K, V> sortedStoreWithProxy(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes, IStore<K, V> parentStore) {
+        return new SortedStore<>(kind, keyClass, valueClass, indexes, parentStore);
     }
 
     @Override
@@ -339,6 +349,7 @@ public class DynamoDBVelvet implements IVelvet {
         protected Table table;
         protected Collection<IStoreIndexDef<?, V>> indexes;
         private Map<String, StoreIndex<?>> indexMap;
+        private IStore<K, V> parentStore;
 
         /**
          * hash key: id
@@ -349,7 +360,8 @@ public class DynamoDBVelvet implements IVelvet {
          * range key: index-indexname
          */
         @SuppressWarnings({ "rawtypes", "unchecked" })
-        public Store(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes) {
+        public Store(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes, IStore<K, V> parentStore) {
+            this.parentStore =  parentStore == null ? this:  parentStore;
             this.keyClass = keyClass;
             this.valueClass = valueClass;
             this.kind = kind;
@@ -556,9 +568,10 @@ public class DynamoDBVelvet implements IVelvet {
 
             @Override
             public List<K> keys(IRangeQuery<K, M> query) {
+                System.err.println("DynamoDB store index query: " + kind + "/" + indexDef.name() + " " + query);
                 Index index = table.getIndex("index-" + indexDef.name());
                 KeyAttribute hashKey = new KeyAttribute("partition", 1);
-                return scanSecondary(query, index, Store.this, indexDef.metric(), hashKey, keyClass, indexDef.clazz(), "id", "i-" + indexDef.name(), Store.this::createTable);
+                return scanSecondary(query, index, parentStore, indexDef.metric(), hashKey, keyClass, indexDef.clazz(), "id", "i-" + indexDef.name(), Store.this::createTable);
             }
         }
     }
@@ -574,8 +587,8 @@ public class DynamoDBVelvet implements IVelvet {
      */
     private class SortedStore <K extends Comparable<? super K>, V> extends Store<K, V> implements ISortedStore<K, V> {
 
-        public SortedStore(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes) {
-            super(kind, keyClass, valueClass, indexes);
+        public SortedStore(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> indexes, IStore<K, V> parentStore) {
+            super(kind, keyClass, valueClass, indexes, parentStore);
         }
 
         @Override
