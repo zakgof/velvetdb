@@ -3,7 +3,6 @@ package com.zakgof.db.velvet.cache;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -245,7 +244,7 @@ class CachingVelvet implements IVelvet {
         @Override
         public List<CK> keys(HK hk) {
             CK ck = fromCache(cache, hk, () -> toOne(proxyStore.keys(hk)));
-            return ck == null ? null : Arrays.asList(ck);
+            return ck == null ? Collections.emptyList() : Arrays.asList(ck);
         }
 
         @Override
@@ -338,16 +337,26 @@ class CachingVelvet implements IVelvet {
         return vv;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private <KK, VV> VV fromCache(Cache<KK, VV> cache, KK key, Callable<VV> getter) {
-        try {
-             VV vv = cache.get(key, getter);
+
+            VV vv = cache.getIfPresent(key);
              if (vv == NULL_VALUE) {
                  return null;
+             } else if (vv == null) {
+                 try {
+                     vv = getter.call();
+                 } catch (Exception e) {
+                     throw new VelvetException(e);
+                 }
+                 if (vv == null) {
+                     ((Cache)cache).put(key, NULL_VALUE);
+                 } else {
+                     cache.put(key, vv);
+                 }
              }
              return vv;
-        } catch (ExecutionException e) {
-            throw new VelvetException(e);
-        }
+
     }
 
     @SuppressWarnings("unchecked")

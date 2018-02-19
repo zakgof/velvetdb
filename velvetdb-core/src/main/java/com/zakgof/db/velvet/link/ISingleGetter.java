@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.tools.generic.Pair;
 
 public interface ISingleGetter<HK, HV, CK, CV> extends IRelation<HK, HV, CK, CV> {
 
@@ -24,7 +25,10 @@ public interface ISingleGetter<HK, HV, CK, CV> extends IRelation<HK, HV, CK, CV>
     }
 
     public default Map<HK, CK> batchKeys(IVelvet velvet, List<HK> keys) {
-        return keys.stream().collect(Collectors.toMap(hk -> hk, hk -> key(velvet, hk)));
+        return keys.stream()
+            .map(hk -> Pair.create(hk, key(velvet, hk)))
+            .filter(p -> p.second() != null)
+            .collect(Collectors.toMap(Pair::first, Pair::second));
     }
 
 }
