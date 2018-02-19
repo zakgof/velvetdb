@@ -388,7 +388,7 @@ public class IslandModel {
         private <K, V, CK, CV> void preFetchSingle(ISingleGetter<K, V, CK, CV> single, List<V> nodes) {
             Map<K, CV> children = single.batchGet(velvet, nodes);
             singles.computeIfAbsent(single, s -> new LinkedHashMap<>()).putAll((Map)children);
-            List<CV> childnodes = children.values().stream().collect(Collectors.toList());
+            List<CV> childnodes = children.values().stream().filter(v -> v!= null).collect(Collectors.toList());
             preFetch(single.getChildEntity(), childnodes);
         }
 
