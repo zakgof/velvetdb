@@ -1,6 +1,12 @@
 package com.zakgof.db.velvet.cache;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
@@ -10,7 +16,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
-import com.zakgof.db.velvet.query.IRangeQuery;
+import com.zakgof.db.velvet.query.IKeyQuery;
 import com.zakgof.tools.generic.Pair;
 
 class CachingVelvet implements IVelvet {
@@ -45,12 +51,12 @@ class CachingVelvet implements IVelvet {
     }
 
     @Override
-    public <HK, CK extends Comparable<? super CK>> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+    public <HK, CK extends Comparable<? super CK>> IPriIndexLink<HK, CK> primaryKeyIndex(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
         return proxy.primaryKeyIndex(hostKeyClass, childKeyClass, edgekind);
     }
 
     @Override
-    public <HK, CK, CV, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex(Class<HK> hostKeyClass, String edgekind, Function<CV, M> nodeMetric, Class<M> metricClass, Class<CK> keyClass, IStore<CK, CV> childStore) {
+    public <HK, CK, CV, M extends Comparable<? super M>> ISecIndexLink<HK, CK, M> secondaryKeyIndex(Class<HK> hostKeyClass, String edgekind, Function<CV, M> nodeMetric, Class<M> metricClass, Class<CK> keyClass, IStore<CK, CV> childStore) {
         return proxy.secondaryKeyIndex(hostKeyClass, edgekind, nodeMetric, metricClass, keyClass, childStore);
     }
 
@@ -215,7 +221,7 @@ class CachingVelvet implements IVelvet {
         }
 
         @Override
-        public List<K> keys(IRangeQuery<K, K> query) {
+        public List<K> keys(IKeyQuery<K> query) {
             return proxyStore.keys(query);
         }
     }

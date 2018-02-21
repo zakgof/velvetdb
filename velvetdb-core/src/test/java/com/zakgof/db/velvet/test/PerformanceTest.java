@@ -9,8 +9,8 @@ import com.zakgof.db.velvet.entity.IEntityDef;
 
 public class PerformanceTest extends AVelvetTest {
 
-    private static final int INSERTS = 100;
-    private static final int COMMITS = 10;
+    private static final int INSERTS = 100000;
+    private static final int COMMITS = 1000;
     private static final int INSERTS_PER_COMMIT = INSERTS / COMMITS;
     private IEntityDef<Integer, String> E = Entities.from(String.class).kind("kind").make(Integer.class, s -> Integer.parseInt(s.substring(1)));
 

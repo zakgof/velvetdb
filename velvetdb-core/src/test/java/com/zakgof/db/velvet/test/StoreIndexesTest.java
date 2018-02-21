@@ -9,8 +9,8 @@ import org.junit.Test;
 
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.query.IRangeQuery;
-import com.zakgof.db.velvet.query.Queries;
+import com.zakgof.db.velvet.query.ISecQuery;
+import com.zakgof.db.velvet.query.SecQueries;
 
 public class StoreIndexesTest extends AVelvetTxnTest {
 
@@ -43,55 +43,55 @@ public class StoreIndexesTest extends AVelvetTxnTest {
 
     @Test
     public void testGetAll() {
-        check("key", Queries.<Integer, Integer> builder().build(), "limhefckgabdj");
-        check("weight", Queries.<Integer, Integer> builder().build(), "lgecjabhmikfd");
-        check("str", Queries.<Integer, Integer> builder().build(), "abcdefghijklm");
+        check("key", SecQueries.<Integer, Integer> builder().build(), "limhefckgabdj");
+        check("weight", SecQueries.<Integer, Integer> builder().build(), "lgecjabhmikfd");
+        check("str", SecQueries.<Integer, Integer> builder().build(), "abcdefghijklm");
     }
 
     @Test
     public void testRange() {
-        check("key", Queries.<Integer, Integer> range(4, false, 10, false), "efckg");
-        check("weight", Queries.<Integer, Long> range(250L, false, 1101L, true), "ecjabhmik");
-        check("str", Queries.<Integer, String> range("c", true, "i", false), "cdefgh");
+        check("key", SecQueries.<Integer, Integer> range(4, false, 10, false), "efckg");
+        check("weight", SecQueries.<Integer, Long> range(250L, false, 1101L, true), "ecjabhmik");
+        check("str", SecQueries.<Integer, String> range("c", true, "i", false), "cdefgh");
     }
 
     @Test
     public void testOpenRange() {
-        check("key", Queries.less(8), "limhefc");
-        check("weight", Queries.greaterOrEq(600L), "abhmikfd");
-        check("str", Queries.lessOrEq("g"), "abcdefg");
+        check("key", SecQueries.lt(8), "limhefc");
+        check("weight", SecQueries.ge(600L), "abhmikfd");
+        check("str", SecQueries.le("g"), "abcdefg");
     }
 
     @Test
     public void testOpenRangeDesc() {
-        check("key", Queries.<Integer, Integer>builder().less(8).descending().build(), "cfehmil");
-        check("weight", Queries.<Integer, Long>builder().greaterOrEq(600L).descending().build(), "dfkimhba");
-        check("str", Queries.<Integer, String> builder().lessOrEq("g").descending().build(), "gfedcba");
+        check("key", SecQueries.<Integer, Integer>builder().lt(8).descending().build(), "cfehmil");
+        check("weight", SecQueries.<Integer, Long>builder().ge(600L).descending().build(), "dfkimhba");
+        check("str", SecQueries.<Integer, String> builder().le("g").descending().build(), "gfedcba");
     }
 
     @Test
     public void testKeyOpenRange() {
-        check("key", Queries.<Integer, Integer>builder().lessKey(8).build(), "limhefc");
-        check("weight", Queries.<Integer, Integer>builder().greaterOrEqKey(8).build(), "kfd");
-        check("str", Queries.<Integer, Integer>builder().lessOrEqKey(8).build(), "abcdefghijk");
+        check("key", SecQueries.<Integer, Integer>builder().ltKey(8).build(), "limhefc");
+        check("weight", SecQueries.<Integer, Integer>builder().geKey(8).build(), "kfd");
+        check("str", SecQueries.<Integer, Integer>builder().leKey(8).build(), "abcdefghijk");
     }
 
     @Test
     public void testKeyOpenRangeDesc() {
-        check("key", Queries.<Integer, Integer>builder().lessKey(8).descending().build(), "cfehmil");
-        check("weight", Queries.<Integer, Long>builder().greaterOrEqKey(8).descending().build(), "dfk");
-        check("str", Queries.<Integer, String> builder().lessOrEqKey(8).descending().build(), "kjihgfedcba");
+        check("key", SecQueries.<Integer, Integer>builder().ltKey(8).descending().build(), "cfehmil");
+        check("weight", SecQueries.<Integer, Long>builder().geKey(8).descending().build(), "dfk");
+        check("str", SecQueries.<Integer, String> builder().leKey(8).descending().build(), "kjihgfedcba");
     }
 
     @Test
     public void testRemove() {
         ENTITY3.deleteValue(velvet, value7);
-        check("key", Queries.<Integer, Integer> builder().build(), "limhefkgabdj");
-        check("weight", Queries.<Integer, Integer> builder().build(), "lgejabhmikfd");
-        check("str", Queries.<Integer, Integer> builder().build(), "abdefghijklm");
+        check("key", SecQueries.<Integer, Integer> builder().build(), "limhefkgabdj");
+        check("weight", SecQueries.<Integer, Integer> builder().build(), "lgejabhmikfd");
+        check("str", SecQueries.<Integer, Integer> builder().build(), "abdefghijklm");
     }
 
-    private <K, M extends Comparable<? super M>> void check(String name, IRangeQuery<Integer, M> query, String ref) {
+    private <K, M extends Comparable<? super M>> void check(String name, ISecQuery<Integer, M> query, String ref) {
         List<Integer> keys = ENTITY3.<M> indexKeys(velvet, name, query);
         List<TestEnt3> values = ENTITY3.batchGetList(velvet, keys);
         String result = values.stream().map(TestEnt3::getStr).collect(Collectors.joining(""));

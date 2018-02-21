@@ -5,11 +5,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.IKeylessEntityDef;
-import com.zakgof.db.velvet.query.Queries;
+import com.zakgof.db.velvet.query.KeyQueries;
 
 public class KeylessTest extends AVelvetTxnTest {
 
@@ -44,22 +47,22 @@ public class KeylessTest extends AVelvetTxnTest {
 
         List<Integer> order = ENTITY.batchGetAll(velvet).values().stream().map(KeylessEnt::getNum).collect(Collectors.toList());
 
-        KeylessEnt first = ENTITY.get(velvet, Queries.first());
+        KeylessEnt first = ENTITY.get(velvet, KeyQueries.first());
         Assert.assertEquals(order.get(0).intValue(), first.getNum());
 
-        KeylessEnt e2 = ENTITY.get(velvet, Queries.nextKey(ENTITY.keyOf(first)));
+        KeylessEnt e2 = ENTITY.get(velvet, KeyQueries.next(ENTITY.keyOf(first)));
         Assert.assertEquals(order.get(1).intValue(), e2.getNum());
 
-        KeylessEnt e3 = ENTITY.get(velvet, Queries.nextKey(ENTITY.keyOf(e2))); // TODO: helper for this
+        KeylessEnt e3 = ENTITY.get(velvet, KeyQueries.next(ENTITY.keyOf(e2))); // TODO: helper for this
         Assert.assertEquals(order.get(2).intValue(), e3.getNum());
 
-        KeylessEnt last = ENTITY.get(velvet, Queries.last());
+        KeylessEnt last = ENTITY.get(velvet, KeyQueries.last());
         Assert.assertEquals(order.get(4).intValue(), last.getNum());
     }
 
     @Test
     public void testGetByKey() {
-        KeylessEnt first = ENTITY.get(velvet, Queries.first());
+        KeylessEnt first = ENTITY.get(velvet, KeyQueries.first());
         Long k = ENTITY.keyOf(first);
         Assert.assertNotNull(k);
         KeylessEnt reget = ENTITY.get(velvet, k);

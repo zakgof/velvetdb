@@ -1,7 +1,16 @@
 package com.zakgof.db.velvet.dynamodb;
 
 import java.io.ByteArrayInputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -9,15 +18,48 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.amazonaws.services.dynamodbv2.document.*;
-import com.amazonaws.services.dynamodbv2.document.spec.*;
-import com.amazonaws.services.dynamodbv2.model.*;
+import com.amazonaws.services.dynamodbv2.document.BatchGetItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.BatchWriteItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Index;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
+import com.amazonaws.services.dynamodbv2.document.KeyAttribute;
+import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
+import com.amazonaws.services.dynamodbv2.document.RangeKeyCondition;
+import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
+import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.TableCollection;
+import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes;
+import com.amazonaws.services.dynamodbv2.document.TableWriteItems;
+import com.amazonaws.services.dynamodbv2.document.spec.BatchGetItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.BatchWriteItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
+import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
+import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
+import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.GlobalSecondaryIndex;
+import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
+import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
+import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
+import com.amazonaws.services.dynamodbv2.model.LocalSecondaryIndex;
+import com.amazonaws.services.dynamodbv2.model.Projection;
+import com.amazonaws.services.dynamodbv2.model.ProjectionType;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
+import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Primitives;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
-import com.zakgof.db.velvet.query.IQueryAnchor;
-import com.zakgof.db.velvet.query.IRangeQuery;
+import com.zakgof.db.velvet.query.IKeyAnchor;
+import com.zakgof.db.velvet.query.IKeyQuery;
+import com.zakgof.db.velvet.query.ISecAnchor;
+import com.zakgof.db.velvet.query.ISecQuery;
 import com.zakgof.serialize.ISerializer;
 
 public class DynamoDBVelvet implements IVelvet {
@@ -125,10 +167,10 @@ public class DynamoDBVelvet implements IVelvet {
         );
     }
 
-    private <CK, M extends Comparable <? super M>, V> boolean filterM(Item item, IRangeQuery<CK, M> query, M lowM2, M highM2, Class<CK> keyClass, Class<M> mClass, String keyAttr, String mAttr) {
+    private <CK, M extends Comparable <? super M>, V> boolean filterM(Item item, ISecQuery<CK, M> query, M lowM2, M highM2, Class<CK> keyClass, Class<M> mClass, String keyAttr, String mAttr) {
         CK ck = valueFromItem(item, keyClass, keyAttr, true);
         M m = valueFromItem(item, mClass, mAttr, true);
-        IQueryAnchor<CK, M> lowAnchor = query.getLowAnchor();
+        ISecAnchor<CK, M> lowAnchor = query.getLowAnchor();
         if (lowAnchor != null) {
             int c = m.compareTo(lowM2);
             if (c < 0 || c == 0 && !lowAnchor.isIncluding())
@@ -137,7 +179,7 @@ public class DynamoDBVelvet implements IVelvet {
                 return false;
             }
         }
-        IQueryAnchor<CK, M> highAnchor = query.getHighAnchor();
+        ISecAnchor<CK, M> highAnchor = query.getHighAnchor();
         if (highAnchor != null) {
             int c = m.compareTo(highM2);
             if (c > 0 || c == 0 && !highAnchor.isIncluding())
@@ -158,14 +200,14 @@ public class DynamoDBVelvet implements IVelvet {
         return m;
     }
 
-    private <K, V, M extends Comparable<? super M>> List<K> scanSecondary(IRangeQuery<K, M> query, Index index, IStore<K, V> store, Function<V, M> metric, KeyAttribute hashKey, Class<K> keyClass, Class<M> mClass, String keyAttr, String mAttr, Runnable tableCreator) {
+    private <K, V, M extends Comparable<? super M>> List<K> scanSecondary(ISecQuery<K, M> query, Index index, IStore<K, V> store, Function<V, M> metric, KeyAttribute hashKey, Class<K> keyClass, Class<M> mClass, String keyAttr, String mAttr, Runnable tableCreator) {
 
             QuerySpec qs = new QuerySpec()
                     .withAttributesToGet(keyAttr, mAttr)
                     .withHashKey(hashKey);
 
-            IQueryAnchor<K, M> lowAnchor = query.getLowAnchor();
-            IQueryAnchor<K, M> highAnchor = query.getHighAnchor();
+            ISecAnchor<K, M> lowAnchor = query.getLowAnchor();
+            ISecAnchor<K, M> highAnchor = query.getHighAnchor();
             M lowM = null;
             M highM = null;
             if (lowAnchor != null) {
@@ -214,30 +256,46 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
     private void cleanTable(Table table) {
-        List<TableWriteItems> writes = new ArrayList<>();
         System.err.print("Cleaning up " + table.getTableName() + "... ");
-
         try {
 
             if (table.getDescription() == null)
                 table.describe();
             List<KeySchemaElement> keySchema = table.getDescription().getKeySchema();
             String[] attrs = keySchema.stream().map(KeySchemaElement::getAttributeName).toArray(String[]::new);
-            TableWriteItems tableWriteItems = new TableWriteItems(table.getTableName());
             ItemCollection<ScanOutcome> itemCollection = table.scan(new ScanSpec().withAttributesToGet(attrs));
-            StreamSupport.stream(itemCollection.spliterator(), false)
+            List<PrimaryKey> pks = StreamSupport.stream(itemCollection.spliterator(), false)
                 .map((Item item) -> itemToPrimaryKey(item))
-                .forEach(pk -> tableWriteItems.addPrimaryKeyToDelete(pk));
+                .collect(Collectors.toList());
+            System.err.println(" " + pks.size() + " items"  );
 
-            if (tableWriteItems.getPrimaryKeysToDelete() != null && !tableWriteItems.getPrimaryKeysToDelete().isEmpty()) {
-                writes.add(tableWriteItems);
-                System.err.println("batched (" + tableWriteItems.getPrimaryKeysToDelete().size() + " items)");
-            } else {
-                System.err.println("no items.");
+
+            Iterator<PrimaryKey> iterator = pks.iterator();
+            List<WriteRequest> unprocessed = null;
+            for (;;) {
+                BatchWriteItemSpec bwis = new BatchWriteItemSpec();
+                TableWriteItems tableWriteItems = new TableWriteItems(table.getTableName());
+                if (unprocessed != null && !unprocessed.isEmpty()) {
+                    bwis.withUnprocessedItems(ImmutableMap.of(table.getTableName(), unprocessed));
+                } else if (iterator.hasNext()) {
+                    for (int i = 0; i < 25 && iterator.hasNext(); i++) {
+                        tableWriteItems.addPrimaryKeyToDelete(iterator.next());
+                    }
+                    bwis.withTableWriteItems(tableWriteItems);
+                }
+                if (bwis.getUnprocessedItems() == null && bwis.getTableWriteItems() == null) {
+                    break;
+                }
+                System.err.print("   deleting a batch... ");
+                BatchWriteItemOutcome outcome = db.batchWriteItem(bwis);
+                unprocessed = outcome.getUnprocessedItems().get(table.getTableName());
+                if (unprocessed != null && !unprocessed.isEmpty()) {
+                    System.err.println("   " + unprocessed.size() + " inprocessed items");
+                } else {
+                    System.err.println("   done");
+                }
             }
-            if (!writes.isEmpty()) {
-                db.batchWriteItem(new BatchWriteItemSpec().withTableWriteItems(writes.toArray(new TableWriteItems[0])));
-            }
+            System.err.println("Deleting complete");
         } catch (ResourceNotFoundException e) {
             System.err.println("error " + e);
         }
@@ -312,12 +370,12 @@ public class DynamoDBVelvet implements IVelvet {
     }
 
     @Override
-    public <HK, CK extends Comparable<? super CK>> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+    public <HK, CK extends Comparable<? super CK>> IPriIndexLink<HK, CK> primaryKeyIndex(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
         return new PrimaryMultiLink<>(hostKeyClass, childKeyClass, edgekind);
     }
 
     @Override
-    public <HK, CK, CV, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex( Class<HK> hostKeyClass, String edgekind, Function<CV, M> nodeMetric, Class<M> mclazz, Class<CK> childKeyClazz, IStore<CK, CV> childStore) {
+    public <HK, CK, CV, M extends Comparable<? super M>> ISecIndexLink<HK, CK, M> secondaryKeyIndex( Class<HK> hostKeyClass, String edgekind, Function<CV, M> nodeMetric, Class<M> mclazz, Class<CK> childKeyClazz, IStore<CK, CV> childStore) {
         return new SecondaryMultiLink<>(hostKeyClass, edgekind, nodeMetric, mclazz, childKeyClazz, childStore);
     }
 
@@ -567,7 +625,7 @@ public class DynamoDBVelvet implements IVelvet {
             }
 
             @Override
-            public List<K> keys(IRangeQuery<K, M> query) {
+            public List<K> keys(ISecQuery<K, M> query) {
                 System.err.println("DynamoDB store index query: " + kind + "/" + indexDef.name() + " " + query);
                 Index index = table.getIndex("index-" + indexDef.name());
                 KeyAttribute hashKey = new KeyAttribute("partition", 1);
@@ -592,7 +650,7 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
         @Override
-        public List<K> keys(IRangeQuery<K, K> query) {
+        public List<K> keys(IKeyQuery<K> query) {
 
             System.err.println("DynamoDB SortedStore query: " + kind);
 
@@ -600,16 +658,16 @@ public class DynamoDBVelvet implements IVelvet {
                 .withAttributesToGet("id")
                 .withHashKey("partition", 1);
 
-            IQueryAnchor<K, K> lowAnchor = query.getLowAnchor();
-            IQueryAnchor<K, K> highAnchor = query.getHighAnchor();
+            IKeyAnchor<K> lowAnchor = query.getLowAnchor();
+            IKeyAnchor<K> highAnchor = query.getHighAnchor();
             K lowKey = null;
             K highKey = null;
             Predicate<K> fixBeetween = (ck) -> true;
             if (lowAnchor != null) {
-                lowKey = lowAnchor.getKey() == null ? lowAnchor.getMetric() : lowAnchor.getKey(); // TODO create single-arg queries
+                lowKey = lowAnchor.getKey();
             }
             if (highAnchor != null) {
-                highKey = highAnchor.getKey() == null ? highAnchor.getMetric() : highAnchor.getKey();
+                highKey = highAnchor.getKey();
             }
             if (lowKey != null && highKey == null) {
                 RangeKeyCondition condition = new RangeKeyCondition("id");
@@ -820,19 +878,14 @@ public class DynamoDBVelvet implements IVelvet {
         }
     }
 
-    private class PrimaryMultiLink<HK, CK extends Comparable<? super CK>> extends MultiLink<HK, CK> implements IKeyIndexLink<HK, CK, CK> {
+    private class PrimaryMultiLink<HK, CK extends Comparable<? super CK>> extends MultiLink<HK, CK> implements IPriIndexLink<HK, CK> {
 
         public PrimaryMultiLink(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
             super(hostKeyClass, childKeyClass, edgekind);
         }
 
         @Override
-        public void update(HK hk, CK ck) {
-            // NOOP for primaries
-        }
-
-        @Override
-        public List<CK> keys(HK hk, IRangeQuery<CK, CK> query) {
+        public List<CK> keys(HK hk, IKeyQuery<CK> query) {
 
             System.err.println("DynamoDB PriMultiLink range query: " + tableName + "/" + hk);
 
@@ -841,16 +894,16 @@ public class DynamoDBVelvet implements IVelvet {
                     .withHashKey(keyFor(hk));
 
 
-            IQueryAnchor<CK, CK> lowAnchor = query.getLowAnchor();
-            IQueryAnchor<CK, CK> highAnchor = query.getHighAnchor();
+            IKeyAnchor<CK> lowAnchor = query.getLowAnchor();
+            IKeyAnchor<CK> highAnchor = query.getHighAnchor();
             CK lowKey = null;
             CK highKey = null;
             Predicate<CK> fixBeetween = (ck) -> true;
             if (lowAnchor != null) {
-                lowKey = lowAnchor.getKey() == null ? lowAnchor.getMetric() : lowAnchor.getKey(); // TODO create single-arg queries
+                lowKey = lowAnchor.getKey();
             }
             if (highAnchor != null) {
-                highKey = highAnchor.getKey() == null ? highAnchor.getMetric() : highAnchor.getKey();
+                highKey = highAnchor.getKey();
             }
             if (lowKey != null && highKey == null) {
                 RangeKeyCondition condition = new RangeKeyCondition("ck");
@@ -899,7 +952,7 @@ public class DynamoDBVelvet implements IVelvet {
      * Sort key : ck
      * LSI      :  m
      */
-    private class SecondaryMultiLink<HK, CK, CV, M extends Comparable<? super M>> extends MultiLink<HK, CK> implements IKeyIndexLink<HK, CK, M> {
+    private class SecondaryMultiLink<HK, CK, CV, M extends Comparable<? super M>> extends MultiLink<HK, CK> implements ISecIndexLink<HK, CK, M> {
 
         private Function<CV, M> nodeMetric;
         private IStore<CK, CV> childStore;
@@ -939,7 +992,7 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
         @Override
-        public List<CK> keys(HK hk, IRangeQuery<CK, M> query) {
+        public List<CK> keys(HK hk, ISecQuery<CK, M> query) {
 
             System.err.println("DynamoDB SecMultiLink range query: " + tableName + "/" + hk);
 

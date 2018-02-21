@@ -11,7 +11,7 @@ import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.annotation.Key;
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.query.Queries;
+import com.zakgof.db.velvet.query.SecQueries;
 import com.zakgof.db.velvet.upgrader.IVelvetUpgrader;
 import com.zakgof.serialize.ClassStructure;
 import com.zakgof.serialize.IUpgrader;
@@ -80,7 +80,7 @@ class VelvetUpgraderImpl implements IVelvetUpgrader, IUpgrader {
         ClassStructure actualStructure = ClassStructure.of(clazz);
 
        // TODO: PERF: only load biggest version number, then climb down
-       List<ClassVersion> versions = env.calculate(velvet -> CLASS_VERSION.index(velvet, "class", Queries.equalsTo(clazz.getName())));
+       List<ClassVersion> versions = env.calculate(velvet -> CLASS_VERSION.index(velvet, "class", SecQueries.eq(clazz.getName())));
        for (ClassVersion version : versions) {
             if (version.structure.equals(actualStructure)) {
                 actualVersions.put(clazz, version.version);
