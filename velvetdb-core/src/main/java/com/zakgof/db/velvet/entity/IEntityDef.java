@@ -7,8 +7,8 @@ import java.util.stream.Collectors;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
-import com.zakgof.db.velvet.query.IRangeQuery;
-import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
+import com.zakgof.db.velvet.query.ISecQuery;
+import com.zakgof.db.velvet.query.ISingleReturnSecQuery;
 
 public interface IEntityDef<K, V> {
 
@@ -72,13 +72,13 @@ public interface IEntityDef<K, V> {
     // Index
 
     // TODO
-    public <M extends Comparable<? super M>> List<V> index(IVelvet velvet, String indexName, IRangeQuery<K, M> query);
+    public <M extends Comparable<? super M>> List<V> index(IVelvet velvet, String indexName, ISecQuery<K, M> query);
 
-    public <M extends Comparable<? super M>> List<K> indexKeys(IVelvet velvet, String indexName, IRangeQuery<K, M> query);
+    public <M extends Comparable<? super M>> List<K> indexKeys(IVelvet velvet, String indexName, ISecQuery<K, M> query);
 
-    public <M extends Comparable<? super M>> V singleIndex(IVelvet velvet, String indexName, ISingleReturnRangeQuery<K, M> query);
+    public <M extends Comparable<? super M>> V singleIndex(IVelvet velvet, String indexName, ISingleReturnSecQuery<K, M> query);
 
-    public <M extends Comparable<? super M>> K indexKey(IVelvet velvet, String indexName, ISingleReturnRangeQuery<K, M> query);
+    public <M extends Comparable<? super M>> K indexKey(IVelvet velvet, String indexName, ISingleReturnSecQuery<K, M> query);
 
     // Other
 

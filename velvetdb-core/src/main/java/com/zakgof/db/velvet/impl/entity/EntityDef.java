@@ -1,6 +1,10 @@
 package com.zakgof.db.velvet.impl.entity;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -9,8 +13,8 @@ import com.zakgof.db.velvet.IVelvet.IStore;
 import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
-import com.zakgof.db.velvet.query.IRangeQuery;
-import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
+import com.zakgof.db.velvet.query.ISecQuery;
+import com.zakgof.db.velvet.query.ISingleReturnSecQuery;
 
 public class EntityDef<K, V> implements IEntityDef<K, V> {
 
@@ -137,25 +141,25 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     }
 
     @Override
-    public <M extends Comparable<? super M>> V singleIndex(IVelvet velvet, String indexName, ISingleReturnRangeQuery<K, M> query) {
+    public <M extends Comparable<? super M>> V singleIndex(IVelvet velvet, String indexName, ISingleReturnSecQuery<K, M> query) {
         K key = indexKey(velvet, indexName, query);
         return key == null ? null : get(velvet, key);
     }
 
     @Override
-    public <M extends Comparable<? super M>> K indexKey(IVelvet velvet, String indexName, ISingleReturnRangeQuery<K, M> query) {
-        List<K> keys = store(velvet).<M> index(indexName).keys(query);
+    public <M extends Comparable<? super M>> K indexKey(IVelvet velvet, String indexName, ISingleReturnSecQuery<K, M> query) {
+        List<K> keys = store(velvet).<M> index(indexName).keys((ISecQuery<K, M>)query);
         return keys.isEmpty() ? null : keys.get(0);
     }
 
     @Override
-    public <M extends Comparable<? super M>> List<V> index(IVelvet velvet, String indexName, IRangeQuery<K, M> query) {
+    public <M extends Comparable<? super M>> List<V> index(IVelvet velvet, String indexName, ISecQuery<K, M> query) {
         List<K> keys = indexKeys(velvet, indexName, query);
         return new ArrayList<>(batchGet(velvet, keys).values());
     }
 
     @Override
-    public <M extends Comparable<? super M>> List<K> indexKeys(IVelvet velvet, String indexName, IRangeQuery<K, M> query) {
+    public <M extends Comparable<? super M>> List<K> indexKeys(IVelvet velvet, String indexName, ISecQuery<K, M> query) {
         return store(velvet).<M> index(indexName).keys(query);
     }
 

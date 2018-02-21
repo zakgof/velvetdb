@@ -1,12 +1,16 @@
 package com.zakgof.db.velvet;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.zakgof.db.velvet.query.IRangeQuery;
-import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
+import com.zakgof.db.velvet.query.IKeyQuery;
+import com.zakgof.db.velvet.query.ISecQuery;
 import com.zakgof.tools.generic.Pair;
 
 public interface IVelvet {
@@ -29,9 +33,9 @@ public interface IVelvet {
 
     public <HK, CK> IMultiLink<HK, CK> multiLink(Class<HK> hostKeyClass,  Class<CK> childKeyClass, String edgekind);
 
-    public <HK, CK extends Comparable<? super CK>> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind);
+    public <HK, CK extends Comparable<? super CK>> IPriIndexLink<HK, CK> primaryKeyIndex(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind);
 
-    public <HK, CK, CV, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex(Class<HK> hostKeyClass, String edgekind, Function<CV, M> nodeMetric, Class<M> metricClass, Class<CK> keyClass, IStore<CK, CV> childStore);
+    public <HK, CK, CV, M extends Comparable<? super M>> ISecIndexLink<HK, CK, M> secondaryKeyIndex(Class<HK> hostKeyClass, String edgekind, Function<CV, M> nodeMetric, Class<M> metricClass, Class<CK> keyClass, IStore<CK, CV> childStore);
 
     public interface IStore<K, V> {
 
@@ -89,7 +93,7 @@ public interface IVelvet {
     }
 
     public interface IStoreIndex<K, M extends Comparable<? super M>> {
-        List<K> keys(IRangeQuery<K, M> query);
+        List<K> keys(ISecQuery<K, M> query);
     }
 
     public interface IStoreIndexDef<M extends Comparable<? super M>, V> {
@@ -98,7 +102,8 @@ public interface IVelvet {
         public Class<M> clazz();
     }
 
-    public interface ISortedStore<K extends Comparable<? super K>, V> extends IStore<K, V>, IStoreIndex<K, K> {
+    public interface ISortedStore<K extends Comparable<? super K>, V> extends IStore<K, V> {
+        List<K> keys(IKeyQuery<K> query);
     }
 
     public interface ILink<HK, CK> {
@@ -137,21 +142,14 @@ public interface IVelvet {
         default void batchDeleteAll(List<HK> map)           {throw new UnsupportedOperationException();} // TODO
     }
 
-    public interface IKeyIndexLink<HK, CK, M extends Comparable<? super M>> extends IMultiLink<HK, CK> {
+    public interface IPriIndexLink<HK, CK extends Comparable<? super CK>> extends IMultiLink<HK, CK> {
+        List<CK> keys(HK hk, IKeyQuery<CK> query);
+    }
+
+    public interface ISecIndexLink<HK, CK, M extends Comparable<? super M>> extends IMultiLink<HK, CK> {
 
         void update(HK hk, CK ck);
 
-        List<CK> keys(HK hk, IRangeQuery<CK, M> query);
-
-        // TODO not here
-        default CK key(HK hk, ISingleReturnRangeQuery<CK, M> query) {
-            // TODO
-            List<CK> keys = keys(hk, query);
-            if (keys.isEmpty())
-                return null;
-            if (keys.size() > 1)
-                throw new VelvetException("");
-            return keys.get(0);
-        }
+        List<CK> keys(HK hk, ISecQuery<CK, M> query);
     }
 }

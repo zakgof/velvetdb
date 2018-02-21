@@ -132,11 +132,11 @@ public class Links {
         };
     }
 
-    public static <HK, HV, CK extends Comparable<CK>, CV> PriIndexMultiLinkDef<HK, HV, CK, CV> pri(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
+    public static <HK, HV, CK extends Comparable<CK>, CV> IPriMultiLinkDef<HK, HV, CK, CV> pri(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
         return new PriIndexMultiLinkDef<>(hostEntity, childEntity);
     }
 
-    public static <HK, HV, CK, CV, M extends Comparable<? super M>> ISecSortedMultiLinkDef<HK, HV, CK, CV, M> sec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
+    public static <HK, HV, CK, CV, M extends Comparable<? super M>> ISecMultiLinkDef<HK, HV, CK, CV, M> sec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
         return new SecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric);
     }
 

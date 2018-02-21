@@ -14,9 +14,11 @@ import java.util.stream.Collectors;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
-import com.zakgof.db.velvet.query.IQueryAnchor;
-import com.zakgof.db.velvet.query.IRangeQuery;
-import com.zakgof.db.velvet.query.Queries;
+import com.zakgof.db.velvet.query.IKeyQuery;
+import com.zakgof.db.velvet.query.ISecAnchor;
+import com.zakgof.db.velvet.query.ISecQuery;
+import com.zakgof.db.velvet.query.KeyQueries;
+import com.zakgof.db.velvet.query.SecQueries;
 import com.zakgof.serialize.ISerializer;
 
 import jetbrains.exodus.ArrayByteIterable;
@@ -198,8 +200,8 @@ class XodusVelvet implements IVelvet {
         }
 
         @Override
-        public List<K> keys(IRangeQuery<K, K> query) {
-            return new SorterStoreProcessor<>(keyClass).go(valueMap, query);
+        public List<K> keys(IKeyQuery<K> query) {
+            return new SorterStoreProcessor<>(keyClass).go(valueMap, SecQueries.from(query));
         }
 
         @Override
@@ -215,7 +217,7 @@ class XodusVelvet implements IVelvet {
         Cursor cursor;
         boolean cursorValid = true;
 
-        List<K> go(Store store, IRangeQuery<K, M> query) {
+        List<K> go(Store store, ISecQuery<K, M> query) {
 
             debug(store);
 
@@ -223,7 +225,7 @@ class XodusVelvet implements IVelvet {
             try (Cursor c = store.openCursor(tx)) {
                 cursor = c;
                 if (query.isAscending()) {
-                    IQueryAnchor<K, M> lowAnchor = query.getLowAnchor();
+                    ISecAnchor<K, M> lowAnchor = query.getLowAnchor();
                     gotoLowElement(lowAnchor);
                     int[] i = new int[] { 0 };
                     forwardWhile(() -> (i[0] < query.getOffset()), () -> i[0]++);
@@ -231,7 +233,7 @@ class XodusVelvet implements IVelvet {
                     if (check() && query.getHighAnchor() != null && query.getHighAnchor().isIncluding() && get() != null && get().equals(query.getHighAnchor().getKey()))
                         result.add(get());
                 } else {
-                    IQueryAnchor<K, M> highAnchor = query.getHighAnchor();
+                    ISecAnchor<K, M> highAnchor = query.getHighAnchor();
                     gotoHighElement(highAnchor);
                     int[] i = new int[] { 0 };
                     backwardWhile(() -> (i[0] < query.getOffset()), () -> i[0]++);
@@ -263,7 +265,7 @@ class XodusVelvet implements IVelvet {
             }
         }
 
-        boolean isBelow(IQueryAnchor<K, M> anchor, boolean below) {
+        boolean isBelow(ISecAnchor<K, M> anchor, boolean below) {
             if (anchor == null)
                 return true;
             else {
@@ -284,9 +286,9 @@ class XodusVelvet implements IVelvet {
 
         abstract boolean check();
 
-        abstract void gotoLowElement(IQueryAnchor<K, M> lowAnchor);
+        abstract void gotoLowElement(ISecAnchor<K, M> lowAnchor);
 
-        abstract void gotoHighElement(IQueryAnchor<K, M> highAnchor);
+        abstract void gotoHighElement(ISecAnchor<K, M> highAnchor);
     }
 
     private abstract class AStoreProcessor<K, M extends Comparable<? super M>> extends ARangeQueryProcessor<K, M> {
@@ -311,7 +313,7 @@ class XodusVelvet implements IVelvet {
         }
 
         @Override
-        void gotoLowElement(IQueryAnchor<K, M> anchor) {
+        void gotoLowElement(ISecAnchor<K, M> anchor) {
             if (anchor == null) {
                 cursor.getNext();
             } else {
@@ -330,7 +332,7 @@ class XodusVelvet implements IVelvet {
         }
 
         @Override
-        void gotoHighElement(IQueryAnchor<K, M> anchor) {
+        void gotoHighElement(ISecAnchor<K, M> anchor) {
             if (anchor == null) {
                 cursor.getLast(); // Xodus bug
                 cursor.getLast(); // Xodus bug
@@ -432,7 +434,7 @@ class XodusVelvet implements IVelvet {
             return keyMetric.apply(get());
         }
 
-        List<K> go(IRangeQuery<K, M> query) {
+        List<K> go(ISecQuery<K, M> query) {
             return go(store, query);
         }
     }
@@ -468,12 +470,12 @@ class XodusVelvet implements IVelvet {
     }
 
     @Override
-    public <HK, CK extends Comparable<? super CK>> IKeyIndexLink<HK, CK, CK> primaryKeyIndex(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
+    public <HK, CK extends Comparable<? super CK>> IPriIndexLink<HK, CK> primaryKeyIndex(Class<HK> hostKeyClass, Class<CK> childKeyClass, String edgekind) {
         return new PriIndexMultiLink<>(hostKeyClass, childKeyClass, edgekind);
     }
 
     @Override
-    public <HK, CK, T, M extends Comparable<? super M>> IKeyIndexLink<HK, CK, M> secondaryKeyIndex(Class<HK> hostKeyClass, String edgekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<CK> keyClazz, IStore<CK, T> childStore) {
+    public <HK, CK, T, M extends Comparable<? super M>> ISecIndexLink<HK, CK, M> secondaryKeyIndex(Class<HK> hostKeyClass, String edgekind, Function<T, M> nodeMetric, Class<M> mclazz, Class<CK> keyClazz, IStore<CK, T> childStore) {
         return new SecIndexMultiLink<>(hostKeyClass, edgekind, nodeMetric, mclazz, keyClazz, childStore);
     }
 
@@ -597,7 +599,7 @@ class XodusVelvet implements IVelvet {
         }
 
         @Override
-        void gotoLowElement(IQueryAnchor<K, M> anchor) {
+        void gotoLowElement(ISecAnchor<K, M> anchor) {
             if (anchor == null) {
                 cursor.getSearchKeyRange(BytesUtil.join(key1Bi, ByteIterable.EMPTY));
             } else {
@@ -624,7 +626,7 @@ class XodusVelvet implements IVelvet {
         }
 
         @Override
-        void gotoHighElement(IQueryAnchor<K, M> anchor) {
+        void gotoHighElement(ISecAnchor<K, M> anchor) {
             if (anchor == null) { // Warn: this is slow
                 seekLast();
             } else {
@@ -654,9 +656,9 @@ class XodusVelvet implements IVelvet {
                     });
                     if (!anchor.isIncluding()) {
                         oneStepBack();
-                        if (indexValue().compareTo(m) == 0) {
-                            cursorValid = false;
-                        }
+//                        if (indexValue().compareTo(m) == 0) {
+//                            cursorValid = false;
+//                        }
                     }
                 }
             }
@@ -686,7 +688,7 @@ class XodusVelvet implements IVelvet {
     /**
      * key: [key1][key2], value: empty
      */
-    private class PriIndexMultiLink<HK, CK extends Comparable<? super CK>> implements IKeyIndexLink<HK, CK, CK> {
+    private class PriIndexMultiLink<HK, CK extends Comparable<? super CK>> implements IPriIndexLink<HK, CK> {
 
         private Store connectMap;
         private Class<CK> childKeyClass;
@@ -714,7 +716,7 @@ class XodusVelvet implements IVelvet {
 
         @Override
         public List<CK> keys(HK hk) {
-            return keys(hk, Queries.<CK, CK> builder().build());
+            return keys(hk, KeyQueries.<CK> builder().build());
         }
 
         @Override
@@ -725,14 +727,10 @@ class XodusVelvet implements IVelvet {
         }
 
         @Override
-        public void update(HK hk, CK key2) {
-            // Nothing to do for keys
-        }
-
-        @Override
-        public List<CK> keys(HK hk, IRangeQuery<CK, CK> query) {
+        public List<CK> keys(HK hk, IKeyQuery<CK> query) {
             ByteIterable key1Bi = toBi(hk, hostKeyClass);
-            return new PriLinkProcessor(childKeyClass, childKeyClass, key1Bi).go(connectMap, query);
+            ISecQuery<CK, CK> mquery = SecQueries.from(query);
+            return new PriLinkProcessor(childKeyClass, childKeyClass, key1Bi).go(connectMap, mquery);
         }
 
         private class PriLinkProcessor extends ALinkProcessor<CK, CK> {
@@ -755,7 +753,7 @@ class XodusVelvet implements IVelvet {
     /**
      * key: [key1][weight], value: key2
      */
-    private class SecIndexMultiLink<HK, CK, V, M extends Comparable<? super M>> implements IKeyIndexLink<HK, CK, M> {
+    private class SecIndexMultiLink<HK, CK, V, M extends Comparable<? super M>> implements ISecIndexLink<HK, CK, M> {
 
         private Store connectMap;
         private Function<CK, M> keyMetric;
@@ -800,7 +798,7 @@ class XodusVelvet implements IVelvet {
 
         @Override
         public List<CK> keys(HK hk) {
-            return keys(hk, Queries.<CK, M> builder().build());
+            return keys(hk, SecQueries.<CK, M> builder().build());
         }
 
         @Override
@@ -821,7 +819,7 @@ class XodusVelvet implements IVelvet {
         }
 
         @Override
-        public List<CK> keys(HK hk, IRangeQuery<CK, M> query) {
+        public List<CK> keys(HK hk, ISecQuery<CK, M> query) {
             ByteIterable key1Bi = toBi(hk, hostKeyClass);
             return new SecLinkProcessor(keyClass, mclazz, key1Bi, keyMetric).go(connectMap, query);
         }
