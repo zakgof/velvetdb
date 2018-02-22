@@ -1,17 +1,7 @@
 package com.zakgof.db.velvet.dynamodb;
 
 import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -19,48 +9,14 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.amazonaws.services.dynamodbv2.document.BatchGetItemOutcome;
-import com.amazonaws.services.dynamodbv2.document.BatchWriteItemOutcome;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Index;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.KeyAttribute;
-import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
-import com.amazonaws.services.dynamodbv2.document.RangeKeyCondition;
-import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.TableCollection;
-import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes;
-import com.amazonaws.services.dynamodbv2.document.TableWriteItems;
-import com.amazonaws.services.dynamodbv2.document.spec.BatchGetItemSpec;
-import com.amazonaws.services.dynamodbv2.document.spec.BatchWriteItemSpec;
-import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
-import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
-import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
-import com.amazonaws.services.dynamodbv2.model.GlobalSecondaryIndex;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.KeyType;
-import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
-import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
-import com.amazonaws.services.dynamodbv2.model.LocalSecondaryIndex;
-import com.amazonaws.services.dynamodbv2.model.Projection;
-import com.amazonaws.services.dynamodbv2.model.ProjectionType;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+import com.amazonaws.services.dynamodbv2.document.*;
+import com.amazonaws.services.dynamodbv2.document.spec.*;
+import com.amazonaws.services.dynamodbv2.model.*;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Primitives;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
-import com.zakgof.db.velvet.query.IKeyAnchor;
-import com.zakgof.db.velvet.query.IKeyQuery;
-import com.zakgof.db.velvet.query.ISecAnchor;
-import com.zakgof.db.velvet.query.ISecQuery;
+import com.zakgof.db.velvet.query.*;
 import com.zakgof.serialize.ISerializer;
 import com.zakgof.tools.generic.Pair;
 
@@ -175,7 +131,7 @@ public class DynamoDBVelvet implements IVelvet {
             int c = m.compareTo(lowM2);
             if (c < 0 || c == 0 && !lowAnchor.isIncluding() && lowAnchor.getKey() == null)
                 return false;
-            if (lowAnchor.getKey() != null && !lowAnchor.isIncluding() && ((Comparable<? super CK>)lowAnchor.getKey()).compareTo(ck) >= 0) {
+            if (c == 0 && lowAnchor.getKey() != null && !lowAnchor.isIncluding() && ((Comparable<? super CK>)lowAnchor.getKey()).compareTo(ck) >= 0) {
                 return false;
             }
         }
@@ -184,7 +140,7 @@ public class DynamoDBVelvet implements IVelvet {
             int c = m.compareTo(highM2);
             if (c > 0 || c == 0 && !highAnchor.isIncluding() && highAnchor.getKey() == null)
                 return false;
-            if (highAnchor.getKey() != null && !highAnchor.isIncluding() && ((Comparable<? super CK>)highAnchor.getKey()).compareTo(ck) <= 0) {
+            if (c == 0 && highAnchor.getKey() != null && !highAnchor.isIncluding() && ((Comparable<? super CK>)highAnchor.getKey()).compareTo(ck) <= 0) {
                 return false;
             }
         }
@@ -243,7 +199,13 @@ public class DynamoDBVelvet implements IVelvet {
             List<K> cks = calcOnTable(() -> {
                 ItemCollection<QueryOutcome> itemCollection = index.query(qs);
 
-                // List<Item> debug = StreamSupport.stream(itemCollection.spliterator(), false).collect(Collectors.toList());
+                List<Item> debug1 = StreamSupport.stream(itemCollection.spliterator(), false)
+                        .collect(Collectors.toList());
+
+                List<Item> debug2 = StreamSupport.stream(itemCollection.spliterator(), false)
+                        .filter(item -> filterM(item, query, lowM2, highM2, keyClass, mClass, keyAttr, mAttr))
+                        .sorted(itemComparator(keyClass, keyAttr, mClass, mAttr, query.isAscending()))
+                        .collect(Collectors.toList());
 
                 return StreamSupport.stream(itemCollection.spliterator(), false)
                     .filter(item -> filterM(item, query, lowM2, highM2, keyClass, mClass, keyAttr, mAttr))
@@ -258,11 +220,11 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
     private <K, M extends Comparable<? super M>> Comparator<? super Item> itemComparator(Class<K> keyClass, String keyAttr, Class<M> mClass, String mAttr, boolean isAscending) {
-        Comparator<Item> comparator = Comparator.<Item, M>comparing(item -> valueFromItem(item, mClass, mAttr, true));
+        Comparator<Item> comparator = Comparator.<Item, M>comparing(item -> valueFromItem(item, mClass, mAttr, true)).thenComparing(item -> (Comparable)valueFromItem(item, keyClass, keyAttr, true));
         if (!isAscending) {
             comparator = comparator.reversed();
         }
-        return comparator.thenComparing(item -> valueFromItem(item, keyClass, keyAttr, true));
+        return comparator;
     }
 
     private void cleanTable(Table table) {
