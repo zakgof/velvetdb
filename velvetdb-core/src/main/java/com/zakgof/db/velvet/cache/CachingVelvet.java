@@ -1,12 +1,6 @@
 package com.zakgof.db.velvet.cache;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
@@ -92,8 +86,8 @@ class CachingVelvet implements IVelvet {
                  cache.putAll(missMap);
                  hks.stream().distinct().filter(hk -> !hitMap.containsKey(hk)).forEach(hk -> ((Cache)cache).put(hk, NULL_VALUE));
              }
-             Map<K, V> fixedHitMap = hitMap.entrySet().stream().filter(e -> e.getValue() != NULL_VALUE).collect(Collectors.toMap(Entry::getKey, Entry::getValue, (u,v) -> {throw new VelvetException("Duplicate key");}, LinkedHashMap::new));
-             return fixedHitMap;
+             Map<K, V> fixedHitMap = hitMap.entrySet().stream().filter(e -> e.getValue() != NULL_VALUE).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+             return hks.stream().distinct().collect(Collectors.toMap(hk -> hk, fixedHitMap::get, (u,v) -> {throw new VelvetException("Duplicate key");}, LinkedHashMap::new));
         }
 
         @Override
@@ -312,7 +306,7 @@ class CachingVelvet implements IVelvet {
 
         @Override
         public void delete(HK hk, CK ck) {
-            proxyStore.put(hk, ck);
+            proxyStore.delete(hk, ck);
             List<CK> set = fromCacheIfPresent(cache, hk);
             if (set != null) {
                 set.remove(ck);
