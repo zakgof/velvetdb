@@ -52,6 +52,10 @@ public class SecQueries {
         return SecQueries.<K, M> builder().descending().buildSingle();
     }
 
+    public static <K, M extends Comparable<? super M>> ISecQuery<K, M> last(int count) {
+        return SecQueries.<K, M> builder().descending().limit(count).build();
+    }
+
     public static <K, M extends Comparable<? super M>> ISingleReturnSecQuery<K, M> next(K key) {
         return SecQueries.<K, M> builder().gtKey(key).buildSingle();
     }
