@@ -61,6 +61,7 @@ import com.zakgof.db.velvet.query.IKeyQuery;
 import com.zakgof.db.velvet.query.ISecAnchor;
 import com.zakgof.db.velvet.query.ISecQuery;
 import com.zakgof.serialize.ISerializer;
+import com.zakgof.tools.generic.Pair;
 
 public class DynamoDBVelvet implements IVelvet {
 
@@ -80,7 +81,6 @@ public class DynamoDBVelvet implements IVelvet {
             try {
                 return callable.call();
             } catch (ResourceNotFoundException e) {
-                System.err.println("Table not found: " + e);
                 try {
                     tableCreator.run();
                     return callable.call();
@@ -99,7 +99,6 @@ public class DynamoDBVelvet implements IVelvet {
         try {
             runnable.run();
         } catch (ResourceNotFoundException e) {
-            System.err.println("Table not found: " + e);
             try {
                 tableCreator.run();
                 runnable.run();
@@ -173,18 +172,18 @@ public class DynamoDBVelvet implements IVelvet {
         ISecAnchor<CK, M> lowAnchor = query.getLowAnchor();
         if (lowAnchor != null) {
             int c = m.compareTo(lowM2);
-            if (c < 0 || c == 0 && !lowAnchor.isIncluding())
+            if (c < 0 || c == 0 && !lowAnchor.isIncluding() && lowAnchor.getKey() == null)
                 return false;
-            if (lowAnchor.getKey() != null && !lowAnchor.isIncluding() && lowAnchor.getKey().equals(ck)) {
+            if (lowAnchor.getKey() != null && !lowAnchor.isIncluding() && ((Comparable<? super CK>)lowAnchor.getKey()).compareTo(ck) >= 0) {
                 return false;
             }
         }
         ISecAnchor<CK, M> highAnchor = query.getHighAnchor();
         if (highAnchor != null) {
             int c = m.compareTo(highM2);
-            if (c > 0 || c == 0 && !highAnchor.isIncluding())
+            if (c > 0 || c == 0 && !highAnchor.isIncluding() && highAnchor.getKey() == null)
                 return false;
-            if (highAnchor.getKey() != null && !highAnchor.isIncluding() && highAnchor.getKey().equals(ck)) {
+            if (highAnchor.getKey() != null && !highAnchor.isIncluding() && ((Comparable<? super CK>)highAnchor.getKey()).compareTo(ck) <= 0) {
                 return false;
             }
         }
@@ -218,11 +217,11 @@ public class DynamoDBVelvet implements IVelvet {
             }
             if (lowM != null && highM == null) {
                 RangeKeyCondition condition = new RangeKeyCondition(mAttr);
-                condition = lowAnchor.isIncluding() ? condition.ge(lowM) : condition.gt(lowM);
+                condition = lowAnchor.isIncluding() || lowAnchor.getKey() != null ? condition.ge(lowM) : condition.gt(lowM);
                 qs.withRangeKeyCondition(condition);
             } else if (lowM == null && highM != null) {
                 RangeKeyCondition condition = new RangeKeyCondition(mAttr);
-                condition = highAnchor.isIncluding() ? condition.le(highM) : condition.lt(highM);
+                condition = highAnchor.isIncluding() || highAnchor.getKey() != null ? condition.le(highM) : condition.lt(highM);
                 qs.withRangeKeyCondition(condition);
             } else if (lowM != null && highM != null) {
                 if (lowM.compareTo(highM) > 0)
@@ -247,6 +246,7 @@ public class DynamoDBVelvet implements IVelvet {
 
                 return StreamSupport.stream(itemCollection.spliterator(), false)
                     .filter(item -> filterM(item, query, lowM2, highM2, keyClass, mClass, keyAttr, mAttr))
+                    // TODO: have to sort by pri key if metrics equals
                     .skip(query.getOffset())
                     .limit(query.getLimit() >= 0 ? query.getLimit() : Integer.MAX_VALUE)
                     .map(item -> valueFromItem(item, keyClass, keyAttr, true))
@@ -309,7 +309,7 @@ public class DynamoDBVelvet implements IVelvet {
     private <K, V> Map<K, V> batchGet(List<K> keys, String kind, Function<K, KeyAttribute[]> keyFunc, List<String> attrs, Function<Item, K> kGetter, Function<Item, V> vGetter, Runnable tableCreator) {
         keys = keys.stream().distinct().collect(Collectors.toList());
         Iterator<K> kiterator = keys.iterator();
-        Map<K, V> result = new LinkedHashMap<>();
+        Map<K, V> result = new HashMap<>();
         Map<String, KeysAndAttributes> unprocessedKeys = new HashMap<>();
         while (kiterator.hasNext()) {
             TableKeysAndAttributes tableKeyAndAttributes = new TableKeysAndAttributes(kind).withAttributeNames(attrs);
@@ -331,7 +331,8 @@ public class DynamoDBVelvet implements IVelvet {
             Map<K, V> partialResult = outcome.getTableItems().get(kind).stream().collect(Collectors.toMap(kGetter, vGetter));
             result.putAll(partialResult);
         }
-        return result;
+        LinkedHashMap<K, V> map = keys.stream().distinct().map(key -> Pair.create(key, result.get(key))).filter(p -> p.second() != null).collect(Collectors.toMap(Pair::first, Pair::second, (u, v) -> u, LinkedHashMap::new));
+        return map;
     }
 
     DynamoDBVelvet(DynamoDB db, Supplier<ISerializer> serializerSupplier) {

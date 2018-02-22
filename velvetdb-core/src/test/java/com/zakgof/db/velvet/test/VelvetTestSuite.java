@@ -14,6 +14,8 @@ import com.zakgof.db.velvet.IVelvetEnvironment;
 
 @SuiteClasses({
 
+    SecondarySortedLinkTest.class,
+
                 SortedStoreIndexesTest.class,
                 StoreIndexesAnnoTest.class,
                 StoreIndexesTest.class,
