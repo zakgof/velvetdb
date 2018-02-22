@@ -9,20 +9,20 @@ import com.zakgof.db.velvet.IVelvetEnvironment;
 import com.zakgof.db.velvet.VelvetFactory;
 import com.zakgof.db.velvet.test.VelvetTestSuite;
 
-public class XodusVelvetTestSuite extends VelvetTestSuite {
+public class XodusCachedVelvetTestSuite extends VelvetTestSuite {
 
     private static String PATH;
 
     @BeforeClass
     public static void setup() {
-        setup(XodusVelvetTestSuite::createEnv, XodusVelvetTestSuite::destroyEnv);
+        setup(XodusCachedVelvetTestSuite::createEnv, XodusCachedVelvetTestSuite::destroyEnv);
     }
 
     private static IVelvetEnvironment createEnv() {
         try {
             PATH = Files.createTempDirectory("velvet").toString();
             new File(PATH).mkdirs();
-            IVelvetEnvironment env = VelvetFactory.open("velvetdb://xodus/" + PATH.replace(File.separatorChar, '/'));
+            IVelvetEnvironment env = VelvetFactory.openCaching("velvetdb://xodus/" + PATH.replace(File.separatorChar, '/'));
             return env;
         } catch (Exception e) {
             e.printStackTrace();
