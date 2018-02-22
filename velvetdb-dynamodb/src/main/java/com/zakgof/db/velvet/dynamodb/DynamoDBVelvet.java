@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -247,6 +248,7 @@ public class DynamoDBVelvet implements IVelvet {
                 return StreamSupport.stream(itemCollection.spliterator(), false)
                     .filter(item -> filterM(item, query, lowM2, highM2, keyClass, mClass, keyAttr, mAttr))
                     // TODO: have to sort by pri key if metrics equals
+                    .sorted(itemComparator(keyClass, keyAttr, mClass, mAttr, query.isAscending()))
                     .skip(query.getOffset())
                     .limit(query.getLimit() >= 0 ? query.getLimit() : Integer.MAX_VALUE)
                     .map(item -> valueFromItem(item, keyClass, keyAttr, true))
@@ -254,6 +256,14 @@ public class DynamoDBVelvet implements IVelvet {
             }, tableCreator);
             return cks;
         }
+
+    private <K, M extends Comparable<? super M>> Comparator<? super Item> itemComparator(Class<K> keyClass, String keyAttr, Class<M> mClass, String mAttr, boolean isAscending) {
+        Comparator<Item> comparator = Comparator.<Item, M>comparing(item -> valueFromItem(item, mClass, mAttr, true));
+        if (!isAscending) {
+            comparator = comparator.reversed();
+        }
+        return comparator.thenComparing(item -> valueFromItem(item, keyClass, keyAttr, true));
+    }
 
     private void cleanTable(Table table) {
         System.err.print("Cleaning up " + table.getTableName() + "... ");
