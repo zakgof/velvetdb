@@ -268,7 +268,7 @@ public class SecondarySortedLinkTest extends AVelvetTxnTest {
 
     @Test
     public void testAllKeys() {
-        List<String> result = MULTI.get(velvet, root).stream().map(TestEnt3::getStr).collect(Collectors.toList());
+        List<String> result = MULTI.indexed(SecQueries.<Integer, Long>builder().build()).get(velvet, root).stream().map(TestEnt3::getStr).collect(Collectors.toList());
         checkData(result, new Object[] { rOne, "two", "three", rFour, rSix }); // TODO: arguable !
     }
 
