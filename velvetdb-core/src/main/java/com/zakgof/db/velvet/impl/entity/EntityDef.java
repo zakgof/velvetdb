@@ -1,17 +1,20 @@
 package com.zakgof.db.velvet.impl.entity;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IStore;
 import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.properties.IPropertyAccessor;
-import com.zakgof.db.velvet.query.IRangeQuery;
-import com.zakgof.db.velvet.query.ISingleReturnRangeQuery;
+import com.zakgof.db.velvet.query.ISecQuery;
+import com.zakgof.db.velvet.query.ISingleReturnSecQuery;
 
 public class EntityDef<K, V> implements IEntityDef<K, V> {
 
@@ -71,8 +74,13 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     }
 
     @Override
-    public byte[] getRaw(IVelvet velvet, K key) {
-        return store(velvet).getRaw(key);
+    public Map<K, V> batchGet(IVelvet velvet, List<K> keys) {
+        return store(velvet).batchGet(keys);
+    }
+
+    @Override
+    public Map<K, V> batchGetAll(IVelvet velvet) {
+        return store(velvet).getAll();
     }
 
     @Override
@@ -87,7 +95,8 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
 
     @Override
     public K put(IVelvet velvet, V value) {
-        return put(velvet, keyOf(value), value);
+        K key = keyOf(value);
+        return put(velvet, key, value);
     }
 
     @Override
@@ -97,8 +106,25 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     }
 
     @Override
+    public List<K> put(IVelvet velvet, List<V> values) {
+        List<K> keys = values.stream().map(this::keyOf).collect(Collectors.toList());
+        return put(velvet, keys, values);
+    }
+
+    @Override
+    public List<K> put(IVelvet velvet, List<K> keys, List<V> values) {
+        store(velvet).put(keys, values);
+        return keys;
+    }
+
+    @Override
     public void deleteKey(IVelvet velvet, K key) {
         store(velvet).delete(key);
+    }
+
+    @Override
+    public void deleteKeys(IVelvet velvet, List<K> keys) {
+        store(velvet).delete(keys);
     }
 
     @Override
@@ -115,25 +141,25 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     }
 
     @Override
-    public <M extends Comparable<? super M>> V singleIndex(IVelvet velvet, String indexName, ISingleReturnRangeQuery<K, M> query) {
+    public <M extends Comparable<? super M>> V singleIndex(IVelvet velvet, String indexName, ISingleReturnSecQuery<K, M> query) {
         K key = indexKey(velvet, indexName, query);
         return key == null ? null : get(velvet, key);
     }
 
     @Override
-    public <M extends Comparable<? super M>> K indexKey(IVelvet velvet, String indexName, ISingleReturnRangeQuery<K, M> query) {
-        List<K> keys = store(velvet).<M> index(indexName).keys(query);
+    public <M extends Comparable<? super M>> K indexKey(IVelvet velvet, String indexName, ISingleReturnSecQuery<K, M> query) {
+        List<K> keys = store(velvet).<M> index(indexName).keys((ISecQuery<K, M>)query);
         return keys.isEmpty() ? null : keys.get(0);
     }
 
     @Override
-    public <M extends Comparable<? super M>> List<V> index(IVelvet velvet, String indexName, IRangeQuery<K, M> query) {
+    public <M extends Comparable<? super M>> List<V> index(IVelvet velvet, String indexName, ISecQuery<K, M> query) {
         List<K> keys = indexKeys(velvet, indexName, query);
-        return get(velvet, keys);
+        return new ArrayList<>(batchGet(velvet, keys).values());
     }
 
     @Override
-    public <M extends Comparable<? super M>> List<K> indexKeys(IVelvet velvet, String indexName, IRangeQuery<K, M> query) {
+    public <M extends Comparable<? super M>> List<K> indexKeys(IVelvet velvet, String indexName, ISecQuery<K, M> query) {
         return store(velvet).<M> index(indexName).keys(query);
     }
 

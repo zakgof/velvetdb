@@ -19,7 +19,7 @@ public class KryoSerializer implements ISerializer {
     this.kryo = kryo;
   }
 
-  public byte[] serialize(Object object) {
+  public <T> byte[] serialize(T object, Class<T> clazz) {
     ByteArrayOutputStream bas = new ByteArrayOutputStream();
     Output output = new Output(bas);
     kryo.writeObject(output, object);

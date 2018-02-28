@@ -6,16 +6,18 @@ compileJava.options.encoding = 'UTF-8'
 
 group = 'com.github.zakgof'
 archivesBaseName = 'velvetdb-xodus'
-version = '0.3.2'
 
 repositories {
     mavenCentral()
 }
 
+compileTestJava.dependsOn tasks.getByPath(':velvetdb-core:testClasses')
+
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core:0.3.2'
-    compile 'org.jetbrains.xodus:xodus-environment:1.0.6'
-    testCompile 'com.github.zakgof:velvetdb-core:0.3.2:tests'
+    compile 'com.github.zakgof:velvetdb-core:0.5.0'
+    compile 'org.jetbrains.xodus:xodus-environment:1.2.1'
+    compile 'com.google.guava:guava:18.0'
+    testCompile project(':velvetdb-core').sourceSets.test.output
     testCompile 'junit:junit:4.12'
 }
 

@@ -1,29 +1,23 @@
 package com.zakgof.db.velvet.xodus;
 
 import java.io.File;
-import java.util.function.Supplier;
 
-import com.google.common.collect.ImmutableMap;
 import com.zakgof.db.txn.ITransactionCall;
 import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.IVelvetEnvironment;
 import com.zakgof.db.velvet.VelvetException;
-import com.zakgof.serialize.ISerializer;
-import com.zakgof.serialize.ZeSerializer;
+import com.zakgof.db.velvet.impl.AVelvetEnvironment;
 
 import jetbrains.exodus.env.Environment;
 import jetbrains.exodus.env.Environments;
 
-public class XodusVelvetEnv implements IVelvetEnvironment {
+public class XodusVelvetEnv extends AVelvetEnvironment {
 
     private Environment env;
     private IKeyGen keyGen;
-    private Supplier<ISerializer> serializerSupplier;
 
     public XodusVelvetEnv(File file) {
         env = Environments.newInstance(file.getAbsolutePath());
         keyGen = new IKeyGen();
-        serializerSupplier = () -> new ZeSerializer(ImmutableMap.of(ZeSerializer.USE_OBJENESIS, true));
     }
 
     @Override
@@ -34,24 +28,24 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
             try {
                 if (count[0] > 0)
                     System.err.println("Xodus transaction retry " + count[0]); // TODO
-                transaction.execute(new XodusVelvet(env, txn, keyGen, serializerSupplier));
+                transaction.execute(new XodusVelvet(env, txn, keyGen, this::instantiateSerializer));
                 count[0]++;
             } catch (Throwable e) {
                 exs[0] = e;
             }
         });
-        if (exs[0] != null)
-            throw (exs[0] instanceof RuntimeException) ? (RuntimeException) exs[0] : new VelvetException(exs[0]);
+        if (exs[0] != null) {
+            Throwable e = exs[0];
+            if (e instanceof RuntimeException)
+                throw (RuntimeException)e;
+            else if (e instanceof Error)
+                throw (Error)e;
+            throw new VelvetException(e);
+        }
     }
 
     @Override
     public void close() {
         env.close();
     }
-
-    @Override
-    public void setSerializer(Supplier<ISerializer> serializerSupplier) {
-        this.serializerSupplier = serializerSupplier;
-    }
-
 }

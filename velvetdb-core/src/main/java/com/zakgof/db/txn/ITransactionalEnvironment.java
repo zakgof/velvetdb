@@ -11,8 +11,8 @@ public interface ITransactionalEnvironment<H> {
         Object[] result = new Object[1];
         try {
             execute(h -> result[0] = transaction.execute(h));
-        } catch (Throwable e) {
-            new VelvetException(e);
+        } catch (Exception e) {
+            throw ((e instanceof RuntimeException) ? (RuntimeException)e : new VelvetException(e));
         }
         return (R) result[0];
     }

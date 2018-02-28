@@ -74,13 +74,13 @@ public class Links {
             return new IMultiGetter<HK, HV, CK, CV>() {
 
                 @Override
-                public List<CV> multi(IVelvet velvet, HV node) {
-                    return Arrays.asList(single.single(velvet, node));
+                public List<CV> get(IVelvet velvet, HV node) {
+                    return Arrays.asList(single.get(velvet, node));
                 }
 
                 @Override
-                public List<CK> multiKeys(IVelvet velvet, HK key) {
-                    CK singleKey = single.singleKey(velvet, key);
+                public List<CK> keys(IVelvet velvet, HK key) {
+                    CK singleKey = single.key(velvet, key);
                     return singleKey == null ? Collections.emptyList() : Arrays.asList(singleKey);
                 }
 
@@ -101,8 +101,8 @@ public class Links {
     public static <HK, HV, CK, CV> ISingleGetter<HK, HV, CK, CV> toSingleGetter(final IMultiGetter<HK, HV, CK, CV> multi) {
         return new ISingleGetter<HK, HV, CK, CV>() {
             @Override
-            public CV single(IVelvet velvet, HV node) {
-                List<CV> links = multi.multi(velvet, node);
+            public CV get(IVelvet velvet, HV node) {
+                List<CV> links = multi.get(velvet, node);
                 if (links.isEmpty())
                     return null;
                 if (links.size() == 1)
@@ -111,8 +111,8 @@ public class Links {
             }
 
             @Override
-            public CK singleKey(IVelvet velvet, HK key) {
-                List<CK> linkKeys = multi.multiKeys(velvet, key);
+            public CK key(IVelvet velvet, HK key) {
+                List<CK> linkKeys = multi.keys(velvet, key);
                 if (linkKeys.isEmpty())
                     return null;
                 if (linkKeys.size() == 1)
@@ -132,12 +132,12 @@ public class Links {
         };
     }
 
-    public static <HK, HV, CK extends Comparable<CK>, CV> PriIndexMultiLinkDef<HK, HV, CK, CV> pri(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
+    public static <HK, HV, CK extends Comparable<CK>, CV> IPriMultiLinkDef<HK, HV, CK, CV> pri(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
         return new PriIndexMultiLinkDef<>(hostEntity, childEntity);
     }
 
-    public static <HK, HV, CK, CV, M extends Comparable<? super M>> ISecSortedMultiLinkDef<HK, HV, CK, CV, M> sec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
-        return new SecIndexMultiLinkDef<HK, HV, CK, CV, M>(hostEntity, childEntity, mclazz, metric);
+    public static <HK, HV, CK, CV, M extends Comparable<? super M>> ISecMultiLinkDef<HK, HV, CK, CV, M> sec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
+        return new SecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric);
     }
 
     public static <HK, HV, CK, CV, M extends Comparable<? super M>> BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> biSec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {

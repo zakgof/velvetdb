@@ -1,0 +1,99 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+compileJava.options.encoding = 'UTF-8'
+
+group = 'com.github.zakgof'
+archivesBaseName = 'velvetdb-dynamodb'
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+}
+
+compileTestJava.dependsOn tasks.getByPath(':velvetdb-core:testClasses')
+
+dependencies {
+    compile 'com.github.zakgof:velvetdb-core:0.5.0-SNAPSHOT'
+    compile 'com.google.guava:guava:18.0'
+    compile 'com.amazonaws:aws-java-sdk-dynamodb:1.11.278'
+    
+    testCompile project(':velvetdb-core').sourceSets.test.output
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.apache.commons:commons-text:1.2'    
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Javadoc) {
+    options.encoding = 'UTF-8'
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        authentication(userName: ossrhUsername, password: ossrhPassword)
+      }
+
+      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+        authentication(userName: ossrhUsername, password: ossrhPassword)
+      }
+
+      pom.project {
+        packaging 'jar'
+        artifactId 'velvetdb-dynamodb'
+        url 'https://github.com/zakgof/velvetdb'
+
+        name 'velvetdb-dynamodb'
+        description 'DynamoDB backend for velvetdb'
+
+        scm {
+          connection 'scm:git:https://github.com/zakgof/velvetdb.git'
+          developerConnection 'scm:git:https://github.com/zakgof/velvetdb.git'
+          url 'https://github.com/zakgof/velvetdb/tree/master/velvetdb-dynamodb'
+        }
+
+        licenses {
+          license {
+            name 'The Apache License, Version 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          }
+        }
+
+        developers {
+          developer {
+            id 'zakgof'
+            name 'Oleksandr Zakusylo'
+            email 'zakgof@gmail.com'
+          }
+        }
+      }
+    }
+  }
+}

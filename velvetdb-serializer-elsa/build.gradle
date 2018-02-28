@@ -6,14 +6,13 @@ compileJava.options.encoding = 'UTF-8'
 
 group = 'com.github.zakgof'
 archivesBaseName = 'velvetdb-serializer-elsa'
-version = '0.3.2'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core:0.3.2'
+    compile 'com.github.zakgof:velvetdb-core:0.5.0'
     compile 'org.mapdb:elsa:3.0.0-M5'
 }
 
