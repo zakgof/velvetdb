@@ -18,8 +18,9 @@ allprojects {
           }
        }
    }
+
+   repositories {
+        mavenCentral()
+   }
 }
 
-repositories {
-    mavenCentral()
-}

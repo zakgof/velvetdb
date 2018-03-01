@@ -7,13 +7,6 @@ compileJava.options.encoding = 'UTF-8'
 group = 'com.github.zakgof'
 archivesBaseName = 'velvetdb-core'
 
-repositories {
-    mavenCentral()
-     maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
-}
-
 dependencies {
     compile 'com.google.guava:guava:18.0'
     compile 'com.github.zakgof:tools:0.4.0'
