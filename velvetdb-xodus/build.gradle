@@ -65,7 +65,7 @@ uploadArchives {
 
       pom.project {
         packaging 'jar'
-        artifactId 'velvetdb-xodus-adnroid'
+        artifactId 'velvetdb-xodus-android'
         url 'https://github.com/zakgof/velvetdb'
 
         name 'velvetdb-xodus'
