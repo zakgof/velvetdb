@@ -1,6 +1,6 @@
 package com.zakgof.db.velvet.entity;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.annimon.stream.Collectors;
@@ -10,24 +10,28 @@ import com.zakgof.db.velvet.IVelvet;
 public abstract class AEntityDef<K, V> implements IEntityDef<K, V> {
 
     @Override
-    public List<V> get(IVelvet velvet, Collection<K> keys) {
-        return Stream.of(keys).map(key -> get(velvet, key)).collect(Collectors.toList());
+    public boolean equals(V value1, V value2) {
+        return keyOf(value1).equals(keyOf(value2));
+    }
+
+     @Override
+    public List<V> batchGetList(IVelvet velvet, List<K> keys) {
+        return new ArrayList<>(batchGet(velvet, keys).values());
+    }
+
+     @Override
+    public List<V> batchGetAllList(IVelvet velvet) {
+        return new ArrayList<>(batchGetAll(velvet).values());
     }
 
     @Override
-    public List<V> get(IVelvet velvet) {
-        return get(velvet, keys(velvet));
-    }
-
-
-    @Override
-    public void deleteValue(IVelvet velvet, V value) {
+    public  void deleteValue(IVelvet velvet, V value) {
         deleteKey(velvet, keyOf(value));
     }
 
     @Override
-    public boolean equals(V value1, V value2) {
-        return keyOf(value1).equals(keyOf(value2));
+    public  void deleteValues(IVelvet velvet, List<V> values) {
+        deleteKeys(velvet, Stream.of(values).map(this::keyOf).collect(Collectors.toList()));
     }
 
 }

@@ -8,13 +8,13 @@ allprojects {
    ext {
        ossrhUsername = ossrhUser
        ossrhPassword = ossrhPass
-   }
-   version = '0.3.4.android-SNAPSHOT'
+   }  
+   version = '0.5.0-SNAPSHOT'
 
    configurations.all {
       resolutionStrategy {
           dependencySubstitution {
-              substitute module("com.github.zakgof:velvetdb-core") with project(":velvetdb-core")
+              substitute module("com.github.zakgof:velvetdb-core-android") with project(":velvetdb-core")
           }
        }
    }

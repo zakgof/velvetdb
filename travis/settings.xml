@@ -1,9 +1,0 @@
-<settings>
-  <servers>
-      <server>
-          <id>velvetdb</id>
-          <username>${env.DIET_NEXUS_USERNAME}</username>
-          <password>${env.DIET_NEXUS_PASSWORD}</password>
-      </server>
-  </servers>
-</settings>

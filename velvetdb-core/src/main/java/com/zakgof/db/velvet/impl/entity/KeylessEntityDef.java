@@ -3,11 +3,17 @@ package com.zakgof.db.velvet.impl.entity;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.WeakHashMap;
 
+import com.annimon.stream.Collectors;
+import com.annimon.stream.Stream;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
+import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.entity.IKeylessEntityDef;
 import com.zakgof.db.velvet.properties.AProperty;
 import com.zakgof.db.velvet.properties.IProperty;
@@ -41,6 +47,22 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
     }
 
     @Override
+    public Map<Long, V> batchGet(IVelvet velvet, List<Long> keys) {
+        Map<Long, V> values = super.batchGet(velvet, keys);
+        Map<V, Long> map = Stream.of(values.entrySet()).collect(Collectors.toMap(Entry::getValue, Entry::getKey));
+        this.keys.putAll(map);
+        return values;
+    }
+
+    @Override
+    public Map<Long, V> batchGetAll(IVelvet velvet) {
+        Map<Long, V> values = store(velvet).getAll();
+        Map<V, Long> map = Stream.of(values.entrySet()).collect(Collectors.toMap(Entry::getValue, Entry::getKey));
+        this.keys.putAll(map);
+        return values;
+    }
+
+    @Override
     public Long put(IVelvet velvet, V value) {
         Long key = keys.get(value);
         if (key == null) {
@@ -53,14 +75,48 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
     }
 
     @Override
+    public List<Long> put(IVelvet velvet, List<V> values) {
+        List<Long> keyz = Stream.of(values).map(keys::get).collect(Collectors.toList());
+        boolean nullz = keyz.contains(null);
+        if (nullz && keyz.stream().anyMatch(k -> k!=null))
+            throw new VelvetException("Cannot put both nodes with and without keys in same batch");
+        if (nullz) {
+            List<Long> newkeyz = store(velvet).put(values);
+            Iterator<V> valit = values.iterator();
+            Iterator<Long> keyit = newkeyz.iterator();
+            while(valit.hasNext()) {
+                keys.put(valit.next(), keyit.next());
+            }
+            return newkeyz;
+        } else {
+            store(velvet).put(keyz, values);
+            return keyz;
+        }
+    }
+
+    @Override
     public Long put(IVelvet velvet, Long key, V value) {
+        // TODO : think over
+        /*
         V oldValue = store(velvet).get(key);
         if (!value.equals(oldValue)) {
             keys.remove(oldValue);
         }
+        */
         store(velvet).put(key, value);
         keys.put(value, key);
         return key;
+    }
+
+    @Override
+    public List<Long> put(IVelvet velvet, List<Long> keyz, List<V> values) {
+        store(velvet).put(keyz, values);
+        Iterator<V> valit = values.iterator();
+        Iterator<Long> keyit = keyz.iterator();
+        while(valit.hasNext()) {
+            keys.put(valit.next(), keyit.next());
+        }
+        return keyz;
     }
 
     @Override
@@ -75,7 +131,7 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
 
         public KeylessPropertyProvider(Class<V> valueClass) {
             super(valueClass);
-            this.keyProperty = new AProperty<Long, V>()  {
+            this.keyProperty = new AProperty<Long, V>() {
 
                 @Override
                 public Long get(V instance) {

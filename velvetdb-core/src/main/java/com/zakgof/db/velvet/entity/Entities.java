@@ -44,8 +44,8 @@ final public class Entities {
             this.indexes = annoKeyProvider.getIndexes();
         }
 
-        public <M extends Comparable<? super M>> Builder<V> index(String name, Function<V, M> metric) {
-            indexes.add(Indexes.<M, V>create(name, metric));
+        public <M extends Comparable<? super M>> Builder<V> index(String name, Function<V, M> metric, Class<M> metricClass) {
+            indexes.add(new Index<>(name, metric, metricClass));
             return this;
         }
 
@@ -79,6 +79,35 @@ final public class Entities {
 
         public <K extends Comparable<? super K>> ISortableEntityDef<K, V> makeSorted(Class<K> keyClass, Function<V, K> keyFunction) {
             return new SortedEntityDef<>(keyClass, clazz, kind, keyFunction, indexes);
+        }
+
+        private class Index<M extends Comparable<? super M>> implements IStoreIndexDef<M , V> {
+
+            private final String name;
+            private final Function<V, M> metric;
+            private final Class<M> metricClass;
+
+            private Index(String name, Function<V, M> metric, Class<M> metricClass) {
+                this.name = name;
+                this.metric = metric;
+                this.metricClass = metricClass;
+            }
+
+            @Override
+            public String name() {
+                return name;
+            }
+
+            @Override
+            public Function<V, M> metric() {
+                return metric;
+            }
+
+            @Override
+            public Class<M> clazz() {
+                return metricClass;
+            }
+
         }
 
     }

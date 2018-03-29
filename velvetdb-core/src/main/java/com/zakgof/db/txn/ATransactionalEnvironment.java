@@ -11,7 +11,7 @@ public abstract class ATransactionalEnvironment<H> implements ITransactionalEnvi
         try {
             execute(h -> result[0] = transaction.execute(h));
         } catch (Throwable e) {
-            new VelvetException(e);
+            throw ((e instanceof RuntimeException) ? (RuntimeException) e : new VelvetException(e));
         }
         return (R) result[0];
     }

@@ -5,7 +5,7 @@ apply plugin: 'signing'
 compileJava.options.encoding = 'UTF-8'
 
 group = 'com.github.zakgof'
-archivesBaseName = 'velvetdb-xodus'
+archivesBaseName = 'velvetdb-xodus-android'
 
 repositories {
     mavenCentral()
@@ -17,8 +17,9 @@ repositories {
 compileTestJava.dependsOn tasks.getByPath(':velvetdb-core:testClasses')
 
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core:' + version
+    compile 'com.github.zakgof:velvetdb-core-android:' + version
     compile 'org.jetbrains.xodus:xodus-environment:1.0-SNAPSHOT'
+    compile 'com.google.guava:guava:18.0'
     testCompile project(':velvetdb-core').sourceSets.test.output
     testCompile 'junit:junit:4.12'
 }
@@ -64,7 +65,7 @@ uploadArchives {
 
       pom.project {
         packaging 'jar'
-        artifactId 'velvetdb-xodus'
+        artifactId 'velvetdb-xodus-adnroid'
         url 'https://github.com/zakgof/velvetdb'
 
         name 'velvetdb-xodus'
