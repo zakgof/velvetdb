@@ -1,6 +1,12 @@
 package com.zakgof.db.velvet.cache;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
@@ -316,7 +322,7 @@ class CachingVelvet implements IVelvet {
 
         @Override
         public List<CK> keys(HK hk) {
-            return fromCache(cache, hk, () -> proxyStore.keys(hk));
+            return new ArrayList<>(fromCache(cache, hk, () -> proxyStore.keys(hk)));
         }
 
         @Override
