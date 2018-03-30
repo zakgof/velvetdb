@@ -325,7 +325,7 @@ class CachingVelvet extends AVelvet implements IVelvet {
 
         @Override
         public List<CK> keys(HK hk) {
-            return fromCache(cache, hk, () -> proxyStore.keys(hk));
+            return new ArrayList<>(fromCache(cache, hk, () -> proxyStore.keys(hk)));
         }
 
         @Override
