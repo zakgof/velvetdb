@@ -1,12 +1,6 @@
 package com.zakgof.db.velvet.cache;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 
@@ -369,11 +363,25 @@ class CachingVelvet extends AVelvet implements IVelvet {
 
     @SuppressWarnings("unchecked")
     private <K, V> Cache<K, V> cacheFor(String kind) {
-        return (Cache<K, V>) cacheContainer.computeIfAbsent(kind, k -> CacheBuilder
-          .newBuilder()
-          .softValues()
-          .recordStats()
-          .build());
+        return (Cache<K, V>) computeIfAbsent(cacheContainer, kind,  k -> CacheBuilder
+             .newBuilder()
+             .softValues()
+             .recordStats()
+             .build());
+    }
+
+    private <K, V> V computeIfAbsent(Map<K, V> map, K key, Function<? super K, ? extends V> mappingFunction) {
+        Objects.requireNonNull(mappingFunction);
+        V v;
+        if ((v = map.get(key)) == null) {
+            V newValue;
+            if ((newValue = mappingFunction.apply(key)) != null) {
+                map.put(key, newValue);
+                return newValue;
+            }
+        }
+
+        return v;
     }
 
 }
