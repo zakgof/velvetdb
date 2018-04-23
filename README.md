@@ -43,18 +43,18 @@ velvetdb is on Maven Central
 <dependency>
     <groupId>com.github.zakgof</groupId>
     <artifactId>velvetdb-xodus</artifactId>
-    <version>0.3.2</version>
+    <version>0.5.0</version>
 </dependency>
 ```
 or, using Gradle:
 ```groovy
-compile 'com.github.zakgof:velvetdb-xodus:0.3.2'    
+compile 'com.github.zakgof:velvetdb-xodus:0.5.0'    
 ```
 
 For Android version:
 
 ```groovy
-compile 'com.github.zakgof:velvetdb-xodus:0.3.3.android'    
+compile 'com.github.zakgof:velvetdb-xodus-android:0.3.3'    
 ```
 
 
