@@ -205,7 +205,7 @@ public class IslandModel {
         }
     }
 
-    private <K, V> Stream<DataWrap<K, V>> sortTheseWraps(IEntityDef<K, V> entityDef, Stream<DataWrap<K, V>> stream) {
+    private <K, V> Stream<DataWrap<K, V>> sortWraps(IEntityDef<K, V> entityDef, Stream<DataWrap<K, V>> stream) {
         @SuppressWarnings("unchecked")
         FetcherEntity<K, V> fetcher = (FetcherEntity<K, V>) entities.get(entityDef);
         Comparator<DataWrap<K, V>> comparator = (fetcher == null) ?  null : fetcher.sort;
@@ -216,6 +216,8 @@ public class IslandModel {
     }
 
     /*
+
+
 
     private <K, V> DataWrap<K, V> createWrap(IVelvet velvet, IEntityDef<K, V> entityDef, V node, Context<?, ?> parentContext) {
         Context<K, V> context = new Context<>(parentContext, entityDef, node);
@@ -363,9 +365,10 @@ public class IslandModel {
 
         private List<DataWrap<KK, VV>> make(List<VV> startNodes) {
             preFetch(startEntity, startNodes);
-            return startNodes.stream()
-                .map(node -> wrap(startEntity, node, null))
-                .collect(Collectors.toList());
+            Stream<DataWrap<KK, VV>> wrapstream = startNodes.stream()
+                .map(node -> wrap(startEntity, node, null));
+            wrapstream = sortWraps(startEntity, wrapstream);
+            return wrapstream.collect(Collectors.toList());
         }
 
         private <K, V> void preFetch(IEntityDef<K, V> entity, List<V> nodes) {
@@ -385,6 +388,7 @@ public class IslandModel {
             }
         }
 
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         private <K, V, CK, CV> void preFetchSingle(ISingleGetter<K, V, CK, CV> single, List<V> nodes) {
             Map<K, CV> children = single.batchGet(velvet, nodes);
             singles.computeIfAbsent(single, s -> new LinkedHashMap<>()).putAll((Map)children);
@@ -392,6 +396,7 @@ public class IslandModel {
             preFetch(single.getChildEntity(), childnodes);
         }
 
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         private <K, V, CK, CV> void preFetchMulti(IMultiGetter<K, V, CK, CV> multi, List<V> nodes) {
             Map<K, List<CV>> children = multi.batchGet(velvet, nodes);
             multis.computeIfAbsent(multi, m -> new LinkedHashMap<>()).putAll((Map)children);
