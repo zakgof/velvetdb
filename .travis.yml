@@ -4,6 +4,7 @@ jdk:
 branches:
   only:
    - master
+   - android2
 before_install:
   openssl enc -d -aes-256-cbc -md md5 -k ${FILE_PASSWORD} -in travis/secring.gpg.enc -out travis/secring.gpg
 install: true
