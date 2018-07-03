@@ -1,7 +1,14 @@
 package com.zakgof.db.velvet.cache;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 
 import com.annimon.stream.Collectors;
@@ -271,7 +278,7 @@ class CachingVelvet extends AVelvet implements IVelvet {
         }
 
         private <T> T toOne(List<T> list) {
-            return list.stream().findFirst().orElse(null);
+            return Stream.of(list).findFirst().orElse(null);
         }
 
         @Override
