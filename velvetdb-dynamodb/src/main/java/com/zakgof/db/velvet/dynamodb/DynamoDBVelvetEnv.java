@@ -4,8 +4,8 @@ import java.net.URI;
 import java.util.Map;
 
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
@@ -45,24 +45,23 @@ public class DynamoDBVelvetEnv extends AVelvetEnvironment {
         }
         clientConfig.withMaxErrorRetry(24);
 
-        AmazonDynamoDB dynamodb = AmazonDynamoDBClientBuilder
-           .standard()
-           .withRegion(region)
-           .withCredentials(new AWSStaticCredentialsProvider(new AWSCredentials() {
-                @Override
-                public String getAWSAccessKeyId() {
-                    return awsAccessKeyId;
-                }
-
-                @Override
-                public String getAWSSecretKey() {
-                    return awsSecretKey;
-                }
-            }))
+        AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard()
            .withClientConfiguration(clientConfig)
-           .build();
+           .withRegion(region);
 
-        db = new DynamoDB(dynamodb);
+        if (awsAccessKeyId != null) {
+            builder = builder.withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsAccessKeyId, awsSecretKey)));
+        }
+
+        this.db = new DynamoDB(builder.build());
+    }
+
+    public DynamoDBVelvetEnv(AmazonDynamoDB amazonDynamoDB) {
+        this(new DynamoDB(amazonDynamoDB));
+    }
+
+    public DynamoDBVelvetEnv(DynamoDB dynamoDB) {
+        this.db = dynamoDB;
     }
 
     @Override
