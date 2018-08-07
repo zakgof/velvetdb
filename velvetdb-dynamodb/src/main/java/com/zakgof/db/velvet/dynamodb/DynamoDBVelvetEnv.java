@@ -1,6 +1,7 @@
 package com.zakgof.db.velvet.dynamodb;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.Map;
 
 import com.amazonaws.ClientConfiguration;
@@ -22,7 +23,7 @@ public class DynamoDBVelvetEnv extends AVelvetEnvironment {
     public DynamoDBVelvetEnv(URI uri) {
         String region = uri.getPath().replaceAll("/", "");
         String query = uri.getQuery();
-        final Map<String, String> params = Splitter.on('&').trimResults().withKeyValueSeparator("=").split(query);
+        final Map<String, String> params = query == null ? Collections.emptyMap() : Splitter.on('&').trimResults().withKeyValueSeparator("=").split(query);
 
         String awsAccessKeyId = params.get("awsAccessKeyId");
         String awsSecretKey = params.get("awsSecretKey");
