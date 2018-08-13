@@ -167,6 +167,7 @@ public class DynamoDBVelvet implements IVelvet {
         );
     }
 
+    @SuppressWarnings({ "unchecked" })
     private <CK, M extends Comparable <? super M>, V> boolean filterM(Item item, ISecQuery<CK, M> query, M lowM2, M highM2, Class<CK> keyClass, Class<M> mClass, String keyAttr, String mAttr) {
         CK ck = valueFromItem(item, keyClass, keyAttr, true);
         M m = valueFromItem(item, mClass, mAttr, true);
@@ -243,13 +244,13 @@ public class DynamoDBVelvet implements IVelvet {
             List<K> cks = calcOnTable(() -> {
                 ItemCollection<QueryOutcome> itemCollection = index.query(qs);
 
-                List<Item> debug1 = StreamSupport.stream(itemCollection.spliterator(), false)
-                        .collect(Collectors.toList());
-
-                List<Item> debug2 = StreamSupport.stream(itemCollection.spliterator(), false)
-                        .filter(item -> filterM(item, query, lowM2, highM2, keyClass, mClass, keyAttr, mAttr))
-                        .sorted(itemComparator(keyClass, keyAttr, mClass, mAttr, query.isAscending()))
-                        .collect(Collectors.toList());
+//                List<Item> debug1 = StreamSupport.stream(itemCollection.spliterator(), false)
+//                        .collect(Collectors.toList());
+//
+//                List<Item> debug2 = StreamSupport.stream(itemCollection.spliterator(), false)
+//                        .filter(item -> filterM(item, query, lowM2, highM2, keyClass, mClass, keyAttr, mAttr))
+//                        .sorted(itemComparator(keyClass, keyAttr, mClass, mAttr, query.isAscending()))
+//                        .collect(Collectors.toList());
 
                 return StreamSupport.stream(itemCollection.spliterator(), false)
                     .filter(item -> filterM(item, query, lowM2, highM2, keyClass, mClass, keyAttr, mAttr))
@@ -264,6 +265,7 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
     private <K, M extends Comparable<? super M>> Comparator<? super Item> itemComparator(Class<K> keyClass, String keyAttr, Class<M> mClass, String mAttr, boolean isAscending) {
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         Comparator<Item> comparator = Comparator.<Item, M>comparing(item -> valueFromItem(item, mClass, mAttr, true)).thenComparing(item -> (Comparable)valueFromItem(item, keyClass, keyAttr, true));
         if (!isAscending) {
             comparator = comparator.reversed();

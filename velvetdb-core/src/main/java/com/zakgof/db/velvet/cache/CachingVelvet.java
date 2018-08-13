@@ -76,6 +76,7 @@ class CachingVelvet implements IVelvet {
         }
 
         @Override
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public Map<K, V> batchGet(List<K> hks) {
             Map<K, V> hitMap = hks.stream()
                 .distinct()
@@ -254,6 +255,7 @@ class CachingVelvet implements IVelvet {
         }
 
         @Override
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public Map<HK, CK> batchGet(List<HK> hks) {
             Map<HK, CK> hitMap = hks.stream()
                .distinct()
