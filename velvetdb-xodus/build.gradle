@@ -10,7 +10,7 @@ archivesBaseName = 'velvetdb-xodus'
 compileTestJava.dependsOn tasks.getByPath(':velvetdb-core:testClasses')
 
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core:0.5.0'
+    compile group: 'com.github.zakgof', name: 'velvetdb-core', version: version
     compile 'org.jetbrains.xodus:xodus-environment:1.2.1'
     compile 'com.google.guava:guava:18.0'
     testCompile project(':velvetdb-core').sourceSets.test.output

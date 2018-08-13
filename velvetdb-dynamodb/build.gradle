@@ -10,13 +10,13 @@ archivesBaseName = 'velvetdb-dynamodb'
 compileTestJava.dependsOn tasks.getByPath(':velvetdb-core:testClasses')
 
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core:0.5.0-SNAPSHOT'
+    compile group: 'com.github.zakgof', name: 'velvetdb-core', version: version
     compile 'com.google.guava:guava:18.0'
-    compile 'com.amazonaws:aws-java-sdk-dynamodb:1.11.278'
-    
+    compile 'com.amazonaws:aws-java-sdk-dynamodb:1.11.381'
+
     testCompile project(':velvetdb-core').sourceSets.test.output
     testCompile 'junit:junit:4.12'
-    testCompile 'org.apache.commons:commons-text:1.2'    
+    testCompile 'org.apache.commons:commons-text:1.2'
 }
 
 tasks.withType(JavaCompile) {

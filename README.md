@@ -43,21 +43,24 @@ velvetdb is on Maven Central
 <dependency>
     <groupId>com.github.zakgof</groupId>
     <artifactId>velvetdb-xodus</artifactId>
+<<<<<<< HEAD
     <version>0.3.2</version>
+=======
+    <version>0.5.0</version>
+>>>>>>> refs/remotes/origin/master
 </dependency>
 ```
 or, using Gradle:
 ```groovy
-compile 'com.github.zakgof:velvetdb-xodus:0.3.2'    
+compile 'com.github.zakgof:velvetdb-xodus:0.6.0'
+>>>>>>> refs/remotes/origin/master
 ```
 
 For Android version:
 
 ```groovy
-compile 'com.github.zakgof:velvetdb-xodus:0.3.3.android'    
+compile 'com.github.zakgof:velvetdb-xodus-android:0.3.3'
 ```
-
-
 
 ## Define entities and links
 ```java
