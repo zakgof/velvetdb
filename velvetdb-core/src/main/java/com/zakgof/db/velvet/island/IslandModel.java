@@ -1,14 +1,24 @@
 package com.zakgof.db.velvet.island;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.link.*;
+import com.zakgof.db.velvet.link.IMultiGetter;
+import com.zakgof.db.velvet.link.IMultiLinkDef;
+import com.zakgof.db.velvet.link.ISingleGetter;
+import com.zakgof.db.velvet.link.ISingleLinkDef;
 
 public class IslandModel {
 
@@ -358,6 +368,9 @@ public class IslandModel {
         }
 
         public DataWrap<KK, VV> make(VV node) {
+            if (node == null) {
+                return null;
+            }
             preFetch(startEntity, Arrays.asList(node));
             DataWrap<KK, VV> wrap = wrap(startEntity, node, null);
             return wrap;
