@@ -141,8 +141,8 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
         return secIndexMap.entrySet().stream().map(e -> createIndexDefX(e)).collect(Collectors.toList());
     }
 
-    @SuppressWarnings("unchecked")
     private IStoreIndexDef<?, V> createIndexDefX(Entry<String, IProperty<?, V>> e) {
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         IStoreIndexDef<?, V> indexDef = createIndexDef((Map.Entry)e);
         return indexDef;
     }
