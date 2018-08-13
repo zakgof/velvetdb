@@ -7,13 +7,6 @@ compileJava.options.encoding = 'UTF-8'
 group = 'com.github.zakgof'
 archivesBaseName = 'velvetdb-dynamodb'
 
-repositories {
-    mavenCentral()
-    maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
-}
-
 compileTestJava.dependsOn tasks.getByPath(':velvetdb-core:testClasses')
 
 dependencies {
