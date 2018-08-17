@@ -9,8 +9,10 @@ import com.zakgof.db.velvet.impl.entity.AnnoEntityDef;
 import com.zakgof.db.velvet.impl.entity.AnnoKeyProvider;
 import com.zakgof.db.velvet.impl.entity.EntityDef;
 import com.zakgof.db.velvet.impl.entity.KeylessEntityDef;
+import com.zakgof.db.velvet.impl.entity.SetEntityDef;
 import com.zakgof.db.velvet.impl.entity.SortedAnnoEntityDef;
 import com.zakgof.db.velvet.impl.entity.SortedEntityDef;
+import com.zakgof.db.velvet.impl.entity.SortedSetEntityDef;
 
 final public class Entities {
 
@@ -24,6 +26,10 @@ final public class Entities {
 
     public static <K extends Comparable<? super K>, V> ISortableEntityDef<K, V> sorted(Class<V> valueClass) {
         return from(valueClass).makeSorted();
+    }
+
+    public static <V> ISetEntityDef<V> set(Class<V> valueClass) {
+        return from(valueClass).makeSet();
     }
 
     public static <V> Builder<V> from(Class<V> clazz) {
@@ -42,6 +48,15 @@ final public class Entities {
             this.kind = AnnoEntityDef.kindOf(clazz);
             this.annoKeyProvider = new AnnoKeyProvider<>(clazz);
             this.indexes = annoKeyProvider.getIndexes();
+        }
+
+        public ISetEntityDef<V> makeSet() {
+            return new SetEntityDef<>(clazz, kind, indexes);
+        }
+
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public ISetEntityDef<V> makeSortedSet() {
+            return new SortedSetEntityDef(clazz, kind, indexes);
         }
 
         public <M extends Comparable<? super M>> Builder<V> index(String name, Function<V, M> metric, Class<M> metricClass) {
