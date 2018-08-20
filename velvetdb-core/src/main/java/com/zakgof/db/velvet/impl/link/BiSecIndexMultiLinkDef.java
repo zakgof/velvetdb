@@ -6,16 +6,15 @@ import java.util.function.Function;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.link.IBiMultiLinkDef;
 import com.zakgof.db.velvet.link.IBiParentLinkDef;
+import com.zakgof.db.velvet.link.IBiSecMultiLinkDef;
 import com.zakgof.db.velvet.link.IMultiGetter;
-import com.zakgof.db.velvet.link.ISecMultiLinkDef;
 import com.zakgof.db.velvet.link.ISingleGetter;
 import com.zakgof.db.velvet.query.ISecQuery;
 import com.zakgof.db.velvet.query.ISingleReturnSecQuery;
 
 public class BiSecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M>> extends ABiLinkDef<HK, HV, CK, CV, SecIndexMultiLinkDef<HK, HV, CK, CV, M>, IBiParentLinkDef<CK, CV, HK, HV>>
-        implements IBiMultiLinkDef<HK, HV, CK, CV>, ISecMultiLinkDef<HK, HV, CK, CV, M> {
+        implements IBiSecMultiLinkDef<HK, HV, CK, CV, M> {
 
     private BiSecIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
         super(new SecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric));
