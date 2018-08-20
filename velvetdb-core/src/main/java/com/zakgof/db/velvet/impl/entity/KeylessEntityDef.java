@@ -39,15 +39,15 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
     }
 
     @Override
-    public Map<Long, V> batchGet(IVelvet velvet, List<Long> keys) {
-        Map<Long, V> values = super.batchGet(velvet, keys);
+    public Map<Long, V> batchGetMap(IVelvet velvet, List<Long> keys) {
+        Map<Long, V> values = super.batchGetMap(velvet, keys);
         Map<V, Long> map = values.entrySet().stream().collect(Collectors.toMap(Entry::getValue, Entry::getKey));
         this.keys.putAll(map);
         return values;
     }
 
     @Override
-    public Map<Long, V> batchGetAll(IVelvet velvet) {
+    public Map<Long, V> batchGetAllMap(IVelvet velvet) {
         Map<Long, V> values = store(velvet).getAll();
         Map<V, Long> map = values.entrySet().stream().collect(Collectors.toMap(Entry::getValue, Entry::getKey));
         this.keys.putAll(map);
@@ -67,7 +67,7 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
     }
 
     @Override
-    public List<Long> put(IVelvet velvet, List<V> values) {
+    public List<Long> batchPut(IVelvet velvet, List<V> values) {
         List<Long> keyz = values.stream().map(keys::get).collect(Collectors.toList());
         boolean nullz = keyz.contains(null);
         if (nullz && keyz.stream().anyMatch(k -> k!=null))
@@ -101,7 +101,7 @@ public class KeylessEntityDef<V> extends SortedEntityDef<Long, V> implements IKe
     }
 
     @Override
-    public List<Long> put(IVelvet velvet, List<Long> keyz, List<V> values) {
+    public List<Long> batchPut(IVelvet velvet, List<Long> keyz, List<V> values) {
         store(velvet).put(keyz, values);
         Iterator<V> valit = values.iterator();
         Iterator<Long> keyit = keyz.iterator();

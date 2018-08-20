@@ -24,13 +24,13 @@ public class SortedEntityDef<K extends Comparable<? super K>, V> extends EntityD
     }
 
     @Override
-    public List<K> keys(IVelvet velvet, IKeyQuery<K> query) {
+    public List<K> queryKeys(IVelvet velvet, IKeyQuery<K> query) {
         return store(velvet).keys(query);
     }
 
     @Override
-    public K key(IVelvet velvet, ISingleReturnKeyQuery<K> query) {
-        List<K> keys = keys(velvet, (IKeyQuery<K>)query);
+    public K queryKey(IVelvet velvet, ISingleReturnKeyQuery<K> query) {
+        List<K> keys = queryKeys(velvet, (IKeyQuery<K>)query);
         if (keys.size() > 1)
             throw new VelvetException("ISingleReturnIndexQuery returned multiple entries");
         return keys.isEmpty() ? null : keys.get(0);

@@ -9,7 +9,12 @@ import com.zakgof.db.velvet.IVelvet;
 
 public interface IMultiGetter<HK, HV, CK, CV> extends IRelation<HK, HV, CK, CV> {
 
+    // TODO: naming is poor
     public List<CV> get(IVelvet velvet, HV node);
+
+    public default Map<CK, CV> getMap(IVelvet velvet, HV node) {
+        return get(velvet, node).stream().collect(Collectors.toMap(cv -> getChildEntity().keyOf(cv), cv -> cv));
+    }
 
     public List<CK> keys(IVelvet velvet, HK key);
 
@@ -17,7 +22,7 @@ public interface IMultiGetter<HK, HV, CK, CV> extends IRelation<HK, HV, CK, CV> 
         List<HK> hks = nodes.stream().map(n -> getHostEntity().keyOf(n)).collect(Collectors.toList());
         Map<HK, List<CK>> keyMap = batchKeys(velvet, hks);
         List<CK> allCKs = keyMap.values().stream().flatMap(List::stream).collect(Collectors.toList());
-        Map<CK, CV> childMap = getChildEntity().batchGet(velvet, allCKs);
+        Map<CK, CV> childMap = getChildEntity().batchGetMap(velvet, allCKs);
         Map<HK, List<CV>> result = keyMap.entrySet().stream().collect(Collectors.toMap(Entry::getKey, e -> e.getValue().stream().map(childMap::get).collect(Collectors.toList())));
         return result;
     }

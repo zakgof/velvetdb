@@ -19,7 +19,7 @@ public interface ISingleGetter<HK, HV, CK, CV> extends IRelation<HK, HV, CK, CV>
         List<HK> hks = nodes.stream().map(n -> getHostEntity().keyOf(n)).collect(Collectors.toList());
         Map<HK, CK> keyMap = batchKeys(velvet, hks);
         List<CK> allCKs = new ArrayList<>(keyMap.values());
-        Map<CK, CV> childMap = getChildEntity().batchGet(velvet, allCKs);
+        Map<CK, CV> childMap = getChildEntity().batchGetMap(velvet, allCKs);
         Map<HK, CV> result = keyMap.entrySet().stream().collect(Collectors.toMap(Entry::getKey, e -> childMap.get(e.getValue())));
         return result;
     }
