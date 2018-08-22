@@ -14,28 +14,57 @@ import com.zakgof.db.velvet.impl.entity.SortedAnnoEntityDef;
 import com.zakgof.db.velvet.impl.entity.SortedEntityDef;
 import com.zakgof.db.velvet.impl.entity.SortedSetEntityDef;
 
+/**
+ * Utility class for creating entities.
+ */
 final public class Entities {
 
+    /**
+     * Creates an entity from a class. The class should have one {@link @Key} annotation.
+     * @param <K> key class
+     * @param <V> value class
+     */
     public static <K, V> IEntityDef<K, V> create(Class<V> valueClass) {
         return from(valueClass).make();
     }
 
+    /**
+     * Creates a keyless entity from a class.
+     * @param <V> value class
+     */
     public static <V> IKeylessEntityDef<V> keyless(Class<V> valueClass) {
         return from(valueClass).makeKeyless();
     }
 
+    /**
+     * Creates an entity from a class. The class should have one {@link @SortableKey} annotation.
+     * @param <K> key class
+     * @param <V> value class
+     */
     public static <K extends Comparable<? super K>, V> ISortableEntityDef<K, V> sorted(Class<V> valueClass) {
         return from(valueClass).makeSorted();
     }
 
+    /**
+     * Creates an entity which key is its value itself.
+     * @param <V> key and value class
+     */
     public static <V> ISetEntityDef<V> set(Class<V> valueClass) {
         return from(valueClass).makeSet();
     }
 
+    /**
+     * Creates a builder for advanced entity construction.
+     * @param <V> value class
+     */
     public static <V> Builder<V> from(Class<V> clazz) {
         return new Builder<>(clazz);
     }
 
+    /**
+     * Builder for advanced entity construction.
+     * @param <V> value class
+     */
     public static class Builder<V> {
 
         private Class<V> clazz;
