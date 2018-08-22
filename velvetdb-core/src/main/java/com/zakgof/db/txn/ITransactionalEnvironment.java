@@ -2,10 +2,21 @@ package com.zakgof.db.txn;
 
 import com.zakgof.db.velvet.VelvetException;
 
+/**
+ * Environment for running transactions.
+ */
 public interface ITransactionalEnvironment<H> {
 
+    /**
+     * Run a transaction.
+     * @param transaction transaction
+     */
     public void execute(ITransactionCall<H> transaction);
 
+    /**
+     * Run a transaction and return a result
+     * @param transaction transaction
+     */
     @SuppressWarnings("unchecked")
     public default <R> R calculate(ITransactionCalc<H, R> transaction) {
         Object[] result = new Object[1];

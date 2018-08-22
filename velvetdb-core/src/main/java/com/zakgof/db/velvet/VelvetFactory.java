@@ -6,16 +6,28 @@ import java.util.List;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 
-import com.zakgof.db.velvet.cache.CachingVelvetEnvironment;
+import com.zakgof.db.velvet.impl.cache.CachingVelvetEnvironment;
 import com.zakgof.tools.generic.Functions;
 
-
+/**
+ * Manage velvetdb providers.
+ */
 public class VelvetFactory {
 
+    /**
+     * Connects to a velvetdb database with RAM caching enabled. Cached velvetdb is faster, but it can only be used if no other client is concurrently working qith the same database.
+     * @param url velvetdb url in format velvetdb://&lt;backendname&gt;/&lt;path&gt;
+     * @return velvet env
+     */
     public static IVelvetEnvironment openCaching(String url) {
         return new CachingVelvetEnvironment(open(url));
     }
 
+    /**
+     * Connects to a velvetdb database.
+     * @param url velvetdb url in format velvetdb://&lt;backendname&gt;/&lt;path&gt;
+     * @return velvet env
+     */
     public static IVelvetEnvironment open(String url) {
         try {
             URI u = new URI(url);
@@ -34,6 +46,10 @@ public class VelvetFactory {
         }
     }
 
+    /**
+     * Enumerates registered velvetdb providers (backends).
+     * @return providers list
+     */
     public static List<IVelvetProvider> getProviders() {
         ServiceLoader<IVelvetProvider> serviceLoader = ServiceLoader.load(IVelvetProvider.class);
         return Functions.stream(serviceLoader.iterator()).collect(Collectors.toList());

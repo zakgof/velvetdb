@@ -1,4 +1,4 @@
-package com.zakgof.db.velvet.cache;
+package com.zakgof.db.velvet.impl.cache;
 
 import java.util.ArrayList;
 import java.util.Arrays;
