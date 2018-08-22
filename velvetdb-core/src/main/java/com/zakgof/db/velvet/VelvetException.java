@@ -1,5 +1,8 @@
 package com.zakgof.db.velvet;
 
+/**
+ * Velvetdb exception.
+ */
 @SuppressWarnings("serial")
 public class VelvetException extends RuntimeException {
 
