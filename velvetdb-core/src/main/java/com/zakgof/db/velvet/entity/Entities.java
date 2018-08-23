@@ -65,8 +65,8 @@ final public class Entities {
 
     /**
      * Creates a builder for advanced entity definition construction.
-     * @param clazz
-     * @param <V> entity value class
+     * @param clazz entity class
+     * @param <V> entity class
      * @return entity definition builder
      */
     public static <V> Builder<V> from(Class<V> clazz) {
@@ -115,6 +115,7 @@ final public class Entities {
 
         /**
          * Creates an entity definition. Primary key should be assigned using the {@link Key} annotation.
+         * @param <K> primary key type
          * @return entity definition
          */
         @SuppressWarnings("unchecked")
@@ -133,6 +134,7 @@ final public class Entities {
          * Creates an entity definition explicitly specifying primary key.
          * @param keyClass primary key class
          * @param keyFunction function returning primary key from an entity
+         * @param <K> primary key type
          * @return entity definition
          */
         public  <K> IEntityDef<K, V> make(Class<K> keyClass, Function<V, K> keyFunction) {
@@ -149,6 +151,7 @@ final public class Entities {
 
         /**
          * Creates a sortable entity definition. Primary key must be specified using the {@link SortedKey} annotation and must implement {@link Comparable}.
+         * @param <K> primary key type
          * @return entity definition
          */
         @SuppressWarnings("unchecked")

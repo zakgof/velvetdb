@@ -11,7 +11,7 @@ import com.zakgof.db.velvet.query.ISecQuery;
 import com.zakgof.db.velvet.query.ISingleReturnSecQuery;
 
 /**
- * Entity definition - specifies a kind of entities with values represented by class <V>
+ * Entity definition - specifies a kind of entities with values represented by class V
  *
  * @param <K> primary key type
  * @param <V> value type
@@ -99,7 +99,7 @@ public interface IEntityDef<K, V> {
 
     /**
      * Gets all entity keys.
-     * @param velvet
+     * @param velvet velvet handle
      * @return key list
      */
     public List<K> batchGetAllKeys(IVelvet velvet);
@@ -223,6 +223,7 @@ public interface IEntityDef<K, V> {
      * @param velvet velvet handle
      * @param indexName secondary index name
      * @param query query
+     * @param <M> index value type
      * @return matching entry key or null
      */
     public <M extends Comparable<? super M>> K queryKey(IVelvet velvet, String indexName, ISingleReturnSecQuery<K, M> query);
@@ -235,6 +236,7 @@ public interface IEntityDef<K, V> {
      * @param velvet velvet handle
      * @param indexName secondary index name
      * @param query query
+     * @param <M> index value type
      * @return matching entry or null
      */
     public <M extends Comparable<? super M>> V queryValue(IVelvet velvet, String indexName, ISingleReturnSecQuery<K, M> query);
@@ -245,6 +247,7 @@ public interface IEntityDef<K, V> {
      * @param velvet velvet handle
      * @param indexName secondary index name
      * @param query query
+     * @param <M> index value type
      * @return list of keys
      */
     public <M extends Comparable<? super M>> List<K> queryKeys(IVelvet velvet, String indexName, ISecQuery<K, M> query);
@@ -256,6 +259,7 @@ public interface IEntityDef<K, V> {
      * @param velvet velvet handle
      * @param indexName secondary index name
      * @param query query
+     * @param <M> index value type
      * @return list of entities
      */
     public <M extends Comparable<? super M>> List<V> queryList(IVelvet velvet, String indexName, ISecQuery<K, M> query);
@@ -266,6 +270,7 @@ public interface IEntityDef<K, V> {
      * @param velvet velvet handle
      * @param indexName secondary index name
      * @param query query
+     * @param <M> index value type
      * @return key to value entity map
      */
     public <M extends Comparable<? super M>> Map<K, V> queryMap(IVelvet velvet, String indexName, ISecQuery<K, M> query);

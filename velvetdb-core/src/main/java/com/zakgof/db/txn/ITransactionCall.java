@@ -12,7 +12,7 @@ public interface ITransactionCall<H> {
      * Execute a transaction without a return value.
      *
      * @param handle transaction handle
-     * @throws Throwable
+     * @throws Throwable exception during transaction
      */
     public void execute(H handle) throws Throwable;
 

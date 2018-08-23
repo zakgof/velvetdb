@@ -20,6 +20,7 @@ public interface ITransactionalEnvironment<H> {
      * Run a transaction and return a result.
      *
      * @param transaction transaction
+     * @param <R> transaction result type
      * @return transaction result
      */
     @SuppressWarnings("unchecked")

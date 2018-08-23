@@ -14,7 +14,7 @@ public interface ITransactionCalc<H, R> {
      *
      * @param handle transaction handle
      * @return transaction result
-     * @throws Throwable
+     * @throws Throwable exception during transaction
      */
     public R execute(H handle) throws Throwable;
 
