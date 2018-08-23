@@ -80,7 +80,7 @@ class VelvetUpgraderImpl implements IVelvetUpgrader, IUpgrader {
         ClassStructure actualStructure = ClassStructure.of(clazz);
 
        // TODO: PERF: only load biggest version number, then climb down
-       List<ClassVersion> versions = env.calculate(velvet -> CLASS_VERSION.index(velvet, "class", SecQueries.eq(clazz.getName())));
+       List<ClassVersion> versions = env.calculate(velvet -> CLASS_VERSION.queryList(velvet, "class", SecQueries.eq(clazz.getName())));
        for (ClassVersion version : versions) {
             if (version.structure.equals(actualStructure)) {
                 actualVersions.put(clazz, version.version);

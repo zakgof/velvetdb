@@ -14,6 +14,7 @@ import com.zakgof.db.velvet.query.ISecQuery;
 import com.zakgof.tools.generic.Pair;
 
 /**
+ * Velvet transaction handle.
  * Clients are not supposed to run any IVelvet methods directly. Use entity and link API.
  */
 public interface IVelvet {
