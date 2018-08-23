@@ -9,9 +9,6 @@ import org.junit.Test;
 
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.link.IMultiLinkDef;
-import com.zakgof.db.velvet.link.ISingleLinkDef;
-import com.zakgof.db.velvet.link.Links;
 
 public class ConcurrentWriteTest extends AVelvetTest {
 
@@ -19,11 +16,11 @@ public class ConcurrentWriteTest extends AVelvetTest {
     private static final int THREADS = 5;
     private static final int TXN_PER_THREAD = 10;
 
-    private IEntityDef<String, TestEnt> ENTITY = Entities.from(TestEnt.class).kind("concurr-testent").make();
+    // private IEntityDef<String, TestEnt> ENTITY = Entities.from(TestEnt.class).kind("concurr-testent").make();
     private IEntityDef<Integer, TestEnt2> ENTITY2 = Entities.from(TestEnt2.class).kind("concurr-testent2").make();
 
-    private ISingleLinkDef<String, TestEnt, Integer, TestEnt2> SINGLE = Links.single(ENTITY, ENTITY2, "single");
-    private IMultiLinkDef<String, TestEnt, Integer, TestEnt2> MULTI = Links.multi(ENTITY, ENTITY2, "multi");
+    // private ISingleLinkDef<String, TestEnt, Integer, TestEnt2> SINGLE = Links.single(ENTITY, ENTITY2, "single");
+    // private IMultiLinkDef<String, TestEnt, Integer, TestEnt2> MULTI = Links.multi(ENTITY, ENTITY2, "multi");
 
     @Test
     public void testSingleTransactionMassiveEntityPut() throws InterruptedException {

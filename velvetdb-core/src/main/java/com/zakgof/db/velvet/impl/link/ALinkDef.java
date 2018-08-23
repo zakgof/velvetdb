@@ -18,7 +18,7 @@ abstract class ALinkDef<HK, HV, CK, CV> implements ILinkDef<HK, HV, CK, CV> {
     }
 
     ALinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
-        this(hostEntity, childEntity, hostEntity.getKind() + "-" + childEntity.getKind());
+        this(hostEntity, childEntity, hostEntity.getKind() + "_" + childEntity.getKind());
     }
 
     ALinkDef(Class<HV> hostClass, Class<CV> childClass) {

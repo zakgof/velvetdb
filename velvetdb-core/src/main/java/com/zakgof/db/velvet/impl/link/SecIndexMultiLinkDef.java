@@ -52,7 +52,7 @@ public class SecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M
 
             @Override
             public List<CV> get(IVelvet velvet, HV node) {
-                return new ArrayList<>(getChildEntity().batchGet(velvet, keys(velvet, getHostEntity().keyOf(node))).values());
+                return new ArrayList<>(getChildEntity().batchGetMap(velvet, keys(velvet, getHostEntity().keyOf(node))).values());
             }
 
             @Override

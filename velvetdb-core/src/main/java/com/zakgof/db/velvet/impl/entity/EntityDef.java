@@ -74,17 +74,17 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     }
 
     @Override
-    public Map<K, V> batchGet(IVelvet velvet, List<K> keys) {
+    public Map<K, V> batchGetMap(IVelvet velvet, List<K> keys) {
         return store(velvet).batchGet(keys);
     }
 
     @Override
-    public Map<K, V> batchGetAll(IVelvet velvet) {
+    public Map<K, V> batchGetAllMap(IVelvet velvet) {
         return store(velvet).getAll();
     }
 
     @Override
-    public List<K> keys(IVelvet velvet) {
+    public List<K> batchGetAllKeys(IVelvet velvet) {
         return store(velvet).keys();
     }
 
@@ -106,13 +106,13 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     }
 
     @Override
-    public List<K> put(IVelvet velvet, List<V> values) {
+    public List<K> batchPut(IVelvet velvet, List<V> values) {
         List<K> keys = values.stream().map(this::keyOf).collect(Collectors.toList());
-        return put(velvet, keys, values);
+        return batchPut(velvet, keys, values);
     }
 
     @Override
-    public List<K> put(IVelvet velvet, List<K> keys, List<V> values) {
+    public List<K> batchPut(IVelvet velvet, List<K> keys, List<V> values) {
         store(velvet).put(keys, values);
         return keys;
     }
@@ -123,7 +123,7 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     }
 
     @Override
-    public void deleteKeys(IVelvet velvet, List<K> keys) {
+    public void batchDeleteKeys(IVelvet velvet, List<K> keys) {
         store(velvet).delete(keys);
     }
 
@@ -141,25 +141,31 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     }
 
     @Override
-    public <M extends Comparable<? super M>> V singleIndex(IVelvet velvet, String indexName, ISingleReturnSecQuery<K, M> query) {
-        K key = indexKey(velvet, indexName, query);
+    public <M extends Comparable<? super M>> V queryValue(IVelvet velvet, String indexName, ISingleReturnSecQuery<K, M> query) {
+        K key = queryKey(velvet, indexName, query);
         return key == null ? null : get(velvet, key);
     }
 
     @Override
-    public <M extends Comparable<? super M>> K indexKey(IVelvet velvet, String indexName, ISingleReturnSecQuery<K, M> query) {
+    public <M extends Comparable<? super M>> K queryKey(IVelvet velvet, String indexName, ISingleReturnSecQuery<K, M> query) {
         List<K> keys = store(velvet).<M> index(indexName).keys((ISecQuery<K, M>)query);
         return keys.isEmpty() ? null : keys.get(0);
     }
 
     @Override
-    public <M extends Comparable<? super M>> List<V> index(IVelvet velvet, String indexName, ISecQuery<K, M> query) {
-        List<K> keys = indexKeys(velvet, indexName, query);
-        return new ArrayList<>(batchGet(velvet, keys).values());
+    public <M extends Comparable<? super M>> List<V> queryList(IVelvet velvet, String indexName, ISecQuery<K, M> query) {
+        List<K> keys = queryKeys(velvet, indexName, query);
+        return new ArrayList<>(batchGetMap(velvet, keys).values());
     }
 
     @Override
-    public <M extends Comparable<? super M>> List<K> indexKeys(IVelvet velvet, String indexName, ISecQuery<K, M> query) {
+    public <M extends Comparable<? super M>> Map<K, V> queryMap(IVelvet velvet, String indexName, ISecQuery<K, M> query) {
+        List<K> keys = queryKeys(velvet, indexName, query);
+        return batchGetMap(velvet, keys);
+    }
+
+    @Override
+    public <M extends Comparable<? super M>> List<K> queryKeys(IVelvet velvet, String indexName, ISecQuery<K, M> query) {
         return store(velvet).<M> index(indexName).keys(query);
     }
 

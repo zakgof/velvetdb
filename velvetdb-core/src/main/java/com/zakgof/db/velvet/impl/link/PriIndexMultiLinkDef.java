@@ -13,7 +13,7 @@ import com.zakgof.db.velvet.link.Links;
 import com.zakgof.db.velvet.query.IKeyQuery;
 import com.zakgof.db.velvet.query.ISingleReturnKeyQuery;
 
-public class PriIndexMultiLinkDef<HK, HV, CK extends Comparable<CK>, CV> extends MultiLinkDef<HK, HV, CK, CV> implements IPriMultiLinkDef<HK, HV, CK, CV> {
+public class PriIndexMultiLinkDef<HK, HV, CK extends Comparable<? super CK>, CV> extends MultiLinkDef<HK, HV, CK, CV> implements IPriMultiLinkDef<HK, HV, CK, CV> {
 
     public PriIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
         super(hostEntity, childEntity);
@@ -41,7 +41,7 @@ public class PriIndexMultiLinkDef<HK, HV, CK extends Comparable<CK>, CV> extends
 
             @Override
             public List<CV> get(IVelvet velvet, HV node) {
-                return new ArrayList<>(getChildEntity().batchGet(velvet, keys(velvet, getHostEntity().keyOf(node))).values());
+                return new ArrayList<>(getChildEntity().batchGetMap(velvet, keys(velvet, getHostEntity().keyOf(node))).values());
             }
 
             @Override
