@@ -3,7 +3,7 @@ jdk:
   - oraclejdk8
 branches:
   only:
-   - master
+   - release
 before_install:
   openssl enc -d -aes-256-cbc -md md5 -k ${FILE_PASSWORD} -in travis/secring.gpg.enc -out travis/secring.gpg
 install: true
