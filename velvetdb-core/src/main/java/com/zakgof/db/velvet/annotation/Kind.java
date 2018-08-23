@@ -13,5 +13,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 public @interface Kind {
+    /**
+     * @return entity name
+     */
     String value() default "";
 }

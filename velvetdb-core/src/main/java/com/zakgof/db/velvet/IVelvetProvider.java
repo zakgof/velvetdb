@@ -10,7 +10,7 @@ public interface IVelvetProvider {
     /**
      * Open velvetdb environment from a URI
      * @param url in format velvetdb://&lt;backendname&gt;/&lt;path&gt;
-     * @return
+     * @return velvet environment handle
      */
     IVelvetEnvironment open(URI url);
 

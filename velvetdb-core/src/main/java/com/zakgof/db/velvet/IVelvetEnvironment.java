@@ -7,7 +7,7 @@ import com.zakgof.db.velvet.upgrader.IVelvetUpgrader;
 import com.zakgof.serialize.ISerializer;
 
 /**
- * Main 'database handle'
+ * Velvet environment wraps an open database handle. Velvet environment provides velvet handles for transactions.
  */
 public interface IVelvetEnvironment extends ITransactionalEnvironment<IVelvet>, AutoCloseable {
 
@@ -19,12 +19,14 @@ public interface IVelvetEnvironment extends ITransactionalEnvironment<IVelvet>, 
 
     /**
      * Set serializer factory.
+     *
      * @param serializer serializer factory
      */
     void setSerializer(Supplier<ISerializer> serializer);
 
     /**
      * Get class version upgrader.
+     *
      * @return upgrader interface
      */
     IVelvetUpgrader upgrader();
