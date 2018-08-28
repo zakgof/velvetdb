@@ -137,16 +137,32 @@ public class Links {
         return new PriIndexMultiLinkDef<>(hostEntity, childEntity);
     }
 
+    public static <HK, HV, CK extends Comparable<? super CK>, CV> IPriMultiLinkDef<HK, HV, CK, CV> pri(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind) {
+        return new PriIndexMultiLinkDef<>(hostEntity, childEntity, edgeKind);
+    }
+
     public static <HK, HV, CK extends Comparable<? super CK>, CV> IBiPriMultiLinkDef<HK, HV, CK, CV> biPri(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
         return BiPriIndexMultiLinkDef.create(hostEntity, childEntity);
+    }
+
+    public static <HK, HV, CK extends Comparable<? super CK>, CV> IBiPriMultiLinkDef<HK, HV, CK, CV> biPri(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind, String backEdgeKind) {
+        return BiPriIndexMultiLinkDef.create(hostEntity, childEntity, edgeKind, backEdgeKind);
     }
 
     public static <HK, HV, CK, CV, M extends Comparable<? super M>> ISecMultiLinkDef<HK, HV, CK, CV, M> sec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
         return new SecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric);
     }
 
+    public static <HK, HV, CK, CV, M extends Comparable<? super M>> ISecMultiLinkDef<HK, HV, CK, CV, M> sec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric, String edgeKind) {
+        return new SecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric, edgeKind);
+    }
+
     public static <HK, HV, CK, CV, M extends Comparable<? super M>> IBiSecMultiLinkDef<HK, HV, CK, CV, M> biSec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
         return BiSecIndexMultiLinkDef.create(hostEntity, childEntity, mclazz, metric);
+    }
+
+    public static <HK, HV, CK, CV, M extends Comparable<? super M>> IBiSecMultiLinkDef<HK, HV, CK, CV, M> biSec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric, String edgeKind, String backEdgeKind) {
+        return BiSecIndexMultiLinkDef.create(hostEntity, childEntity, mclazz, metric, edgeKind, backEdgeKind);
     }
 
 }
