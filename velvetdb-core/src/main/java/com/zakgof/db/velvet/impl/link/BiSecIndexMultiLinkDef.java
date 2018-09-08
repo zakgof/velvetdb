@@ -6,24 +6,32 @@ import java.util.Map;
 import com.annimon.stream.function.Function;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.link.IBiMultiLinkDef;
-import com.zakgof.db.velvet.link.IBiParentLinkDef;
-import com.zakgof.db.velvet.link.IMultiGetter;
-import com.zakgof.db.velvet.link.ISecMultiLinkDef;
-import com.zakgof.db.velvet.link.ISingleGetter;
+import com.zakgof.db.velvet.link.*;
 import com.zakgof.db.velvet.query.ISecQuery;
 import com.zakgof.db.velvet.query.ISingleReturnSecQuery;
 
 public class BiSecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M>> extends ABiLinkDef<HK, HV, CK, CV, SecIndexMultiLinkDef<HK, HV, CK, CV, M>, IBiParentLinkDef<CK, CV, HK, HV>>
-        implements IBiMultiLinkDef<HK, HV, CK, CV>, ISecMultiLinkDef<HK, HV, CK, CV, M> {
+        implements IBiSecMultiLinkDef<HK, HV, CK, CV, M> {
 
     private BiSecIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
         super(new SecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric));
     }
 
+    private BiSecIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric, String edgeKind) {
+        super(new SecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric, edgeKind));
+    }
+
     public static <HK, HV, CK, CV, M extends Comparable<? super M>> BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> create(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
         BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> link = new BiSecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric);
         BiParentLinkDef<CK, CV, HK, HV> backLink = new BiParentLinkDef<>(childEntity, hostEntity);
+        link.setBackLink(backLink);
+        backLink.setBackLink(link);
+        return link;
+    }
+
+    public static <HK, HV, CK, CV, M extends Comparable<? super M>> BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> create(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric, String edgeKind, String backEdgeKind) {
+        BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> link = new BiSecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric, edgeKind);
+        BiParentLinkDef<CK, CV, HK, HV> backLink = new BiParentLinkDef<>(childEntity, hostEntity, backEdgeKind);
         link.setBackLink(backLink);
         backLink.setBackLink(link);
         return link;
@@ -62,5 +70,10 @@ public class BiSecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super
     @Override
     public Function<CV, M> getMetric() {
         return oneWay.getMetric();
+    }
+
+    @Override
+    public Map<CK, CV> getMap(IVelvet velvet, HV node) {
+        return oneWay.getMap(velvet, node);
     }
 }

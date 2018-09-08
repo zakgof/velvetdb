@@ -4,10 +4,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
@@ -31,7 +28,7 @@ public class KeylessTest extends AVelvetTxnTest {
 
     @After
     public void cleanup() {
-        List<Long> keys = ENTITY.keys(velvet);
+        List<Long> keys = ENTITY.batchGetAllKeys(velvet);
         for (Long key : keys) {
             ENTITY.deleteKey(velvet, key);
         }
@@ -39,31 +36,31 @@ public class KeylessTest extends AVelvetTxnTest {
 
     @Test
     public void testGetAll() {
-        List<Integer> all = Stream.of(ENTITY.batchGetAll(velvet).values()).map(KeylessEnt::getNum).collect(Collectors.toList());
+        List<Integer> all = Stream.of(ENTITY.batchGetAllMap(velvet).values()).map(KeylessEnt::getNum).collect(Collectors.toList());
         Assert.assertEquals(new HashSet<>(Arrays.asList(7, 5, 2, 3, 1)), new HashSet<>(all));
     }
 
     @Test
     public void testTraverse() {
 
-        List<Integer> order = Stream.of(ENTITY.batchGetAll(velvet).values()).map(KeylessEnt::getNum).collect(Collectors.toList());
+        List<Integer> order = Stream.of(ENTITY.batchGetAllMap(velvet).values()).map(KeylessEnt::getNum).collect(Collectors.toList());
 
-        KeylessEnt first = ENTITY.get(velvet, KeyQueries.first());
+        KeylessEnt first = ENTITY.queryValue(velvet, KeyQueries.first());
         Assert.assertEquals(order.get(0).intValue(), first.getNum());
 
-        KeylessEnt e2 = ENTITY.get(velvet, KeyQueries.next(ENTITY.keyOf(first)));
+        KeylessEnt e2 = ENTITY.queryValue(velvet, KeyQueries.next(ENTITY.keyOf(first)));
         Assert.assertEquals(order.get(1).intValue(), e2.getNum());
 
-        KeylessEnt e3 = ENTITY.get(velvet, KeyQueries.next(ENTITY.keyOf(e2))); // TODO: helper for this
+        KeylessEnt e3 = ENTITY.queryValue(velvet, KeyQueries.next(ENTITY.keyOf(e2))); // TODO: helper for this
         Assert.assertEquals(order.get(2).intValue(), e3.getNum());
 
-        KeylessEnt last = ENTITY.get(velvet, KeyQueries.last());
+        KeylessEnt last = ENTITY.queryValue(velvet, KeyQueries.last());
         Assert.assertEquals(order.get(4).intValue(), last.getNum());
     }
 
     @Test
     public void testGetByKey() {
-        KeylessEnt first = ENTITY.get(velvet, KeyQueries.first());
+        KeylessEnt first = ENTITY.queryValue(velvet, KeyQueries.first());
         Long k = ENTITY.keyOf(first);
         Assert.assertNotNull(k);
         KeylessEnt reget = ENTITY.get(velvet, k);

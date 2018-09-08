@@ -2,6 +2,7 @@ package com.zakgof.db.velvet.impl.entity;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import com.annimon.stream.function.Function;
 import com.zakgof.db.velvet.IVelvet;
@@ -24,26 +25,31 @@ public class SortedEntityDef<K extends Comparable<? super K>, V> extends EntityD
     }
 
     @Override
-    public List<K> keys(IVelvet velvet, IKeyQuery<K> query) {
+    public List<K> queryKeys(IVelvet velvet, IKeyQuery<K> query) {
         return store(velvet).keys(query);
     }
 
     @Override
-    public K key(IVelvet velvet, ISingleReturnKeyQuery<K> query) {
-        List<K> keys = keys(velvet, (IKeyQuery<K>) query);
+    public K queryKey(IVelvet velvet, ISingleReturnKeyQuery<K> query) {
+        List<K> keys = queryKeys(velvet, (IKeyQuery<K>)query);
         if (keys.size() > 1)
             throw new VelvetException("ISingleReturnIndexQuery returned multiple entries");
         return keys.isEmpty() ? null : keys.get(0);
     }
 
     @Override
-    public List<V> get(IVelvet velvet, IKeyQuery<K> query) {
-        return batchGetList(velvet, keys(velvet, query));
+    public List<V> queryList(IVelvet velvet, IKeyQuery<K> query) {
+        return batchGetList(velvet, queryKeys(velvet, query));
     }
 
     @Override
-    public V get(IVelvet velvet, ISingleReturnKeyQuery<K> query) {
-        K key = key(velvet, query);
+    public Map<K, V> queryMap(IVelvet velvet, IKeyQuery<K> query) {
+        return batchGetMap(velvet, queryKeys(velvet, query));
+    }
+
+    @Override
+    public V queryValue(IVelvet velvet, ISingleReturnKeyQuery<K> query) {
+        K key = queryKey(velvet, query);
         return key == null ? null : get(velvet, key);
     }
 }

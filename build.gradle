@@ -8,9 +8,8 @@ allprojects {
    ext {
        ossrhUsername = ossrhUser
        ossrhPassword = ossrhPass
-   }  
-
-   version = '0.5.1-SNAPSHOT'
+   }
+   version = '0.6.1-SNAPSHOT'
 
    configurations.all {
       resolutionStrategy {
@@ -19,11 +18,11 @@ allprojects {
           }
        }
    }
-}
 
-repositories {
-    mavenCentral()
-    maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
+   repositories {
+      mavenCentral()
+      maven {
+         url "https://oss.sonatype.org/content/repositories/snapshots/"
+      }
+   }
 }

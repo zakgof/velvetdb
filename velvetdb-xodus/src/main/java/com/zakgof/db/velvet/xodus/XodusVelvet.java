@@ -2,12 +2,7 @@ package com.zakgof.db.velvet.xodus;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
@@ -16,20 +11,12 @@ import com.annimon.stream.function.Supplier;
 import com.zakgof.db.velvet.AVelvet;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
-import com.zakgof.db.velvet.query.IKeyQuery;
-import com.zakgof.db.velvet.query.ISecAnchor;
-import com.zakgof.db.velvet.query.ISecQuery;
-import com.zakgof.db.velvet.query.KeyQueries;
-import com.zakgof.db.velvet.query.SecQueries;
+import com.zakgof.db.velvet.query.*;
 import com.zakgof.serialize.ISerializer;
 
 import jetbrains.exodus.ArrayByteIterable;
 import jetbrains.exodus.ByteIterable;
-import jetbrains.exodus.env.Cursor;
-import jetbrains.exodus.env.Environment;
-import jetbrains.exodus.env.Store;
-import jetbrains.exodus.env.StoreConfig;
-import jetbrains.exodus.env.Transaction;
+import jetbrains.exodus.env.*;
 
 /**
  * Simple store:        No duplicates     ze(key)       ->  ze(value)
@@ -756,7 +743,6 @@ class XodusVelvet extends AVelvet implements IVelvet {
      * key: [key1][weight], value: key2
      */
     private class SecIndexMultiLink<HK, CK, V, M extends Comparable<? super M>> extends AMultiLink<HK, CK> implements ISecIndexLink<HK, CK, M> {
-
         private Store connectMap;
         private Function<CK, M> keyMetric;
         private Class<M> mclazz;

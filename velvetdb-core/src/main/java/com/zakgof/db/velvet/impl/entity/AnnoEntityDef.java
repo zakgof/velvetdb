@@ -22,7 +22,7 @@ public class AnnoEntityDef<K, V> extends EntityDef<K, V> implements IPropertyAcc
         Kind annotation = clazz.getAnnotation(Kind.class);
         if (annotation != null)
             return annotation.value();
-        String kind = clazz.getName().toLowerCase(Locale.ENGLISH);
+        String kind = clazz.getSimpleName().toLowerCase(Locale.ENGLISH);
         return kind;
     }
 

@@ -6,18 +6,18 @@ import java.util.List;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.IPriIndexLink;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.link.AMultiGetter;
-import com.zakgof.db.velvet.link.IMultiGetter;
-import com.zakgof.db.velvet.link.IPriMultiLinkDef;
-import com.zakgof.db.velvet.link.ISingleGetter;
-import com.zakgof.db.velvet.link.Links;
+import com.zakgof.db.velvet.link.*;
 import com.zakgof.db.velvet.query.IKeyQuery;
 import com.zakgof.db.velvet.query.ISingleReturnKeyQuery;
 
-public class PriIndexMultiLinkDef<HK, HV, CK extends Comparable<CK>, CV> extends MultiLinkDef<HK, HV, CK, CV> implements IPriMultiLinkDef<HK, HV, CK, CV> {
+public class PriIndexMultiLinkDef<HK, HV, CK extends Comparable<? super CK>, CV> extends MultiLinkDef<HK, HV, CK, CV> implements IPriMultiLinkDef<HK, HV, CK, CV> {
 
     public PriIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
         super(hostEntity, childEntity);
+    }
+
+    public PriIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind) {
+        super(hostEntity, childEntity, edgeKind);
     }
 
     @Override
@@ -42,7 +42,7 @@ public class PriIndexMultiLinkDef<HK, HV, CK extends Comparable<CK>, CV> extends
 
             @Override
             public List<CV> get(IVelvet velvet, HV node) {
-                return new ArrayList<>(getChildEntity().batchGet(velvet, keys(velvet, getHostEntity().keyOf(node))).values());
+                return new ArrayList<>(getChildEntity().batchGetMap(velvet, keys(velvet, getHostEntity().keyOf(node))).values());
             }
 
             @Override

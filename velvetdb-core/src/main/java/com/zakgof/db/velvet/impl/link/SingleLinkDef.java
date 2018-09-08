@@ -11,7 +11,6 @@ import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.ISingleLink;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.link.ISingleLinkDef;
-import com.zakgof.tools.generic.Pair;
 
 public class SingleLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV> implements ISingleLinkDef<HK, HV, CK, CV> {
 
@@ -36,6 +35,11 @@ public class SingleLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV
     }
 
     @Override
+    public Map<HK, CK> batchKeys(IVelvet velvet, List<HK> keys) {
+        return index(velvet).batchGet(keys);
+    }
+
+    @Override
     ISingleLink<HK, CK> index(IVelvet velvet) {
         return velvet.singleLink(getHostEntity().getKeyClass(), getChildEntity().getKeyClass(), getKind());
     }
@@ -50,17 +54,17 @@ public class SingleLinkDef<HK, HV, CK, CV> extends AVelvetLinkDef<HK, HV, CK, CV
         List<HK> hks = Stream.of(nodes).map(n -> getHostEntity().keyOf(n)).collect(Collectors.toList());
         Map<HK, CK> keyMap = batchKeys(velvet, hks);
         List<CK> allCKs = new ArrayList<>(keyMap.values());
-        Map<CK, CV> childMap = getChildEntity().batchGet(velvet, allCKs);
+        Map<CK, CV> childMap = getChildEntity().batchGetMap(velvet, allCKs);
         Map<HK, CV> result = Stream.of(keyMap.entrySet()).collect(Collectors.toMap(Entry::getKey, e -> childMap.get(e.getValue())));
         return result;
     }
 
-    @Override
-    public Map<HK, CK> batchKeys(IVelvet velvet, List<HK> keys) {
-        return Stream.of(keys)
-            .map(hk -> Pair.create(hk, key(velvet, hk)))
-            .filter(p -> p.second() != null)
-            .collect(Collectors.toMap(Pair::first, Pair::second));
-    }
+//    @Override
+//    public Map<HK, CK> batchKeys(IVelvet velvet, List<HK> keys) {
+//        return Stream.of(keys)
+//            .map(hk -> Pair.create(hk, key(velvet, hk)))
+//            .filter(p -> p.second() != null)
+//            .collect(Collectors.toMap(Pair::first, Pair::second));
+//    }
 
 }

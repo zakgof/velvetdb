@@ -8,14 +8,7 @@ import com.annimon.stream.function.Function;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.impl.link.BiManyToManyLinkDef;
-import com.zakgof.db.velvet.impl.link.BiMultiLinkDef;
-import com.zakgof.db.velvet.impl.link.BiSecIndexMultiLinkDef;
-import com.zakgof.db.velvet.impl.link.BiSingleLinkDef;
-import com.zakgof.db.velvet.impl.link.MultiLinkDef;
-import com.zakgof.db.velvet.impl.link.PriIndexMultiLinkDef;
-import com.zakgof.db.velvet.impl.link.SecIndexMultiLinkDef;
-import com.zakgof.db.velvet.impl.link.SingleLinkDef;
+import com.zakgof.db.velvet.impl.link.*;
 
 public class Links {
 
@@ -132,16 +125,36 @@ public class Links {
         };
     }
 
-    public static <HK, HV, CK extends Comparable<CK>, CV> IPriMultiLinkDef<HK, HV, CK, CV> pri(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
+    public static <HK, HV, CK extends Comparable<? super CK>, CV> IPriMultiLinkDef<HK, HV, CK, CV> pri(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
         return new PriIndexMultiLinkDef<>(hostEntity, childEntity);
+    }
+
+    public static <HK, HV, CK extends Comparable<? super CK>, CV> IPriMultiLinkDef<HK, HV, CK, CV> pri(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind) {
+        return new PriIndexMultiLinkDef<>(hostEntity, childEntity, edgeKind);
+    }
+
+    public static <HK, HV, CK extends Comparable<? super CK>, CV> IBiPriMultiLinkDef<HK, HV, CK, CV> biPri(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
+        return BiPriIndexMultiLinkDef.create(hostEntity, childEntity);
+    }
+
+    public static <HK, HV, CK extends Comparable<? super CK>, CV> IBiPriMultiLinkDef<HK, HV, CK, CV> biPri(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind, String backEdgeKind) {
+        return BiPriIndexMultiLinkDef.create(hostEntity, childEntity, edgeKind, backEdgeKind);
     }
 
     public static <HK, HV, CK, CV, M extends Comparable<? super M>> ISecMultiLinkDef<HK, HV, CK, CV, M> sec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
         return new SecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric);
     }
 
-    public static <HK, HV, CK, CV, M extends Comparable<? super M>> BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> biSec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
+    public static <HK, HV, CK, CV, M extends Comparable<? super M>> ISecMultiLinkDef<HK, HV, CK, CV, M> sec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric, String edgeKind) {
+        return new SecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric, edgeKind);
+    }
+
+    public static <HK, HV, CK, CV, M extends Comparable<? super M>> IBiSecMultiLinkDef<HK, HV, CK, CV, M> biSec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
         return BiSecIndexMultiLinkDef.create(hostEntity, childEntity, mclazz, metric);
+    }
+
+    public static <HK, HV, CK, CV, M extends Comparable<? super M>> IBiSecMultiLinkDef<HK, HV, CK, CV, M> biSec(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric, String edgeKind, String backEdgeKind) {
+        return BiSecIndexMultiLinkDef.create(hostEntity, childEntity, mclazz, metric, edgeKind, backEdgeKind);
     }
 
 }

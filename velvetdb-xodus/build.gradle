@@ -7,18 +7,11 @@ compileJava.options.encoding = 'UTF-8'
 group = 'com.github.zakgof'
 archivesBaseName = 'velvetdb-xodus-android'
 
-repositories {
-    mavenCentral()
-    maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
-}
-
 compileTestJava.dependsOn tasks.getByPath(':velvetdb-core:testClasses')
 
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core-android:' + version
-    compile 'org.jetbrains.xodus:xodus-environment:1.0-SNAPSHOT'
+    compile group: 'com.github.zakgof', name: 'velvetdb-core-android', version: version
+    compile 'org.jetbrains.xodus:xodus-environment:1.0.7-SNAPSHOT'
     compile 'com.google.guava:guava:18.0'
     testCompile project(':velvetdb-core').sourceSets.test.output
     testCompile 'junit:junit:4.12'
@@ -68,13 +61,13 @@ uploadArchives {
         artifactId 'velvetdb-xodus-android'
         url 'https://github.com/zakgof/velvetdb'
 
-        name 'velvetdb-xodus'
+        name 'velvetdb-xodus-android'
         description 'Jetbrains Xodus backend for velvetdb'
 
         scm {
           connection 'scm:git:https://github.com/zakgof/velvetdb.git'
           developerConnection 'scm:git:https://github.com/zakgof/velvetdb.git'
-          url 'https://github.com/zakgof/velvetdb/tree/android/velvetdb-xodus'
+          url 'https://github.com/zakgof/velvetdb/tree/android2/velvetdb-xodus'
         }
 
         licenses {

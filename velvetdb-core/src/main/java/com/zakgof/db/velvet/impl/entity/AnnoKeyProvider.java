@@ -1,20 +1,12 @@
 package com.zakgof.db.velvet.impl.entity;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.*;
+import java.util.*;
 import java.util.Map.Entry;
-import com.annimon.stream.function.Function;
 
 import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
+import com.annimon.stream.function.Function;
 import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.annotation.Index;
@@ -143,8 +135,8 @@ public class AnnoKeyProvider<K, V> implements Function<V, K>, IPropertyAccessor<
         return Stream.of(secIndexMap.entrySet()).map(e -> createIndexDefX(e)).collect(Collectors.toList());
     }
 
-    @SuppressWarnings("unchecked")
     private IStoreIndexDef<?, V> createIndexDefX(Entry<String, IProperty<?, V>> e) {
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         IStoreIndexDef<?, V> indexDef = createIndexDef((Map.Entry)e);
         return indexDef;
     }

@@ -1,10 +1,6 @@
 package com.zakgof.db.velvet.test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.junit.Assert;
 import org.junit.Before;

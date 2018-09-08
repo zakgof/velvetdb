@@ -16,12 +16,12 @@ public abstract class AEntityDef<K, V> implements IEntityDef<K, V> {
 
      @Override
     public List<V> batchGetList(IVelvet velvet, List<K> keys) {
-        return new ArrayList<>(batchGet(velvet, keys).values());
+        return new ArrayList<>(batchGetMap(velvet, keys).values());
     }
 
      @Override
     public List<V> batchGetAllList(IVelvet velvet) {
-        return new ArrayList<>(batchGetAll(velvet).values());
+        return new ArrayList<>(batchGetAllMap(velvet).values());
     }
 
     @Override
@@ -30,8 +30,8 @@ public abstract class AEntityDef<K, V> implements IEntityDef<K, V> {
     }
 
     @Override
-    public  void deleteValues(IVelvet velvet, List<V> values) {
-        deleteKeys(velvet, Stream.of(values).map(this::keyOf).collect(Collectors.toList()));
+    public  void batchDeleteValues(IVelvet velvet, List<V> values) {
+        batchDeleteKeys(velvet, Stream.of(values).map(this::keyOf).collect(Collectors.toList()));
     }
 
 }

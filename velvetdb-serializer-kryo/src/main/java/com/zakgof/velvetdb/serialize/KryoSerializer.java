@@ -1,4 +1,5 @@
 package com.zakgof.velvetdb.serialize;
+
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
@@ -9,32 +10,34 @@ import com.zakgof.serialize.ISerializer;
 
 public class KryoSerializer implements ISerializer {
 
-  private Kryo kryo;
+    private Kryo kryo;
 
-  public KryoSerializer() {
-    this(new Kryo());
-  }
+    public KryoSerializer() {
+        this(new Kryo());
+    }
 
-  public KryoSerializer(Kryo kryo) {
-    this.kryo = kryo;
-  }
+    public KryoSerializer(Kryo kryo) {
+        this.kryo = kryo;
+    }
 
-  public <T> byte[] serialize(T object, Class<T> clazz) {
-    ByteArrayOutputStream bas = new ByteArrayOutputStream();
-    Output output = new Output(bas);
-    kryo.writeObject(output, object);
-    output.flush();
-    return bas.toByteArray();
-  }
+    @Override
+    public <T> byte[] serialize(T object, Class<T> clazz) {
+        ByteArrayOutputStream bas = new ByteArrayOutputStream();
+        Output output = new Output(bas);
+        kryo.writeObject(output, object);
+        output.flush();
+        return bas.toByteArray();
+    }
 
-  public <T> T deserialize(InputStream stream, Class<T> clazz) {
-    Input input = new Input(stream);
-    T object = kryo.readObject(input, clazz);
-    return object;
-  }
-  
-  public Kryo getKryo() {
-    return kryo;
-  }
+    @Override
+    public <T> T deserialize(InputStream stream, Class<T> clazz) {
+        Input input = new Input(stream);
+        T object = kryo.readObject(input, clazz);
+        return object;
+    }
+
+    public Kryo getKryo() {
+        return kryo;
+    }
 
 }

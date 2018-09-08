@@ -17,7 +17,7 @@ public abstract class ASingleGetter<HK, HV, CK, CV> implements ISingleGetter<HK,
         List<HK> hks = Stream.of(nodes).map(n -> getHostEntity().keyOf(n)).collect(Collectors.toList());
         Map<HK, CK> keyMap = batchKeys(velvet, hks);
         List<CK> allCKs = new ArrayList<>(keyMap.values());
-        Map<CK, CV> childMap = getChildEntity().batchGet(velvet, allCKs);
+        Map<CK, CV> childMap = getChildEntity().batchGetMap(velvet, allCKs);
         Map<HK, CV> result = Stream.of(keyMap.entrySet()).collect(Collectors.toMap(Entry::getKey, e -> childMap.get(e.getValue())));
         return result;
     }

@@ -4,10 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
@@ -34,7 +31,7 @@ public class SortedStoreTest extends AVelvetTxnTest {
 
     @After
     public void cleanup() {
-        List<Integer> keys = ENTITY2.keys(velvet);
+        List<Integer> keys = ENTITY2.batchGetAllKeys(velvet);
         for (Integer key : keys) {
             ENTITY2.deleteKey(velvet, key);
         }
@@ -146,9 +143,9 @@ public class SortedStoreTest extends AVelvetTxnTest {
     }
 
     void check(ISingleReturnKeyQuery<Integer> query, Integer... ref) {
-        List<TestEnt2> result = ENTITY2.get(velvet, (IKeyQuery<Integer>)query);
+        List<TestEnt2> result = ENTITY2.queryList(velvet, (IKeyQuery<Integer>)query);
         Assert.assertEquals(Stream.of(ref).collect(Collectors.toList()), Stream.of(result).map(TestEnt2::getKey).collect(Collectors.toList()));
-        List<TestEnt3> resultE = ENTITY_EMPTY.get(velvet, (IKeyQuery<Integer>)query);
+        List<TestEnt3> resultE = ENTITY_EMPTY.queryList(velvet, (IKeyQuery<Integer>)query);
         Assert.assertEquals(Collections.emptyList(), resultE);
     }
 

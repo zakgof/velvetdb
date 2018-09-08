@@ -53,4 +53,9 @@ public class BiMultiLinkDef<HK, HV, CK, CV> extends ABiLinkDef<HK, HV, CK, CV, M
     public Map<HK, List<CK>> batchKeys(IVelvet velvet, List<HK> keys) {
         return oneWay.batchKeys(velvet, keys);
     }
+
+    @Override
+    public Map<CK, CV> getMap(IVelvet velvet, HV node) {
+        return oneWay.getMap(velvet, node);
+    }
 }

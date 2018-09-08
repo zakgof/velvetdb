@@ -8,11 +8,7 @@ import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvet.ISecIndexLink;
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.impl.entity.EntityDef;
-import com.zakgof.db.velvet.link.AMultiGetter;
-import com.zakgof.db.velvet.link.IMultiGetter;
-import com.zakgof.db.velvet.link.ISecMultiLinkDef;
-import com.zakgof.db.velvet.link.ISingleGetter;
-import com.zakgof.db.velvet.link.Links;
+import com.zakgof.db.velvet.link.*;
 import com.zakgof.db.velvet.query.ISecQuery;
 import com.zakgof.db.velvet.query.ISingleReturnSecQuery;
 
@@ -20,6 +16,12 @@ public class SecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M
 
     private final Function<CV, M> metric;
     private Class<M> mclazz;
+
+    public SecIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric, String edgeKind) {
+        super(hostEntity, childEntity, edgeKind);
+        this.metric = metric;
+        this.mclazz = mclazz;
+    }
 
     public SecIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
         super(hostEntity, childEntity);
@@ -53,7 +55,7 @@ public class SecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M
 
             @Override
             public List<CV> get(IVelvet velvet, HV node) {
-                return new ArrayList<>(getChildEntity().batchGet(velvet, keys(velvet, getHostEntity().keyOf(node))).values());
+                return new ArrayList<>(getChildEntity().batchGetMap(velvet, keys(velvet, getHostEntity().keyOf(node))).values());
             }
 
             @Override

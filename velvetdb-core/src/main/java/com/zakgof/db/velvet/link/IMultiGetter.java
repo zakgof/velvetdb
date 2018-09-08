@@ -7,7 +7,10 @@ import com.zakgof.db.velvet.IVelvet;
 
 public interface IMultiGetter<HK, HV, CK, CV> extends IRelation<HK, HV, CK, CV> {
 
+    // TODO: naming is poor
     public List<CV> get(IVelvet velvet, HV node);
+
+    public Map<CK, CV> getMap(IVelvet velvet, HV node);
 
     public List<CK> keys(IVelvet velvet, HK key);
 

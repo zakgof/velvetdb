@@ -5,17 +5,10 @@ apply plugin: 'signing'
 compileJava.options.encoding = 'UTF-8'
 
 group = 'com.github.zakgof'
-archivesBaseName = 'velvetdb-serializer-kryo'
-
-repositories {
-    mavenCentral()
-     maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
-}
+archivesBaseName = 'velvetdb-serializer-kryo-android'
 
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core:' + version
+    compile 'com.github.zakgof:velvetdb-core-android:' + version
     compile 'com.esotericsoftware:kryo:4.0.0'
 }
 
@@ -69,16 +62,16 @@ uploadArchives {
 
       pom.project {
         packaging 'jar'
-        artifactId 'velvetdb-serializer-kryo'
+        artifactId 'velvetdb-serializer-kryo-android'
         url 'https://github.com/zakgof/velvetdb'
 
-        name 'velvetdb-serializer-kryo'
+        name 'velvetdb-serializer-kryo-android'
         description 'Kryo serializer plugin for velvetdb'
 
         scm {
           connection 'scm:git:https://github.com/zakgof/velvetdb.git'
           developerConnection 'scm:git:https://github.com/zakgof/velvetdb.git'
-          url 'https://github.com/zakgof/velvetdb/tree/android/velvetdb-serializer-kryo'
+          url 'https://github.com/zakgof/velvetdb/tree/android2/velvetdb-serializer-kryo'
         }
 
         licenses {

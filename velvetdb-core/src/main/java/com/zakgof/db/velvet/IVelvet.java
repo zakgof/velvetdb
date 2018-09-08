@@ -1,15 +1,16 @@
 package com.zakgof.db.velvet;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.annimon.stream.function.BiConsumer;
 import com.annimon.stream.function.Function;
 import com.zakgof.db.velvet.query.IKeyQuery;
 import com.zakgof.db.velvet.query.ISecQuery;
 
+/**
+ * Velvet transaction handle. Clients are not supposed to run any IVelvet methods directly. Use entity and link API.
+ */
 public interface IVelvet {
 
     public <K, V> IStore<K, V> store(String kind, Class<K> keyClass, Class<V> valueClass, Collection<IStoreIndexDef<?, V>> stores);
@@ -35,15 +36,6 @@ public interface IVelvet {
         Map<K, V> batchGet(List<K> keys);
 
         Map<K, V> getAll();
-
-        // TODO
-        static <A, B> void forboth(Collection<A> collA, Collection<B> collB, BiConsumer<A, B> action) {
-            Iterator<A> itA = collA.iterator();
-            Iterator<B> itB = collB.iterator();
-            while (itA.hasNext()) {
-                action.accept(itA.next(), itB.next());
-            }
-        }
 
         List<K> keys();
 
@@ -96,7 +88,7 @@ public interface IVelvet {
     }
 
     public interface ISingleLink<HK, CK> extends ILink<HK, CK> {
-        // batch
+
         CK key(HK hk);
 
         // TODO: poor signature, map is bad
@@ -105,10 +97,12 @@ public interface IVelvet {
         Map<HK, CK> batchGet(List<HK> hks);
 
         void batchDelete(List<HK> map); // TODO
+
     }
 
     public interface IMultiLink<HK, CK> extends ILink<HK, CK> {
         // batch
+
         void batchPutM(Map<HK, List<CK>> map); // TODO
 
         Map<HK, List<CK>> batchGetM(List<HK> hks);
@@ -130,8 +124,4 @@ public interface IVelvet {
 
         List<CK> keys(HK hk, ISecQuery<CK, M> query);
     }
-
-
-
-
 }

@@ -53,4 +53,9 @@ public class BiManyToManyLinkDef<HK, HV, CK, CV> extends ABiLinkDef<HK, HV, CK, 
         return oneWay.batchKeys(velvet, keys);
     }
 
+    @Override
+    public Map<CK, CV> getMap(IVelvet velvet, HV node) {
+        return oneWay.getMap(velvet, node);
+    }
+
 }

@@ -5,17 +5,10 @@ apply plugin: 'signing'
 compileJava.options.encoding = 'UTF-8'
 
 group = 'com.github.zakgof'
-archivesBaseName = 'velvetdb-serializer-elsa'
-
-repositories {
-    mavenCentral()
-     maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
-}
+archivesBaseName = 'velvetdb-serializer-elsa-android'
 
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core:' + version
+    compile 'com.github.zakgof:velvetdb-core-android:' + version
     compile 'org.mapdb:elsa:3.0.0-M5'
 }
 
@@ -69,16 +62,16 @@ uploadArchives {
 
       pom.project {
         packaging 'jar'
-        artifactId 'velvetdb-serializer-elsa'
+        artifactId 'velvetdb-serializer-elsa-android'
         url 'https://github.com/zakgof/velvetdb'
 
-        name 'velvetdb-serializer-elsa'
+        name 'velvetdb-serializer-elsa-android'
         description 'Elsa serializer plugin for velvetdb'
 
         scm {
           connection 'scm:git:https://github.com/zakgof/velvetdb.git'
           developerConnection 'scm:git:https://github.com/zakgof/velvetdb.git'
-          url 'https://github.com/zakgof/velvetdb/tree/android/velvetdb-serializer-elsa'
+          url 'https://github.com/zakgof/velvetdb/tree/android2/velvetdb-serializer-elsa'
         }
 
         licenses {

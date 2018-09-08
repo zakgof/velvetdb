@@ -13,8 +13,10 @@ import com.zakgof.db.velvet.IVelvetEnvironment;
 
 @SuiteClasses({
 
-    SecondarySortedLinkTest.class,
+    UpgradeTest.class
 
+                /*
+                SecondarySortedLinkTest.class,
                 SortedStoreIndexesTest.class,
                 StoreIndexesAnnoTest.class,
                 StoreIndexesTest.class,
@@ -26,7 +28,7 @@ import com.zakgof.db.velvet.IVelvetEnvironment;
                 KeylessTest.class,
                 PutGetTest.class,
 
-                /*
+
                 ConcurrentWriteTest.class,
                 PerformanceTest.class,
                 */

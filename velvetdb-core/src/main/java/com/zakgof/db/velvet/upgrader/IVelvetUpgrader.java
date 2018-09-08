@@ -1,5 +1,7 @@
 package com.zakgof.db.velvet.upgrader;
 
+import com.zakgof.serialize.IFixer;
+
 public interface IVelvetUpgrader {
 
     enum Mode {
@@ -8,8 +10,9 @@ public interface IVelvetUpgrader {
 //      UPGRADE_ALL_NOW
     }
 
-    IVelvetUpgrader track(Mode mode, Class<?>... classes);
+    IVelvetUpgrader trackClasses(Mode mode, Class<?>... classes);
 
-    void upgrade();
+    IVelvetUpgrader trackPackages(Mode mode, String... packages);
 
+    <T> IVelvetUpgrader fix(Class<T> clazz, IFixer<T> fixer);
 }
