@@ -170,6 +170,17 @@ public interface IEntityDef<K, V> {
      */
     public List<K> batchPut(IVelvet velvet, List<K> keys, List<V> values);
 
+    /**
+     * Adds or updates multiple entities.
+     *
+     * If an entity with the specified key exists, it will be updated, otherwise created.
+     *
+     * @param velvet velvet handle
+     * @param map key to entity value maps
+     * @return keys of the added/updated entities.
+     */
+    public List<K> batchPut(IVelvet velvet, Map<K, V> map);
+
     // Delete
 
     /**

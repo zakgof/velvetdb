@@ -118,6 +118,11 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     }
 
     @Override
+    public List<K> batchPut(IVelvet velvet, Map<K, V> map) {
+        return batchPut(velvet, new ArrayList<>(map.keySet()), new ArrayList<>(map.values()));
+    }
+
+    @Override
     public void deleteKey(IVelvet velvet, K key) {
         store(velvet).delete(key);
     }

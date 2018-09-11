@@ -1,5 +1,6 @@
 package com.zakgof.db.velvet.upgrader;
 
+import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.serialize.IFixer;
 
 public interface IVelvetUpgrader {
@@ -15,6 +16,8 @@ public interface IVelvetUpgrader {
     IVelvetUpgrader trackPackages(Mode mode, String... packages);
 
     <T> IVelvetUpgrader fix(Class<T> clazz, IFixer<T> fixer);
+
+    <K, V> void upgradeAllNow(IEntityDef<K, V> entities);
 
     void clear();
 }

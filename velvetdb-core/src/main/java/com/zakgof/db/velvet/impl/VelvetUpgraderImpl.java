@@ -148,4 +148,12 @@ class VelvetUpgraderImpl implements IVelvetUpgrader, IUpgrader {
         env.execute(velvet -> CLASS_VERSION.batchDeleteKeys(velvet, CLASS_VERSION.batchGetAllKeys(velvet)));
     }
 
+    @Override
+    public <K, V> void upgradeAllNow(IEntityDef<K, V> entity) {
+        env.execute(velvet -> {
+            Map<K, V> map = entity.batchGetAllMap(velvet);
+            entity.batchPut(velvet, map);
+        });
+    }
+
 }

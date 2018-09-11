@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.zakgof.db.velvet.IVelvet.IStoreIndexDef;
-import com.zakgof.db.velvet.annotation.Key;
-import com.zakgof.db.velvet.annotation.SortedKey;
 import com.zakgof.db.velvet.impl.entity.AnnoEntityDef;
 import com.zakgof.db.velvet.impl.entity.AnnoKeyProvider;
 import com.zakgof.db.velvet.impl.entity.EntityDef;
