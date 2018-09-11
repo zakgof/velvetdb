@@ -143,4 +143,9 @@ class VelvetUpgraderImpl implements IVelvetUpgrader, IUpgrader {
         return (IFixer<T>) fixers.get(clazz);
     }
 
+    @Override
+    public void clear() {
+        env.execute(velvet -> CLASS_VERSION.batchDeleteKeys(velvet, CLASS_VERSION.batchGetAllKeys(velvet)));
+    }
+
 }

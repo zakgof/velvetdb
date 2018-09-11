@@ -15,4 +15,6 @@ public interface IVelvetUpgrader {
     IVelvetUpgrader trackPackages(Mode mode, String... packages);
 
     <T> IVelvetUpgrader fix(Class<T> clazz, IFixer<T> fixer);
+
+    void clear();
 }
