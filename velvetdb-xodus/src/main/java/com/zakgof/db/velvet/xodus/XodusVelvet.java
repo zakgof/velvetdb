@@ -87,7 +87,13 @@ class XodusVelvet implements IVelvet {
         }
 
         private <M extends Comparable<? super M>> Function<K, M> keyMetric(IStoreIndexDef<M, V> indexDef) {
-            return key -> indexDef.metric().apply(get(key));
+            return key -> {
+                V v = get(key);
+                if (v == null) {
+                    throw new VelvetException("null value for key " + key + " received during secondary index retrieval");
+                }
+                return indexDef.metric().apply(v);
+            };
         }
 
         private Store store(String kind) {
@@ -614,6 +620,9 @@ class XodusVelvet implements IVelvet {
                 } else {
                     K key = anchor.getKey();
                     M m = keyMetric.apply(key);
+                    if (m == null) {
+                        throw new VelvetException("null secondary key value returned for primary key " + key);
+                    }
                     ByteIterable searchBi = BytesUtil.join(key1Bi, BytesUtil.keyToBi(m));
                     cursor.getSearchKeyRange(searchBi);
                     forwardWhile(() -> indexValue().compareTo(m) == 0 && !get().equals(key), () -> {
@@ -646,6 +655,9 @@ class XodusVelvet implements IVelvet {
                 } else {
                     K key = anchor.getKey();
                     M m = keyMetric.apply(key);
+                    if (m == null) {
+                        throw new VelvetException("null value received for key " + key + " during secondary index calculation");
+                    }
                     ByteIterable searchBi = BytesUtil.join(key1Bi, BytesUtil.keyToBi(m));
                     cursor.getSearchKeyRange(searchBi);
                     if (!check()) {

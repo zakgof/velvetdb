@@ -96,7 +96,7 @@ class VelvetUpgraderImpl implements IVelvetUpgrader, IUpgrader {
     }
 
     private byte findMatchingSavedVersion(Class<?> clazz) {
-        ClassStructure actualStructure = ClassStructure.of(clazz);
+        ClassStructure actualStructure = ClassStructure.of(clazz, env.getSerializer());
         // TODO: PERF: only load biggest version number, then climb down
         List<ClassVersion> versions = env.calculate(velvet -> CLASS_VERSION.queryList(velvet, "class", SecQueries.eq(clazz.getName())));
         for (ClassVersion version : versions) {
