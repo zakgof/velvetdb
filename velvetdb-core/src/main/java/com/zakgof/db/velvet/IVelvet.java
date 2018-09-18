@@ -46,7 +46,9 @@ public interface IVelvet {
         V get(K key);
 
         default Map<K, V> batchGet(List<K> keys) {
-            return keys.stream().distinct().collect(Collectors.toMap(k -> k, k -> get(k), (u, v) -> {throw new VelvetException("Duplicate keys");}, LinkedHashMap::new));
+            return keys.stream().distinct().map(k -> Pair.create(k, get(k)))
+                    .filter(p -> p.second() != null)
+                    .collect(Collectors.toMap(Pair::first, Pair::second, (u, v) -> {throw new VelvetException("Duplicate keys");}, LinkedHashMap::new));
         }
 
         default Map<K, V> getAll() {

@@ -6,7 +6,8 @@ public interface ILinkDef<HK, HV, CK, CV> extends IReadOnlyLinkDef<HK, HV, CK, C
 
     public void connectKeys(IVelvet velvet, HK akey, CK bkey);
 
-    // public void batchConnectKeys(IVelvet velvet, Pair<HK, CK> connections);
+    // TODO:
+    // public void batchConnectKeys(IVelvet velvet, Map<HK, CK> connections);
 
     public void disconnectKeys(IVelvet velvet, HK akey, CK bkey);
 
