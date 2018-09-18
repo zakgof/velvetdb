@@ -25,8 +25,8 @@ import com.zakgof.db.velvet.IVelvetEnvironment;
     SimpleLinkTest.class,
     KeylessTest.class,
     PutGetTest.class,
-    UpgradeTest.class
-
+    UpgradeTest.class,
+    JoinTest.class
 
 //    ConcurrentWriteTest.class,
 //    PerformanceTest.class,
