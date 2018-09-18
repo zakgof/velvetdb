@@ -15,22 +15,22 @@ import com.zakgof.db.velvet.IVelvetEnvironment;
 @SuiteClasses({
 
     SecondarySortedLinkTest.class,
+    SortedStoreIndexesTest.class,
+    StoreIndexesAnnoTest.class,
+    StoreIndexesTest.class,
+    SecondarySortedLinkTest.class,
+    PrimarySortedLinkTest.class,
+    PrimarySortedLinkTest2.class,
+    SortedStoreTest.class,
+    SimpleLinkTest.class,
+    KeylessTest.class,
+    PutGetTest.class,
+    UpgradeTest.class,
+    JoinTest.class
 
-                SortedStoreIndexesTest.class,
-                StoreIndexesAnnoTest.class,
-                StoreIndexesTest.class,
-                SecondarySortedLinkTest.class,
-                PrimarySortedLinkTest.class,
-                PrimarySortedLinkTest2.class,
-                SortedStoreTest.class,
-                SimpleLinkTest.class,
-                KeylessTest.class,
-                PutGetTest.class,
+//    ConcurrentWriteTest.class,
+//    PerformanceTest.class,
 
-                /*
-                ConcurrentWriteTest.class,
-                PerformanceTest.class,
-                */
 
 })
 

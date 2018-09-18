@@ -20,6 +20,12 @@ public class SecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M
     private final Function<CV, M> metric;
     private Class<M> mclazz;
 
+    public SecIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric, String edgeKind) {
+        super(hostEntity, childEntity, edgeKind);
+        this.metric = metric;
+        this.mclazz = mclazz;
+    }
+
     public SecIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
         super(hostEntity, childEntity);
         this.metric = metric;

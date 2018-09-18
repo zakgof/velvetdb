@@ -68,7 +68,7 @@ public interface ISortableEntityDef<K extends Comparable<? super K>, V> extends 
      * Get entities as key to value map using primary key range query.
      *
      * @param velvet velvet handle
-     * @param query
+     * @param query key query
      * @return key to value map of entities
      */
     public default Map<K, V> queryMap(IVelvet velvet, IKeyQuery<K> query) {

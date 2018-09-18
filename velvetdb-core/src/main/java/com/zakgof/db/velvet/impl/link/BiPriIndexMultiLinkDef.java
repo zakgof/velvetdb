@@ -15,6 +15,10 @@ import com.zakgof.db.velvet.query.ISingleReturnKeyQuery;
 public class BiPriIndexMultiLinkDef<HK, HV, CK extends Comparable<? super CK>, CV> extends ABiLinkDef<HK, HV, CK, CV, PriIndexMultiLinkDef<HK, HV, CK, CV>, IBiParentLinkDef<CK, CV, HK, HV>>
         implements IBiPriMultiLinkDef<HK, HV, CK, CV> {
 
+    private BiPriIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String egdeKind) {
+        super(new PriIndexMultiLinkDef<>(hostEntity, childEntity, egdeKind));
+    }
+
     private BiPriIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
         super(new PriIndexMultiLinkDef<>(hostEntity, childEntity));
     }
@@ -22,6 +26,15 @@ public class BiPriIndexMultiLinkDef<HK, HV, CK extends Comparable<? super CK>, C
     public static <HK, HV, CK extends Comparable<? super CK>, CV> BiPriIndexMultiLinkDef<HK, HV, CK, CV> create(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity) {
         BiPriIndexMultiLinkDef<HK, HV, CK, CV> link = new BiPriIndexMultiLinkDef<>(hostEntity, childEntity);
         BiParentLinkDef<CK, CV, HK, HV> backLink = new BiParentLinkDef<>(childEntity, hostEntity);
+        link.setBackLink(backLink);
+        backLink.setBackLink(link);
+        return link;
+    }
+
+
+    public static <HK, HV, CK extends Comparable<? super CK>, CV> IBiPriMultiLinkDef<HK, HV, CK, CV> create(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, String edgeKind, String backEdgeKind) {
+        BiPriIndexMultiLinkDef<HK, HV, CK, CV> link = new BiPriIndexMultiLinkDef<>(hostEntity, childEntity, edgeKind);
+        BiParentLinkDef<CK, CV, HK, HV> backLink = new BiParentLinkDef<>(childEntity, hostEntity, backEdgeKind);
         link.setBackLink(backLink);
         backLink.setBackLink(link);
         return link;

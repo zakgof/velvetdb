@@ -20,9 +20,21 @@ public class BiSecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super
         super(new SecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric));
     }
 
+    private BiSecIndexMultiLinkDef(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric, String edgeKind) {
+        super(new SecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric, edgeKind));
+    }
+
     public static <HK, HV, CK, CV, M extends Comparable<? super M>> BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> create(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric) {
         BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> link = new BiSecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric);
         BiParentLinkDef<CK, CV, HK, HV> backLink = new BiParentLinkDef<>(childEntity, hostEntity);
+        link.setBackLink(backLink);
+        backLink.setBackLink(link);
+        return link;
+    }
+
+    public static <HK, HV, CK, CV, M extends Comparable<? super M>> BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> create(IEntityDef<HK, HV> hostEntity, IEntityDef<CK, CV> childEntity, Class<M> mclazz, Function<CV, M> metric, String edgeKind, String backEdgeKind) {
+        BiSecIndexMultiLinkDef<HK, HV, CK, CV, M> link = new BiSecIndexMultiLinkDef<>(hostEntity, childEntity, mclazz, metric, edgeKind);
+        BiParentLinkDef<CK, CV, HK, HV> backLink = new BiParentLinkDef<>(childEntity, hostEntity, backEdgeKind);
         link.setBackLink(backLink);
         backLink.setBackLink(link);
         return link;

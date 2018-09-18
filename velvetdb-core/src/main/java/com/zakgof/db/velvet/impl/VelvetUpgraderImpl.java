@@ -14,6 +14,7 @@ import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.query.SecQueries;
 import com.zakgof.db.velvet.upgrader.IVelvetUpgrader;
 import com.zakgof.serialize.ClassStructure;
+import com.zakgof.serialize.IFixer;
 import com.zakgof.serialize.IUpgrader;
 
 class VelvetUpgraderImpl implements IVelvetUpgrader, IUpgrader {
@@ -54,6 +55,9 @@ class VelvetUpgraderImpl implements IVelvetUpgrader, IUpgrader {
         .make();
 
     private Map<Class<?>, Mode> classMap = new HashMap<>();
+    private Map<String, Mode> packageMap = new HashMap<>();
+    private Map<Class<?>, IFixer<?>> fixers = new HashMap<>();
+
     private Cache<String, ClassStructure> classStructCache = CacheBuilder.newBuilder().maximumSize(2048).build();
 
     VelvetUpgraderImpl(AVelvetEnvironment aVelvetEnvironment) {
@@ -61,7 +65,7 @@ class VelvetUpgraderImpl implements IVelvetUpgrader, IUpgrader {
     }
 
     @Override
-    public IVelvetUpgrader track(Mode mode, Class<?>... classes) {
+    public IVelvetUpgrader trackClasses(Mode mode, Class<?>... classes) {
         // TODO: implement modes
         for (Class<?> clazz : classes) {
             classMap.put(clazz, mode);
@@ -70,34 +74,47 @@ class VelvetUpgraderImpl implements IVelvetUpgrader, IUpgrader {
     }
 
     @Override
-    public void upgrade() {
-        for (Class<?> clazz : classMap.keySet()) {
-            upgrade(clazz);
+    public IVelvetUpgrader trackPackages(Mode mode, String... packages) {
+        // TODO: implement modes
+        for (String packageName : packages) {
+            packageMap.put(packageName, mode);
         }
-    }
-
-    private void upgrade(Class<?> clazz) {
-        ClassStructure actualStructure = ClassStructure.of(clazz);
-
-       // TODO: PERF: only load biggest version number, then climb down
-       List<ClassVersion> versions = env.calculate(velvet -> CLASS_VERSION.queryList(velvet, "class", SecQueries.eq(clazz.getName())));
-       for (ClassVersion version : versions) {
-            if (version.structure.equals(actualStructure)) {
-                actualVersions.put(clazz, version.version);
-                return;
-            }
-       }
-       // Version not found
-       int lastKnownVersion = versions.stream().mapToInt(ClassVersion::getVersion).max().orElse(-1);
-       byte currentVersion = (byte)(lastKnownVersion + 1);
-       actualVersions.put(clazz, currentVersion);
-       ClassVersion cv = new ClassVersion(clazz.getName(), currentVersion, actualStructure);
-       env.execute(velvet -> CLASS_VERSION.put(velvet, cv));
+        return this;
     }
 
     @Override
     public byte getCurrentVersionOf(Class<?> clazz) {
-        return actualVersions.getOrDefault(clazz, (byte)0);
+        Byte actualVersion = 0;
+        if (isTracked(clazz)) {
+            actualVersion = actualVersions.get(clazz);
+            if (actualVersion == null) {
+                actualVersion = findMatchingSavedVersion(clazz);
+                actualVersions.put(clazz, actualVersion);
+            }
+        }
+        return actualVersion;
+    }
+
+    private byte findMatchingSavedVersion(Class<?> clazz) {
+        ClassStructure actualStructure = ClassStructure.of(clazz, env.getSerializer());
+        // TODO: PERF: only load biggest version number, then climb down
+        List<ClassVersion> versions = env.calculate(velvet -> CLASS_VERSION.queryList(velvet, "class", SecQueries.eq(clazz.getName())));
+        for (ClassVersion version : versions) {
+             if (version.structure.equals(actualStructure)) {
+                 return version.getVersion();
+             }
+        }
+        // Class does not match any version, save new structure
+        int lastKnownVersion = versions.stream().mapToInt(ClassVersion::getVersion).max().orElse(-1);
+        byte currentVersion = (byte)(lastKnownVersion + 1);
+        ClassVersion cv = new ClassVersion(clazz.getName(), currentVersion, actualStructure);
+        env.execute(velvet -> CLASS_VERSION.put(velvet, cv));
+        return currentVersion;
+    }
+
+    private boolean isTracked(Class<?> clazz) {
+        String className = clazz.getName();
+        return classMap.containsKey(clazz) || packageMap.keySet().stream().anyMatch(p -> className.startsWith(p));
     }
 
     @Override
@@ -112,6 +129,31 @@ class VelvetUpgraderImpl implements IVelvetUpgrader, IUpgrader {
         } catch (ExecutionException e) {
             throw new VelvetException(e);
         }
+    }
+
+    @Override
+    public <T> IVelvetUpgrader fix(Class<T> clazz, IFixer<T> fixer) {
+        fixers.put(clazz, fixer);
+        return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> IFixer<T> getFixerFor(Class<T> clazz) {
+        return (IFixer<T>) fixers.get(clazz);
+    }
+
+    @Override
+    public void clear() {
+        env.execute(velvet -> CLASS_VERSION.batchDeleteKeys(velvet, CLASS_VERSION.batchGetAllKeys(velvet)));
+    }
+
+    @Override
+    public <K, V> void upgradeAllNow(IEntityDef<K, V> entity) {
+        env.execute(velvet -> {
+            Map<K, V> map = entity.batchGetAllMap(velvet);
+            entity.batchPut(velvet, map);
+        });
     }
 
 }

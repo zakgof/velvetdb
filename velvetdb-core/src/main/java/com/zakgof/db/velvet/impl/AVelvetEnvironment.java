@@ -3,7 +3,6 @@ package com.zakgof.db.velvet.impl;
 import java.util.function.Supplier;
 
 import com.zakgof.db.velvet.IVelvetEnvironment;
-import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.upgrader.IVelvetUpgrader;
 import com.zakgof.serialize.ISerializer;
 import com.zakgof.serialize.ZeSerializer;
@@ -21,11 +20,7 @@ public abstract class AVelvetEnvironment implements IVelvetEnvironment {
     protected ISerializer instantiateSerializer() {
         ISerializer serializer = serializerSupplier.get();
         if (upgrader != null) {
-            if (serializer instanceof ZeSerializer) {
-                ((ZeSerializer)serializer).setUpgrader(upgrader);
-            } else {
-                throw new VelvetException("Upgrader can only be used with ZeSerializer");
-            }
+            serializer.setUpgrader(upgrader);
         }
         return serializer;
     }
@@ -36,5 +31,9 @@ public abstract class AVelvetEnvironment implements IVelvetEnvironment {
             upgrader = new VelvetUpgraderImpl(this);
         }
         return upgrader;
+    }
+
+    public ISerializer getSerializer() {
+        return serializerSupplier.get();
     }
 }

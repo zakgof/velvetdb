@@ -23,6 +23,7 @@ public class XodusVelvetTestSuite extends VelvetTestSuite {
             PATH = Files.createTempDirectory("velvet").toString();
             new File(PATH).mkdirs();
             IVelvetEnvironment env = VelvetFactory.open("velvetdb://xodus/" + PATH.replace(File.separatorChar, '/'));
+            // env.setSerializer(() -> new KryoSerializer());
             return env;
         } catch (Exception e) {
             e.printStackTrace();

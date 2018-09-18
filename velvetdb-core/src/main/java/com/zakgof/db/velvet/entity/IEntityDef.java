@@ -170,6 +170,17 @@ public interface IEntityDef<K, V> {
      */
     public List<K> batchPut(IVelvet velvet, List<K> keys, List<V> values);
 
+    /**
+     * Adds or updates multiple entities.
+     *
+     * If an entity with the specified key exists, it will be updated, otherwise created.
+     *
+     * @param velvet velvet handle
+     * @param map key to entity value maps
+     * @return keys of the added/updated entities.
+     */
+    public List<K> batchPut(IVelvet velvet, Map<K, V> map);
+
     // Delete
 
     /**
@@ -279,8 +290,8 @@ public interface IEntityDef<K, V> {
 
     /**
      * Test if values are equal by comparing their keys.
-     * @param value1
-     * @param value2
+     * @param value1 value 1
+     * @param value2 value 2
      * @return true if keys are the same.
      */
     public default boolean equals(V value1, V value2) {
