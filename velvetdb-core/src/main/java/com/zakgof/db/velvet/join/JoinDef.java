@@ -15,10 +15,13 @@ import java.util.stream.Stream;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.entity.IEntityDef;
+import com.zakgof.db.velvet.link.IBiManyToManyLinkDef;
+import com.zakgof.db.velvet.link.ILinkDef;
 import com.zakgof.db.velvet.link.IMultiGetter;
 import com.zakgof.db.velvet.link.IMultiLinkDef;
 import com.zakgof.db.velvet.link.ISingleGetter;
 import com.zakgof.db.velvet.link.ISingleLinkDef;
+import com.zakgof.db.velvet.link.Links;
 
 /**
  * Query for multiple linked entities.
@@ -81,7 +84,7 @@ public class JoinDef<MK, MV> {
 
             private final IEntityDef<K, V> entityDef;
             private final Map<String, ISingleGetter<K, V, ?, ?>> singles = new HashMap<>();
-            private final Set<ISingleLinkDef<K, V, ?, ?>> detaches = new HashSet<>();
+            private final Set<ILinkDef<K, V, ?, ?>> detaches = new HashSet<>();
             private final Map<String, IMultiGetter<K, V, ?, ?>> multis = new HashMap<>();
             private final Map<String, IContextSingleGetter<K, V, ?>> attrs = new HashMap<>();
             private final Map<String, Function<DataWrap<K, V>, ?>> postattrs = new HashMap<>();
@@ -158,6 +161,17 @@ public class JoinDef<MK, MV> {
              * @return this entity builder
              */
             public <CK, CV> QueryEntityBuilder<K, V> detach(ISingleLinkDef<K, V, CK, CV> parentLink) {
+                detaches.add(parentLink);
+                return this;
+            }
+
+            /**
+             * Registers a link to be detached from when deleting the entity.
+             *
+             * @param parentLink link to this entity to be disconnected when removing this entity
+             * @return this entity builder
+             */
+            public <CK, CV> QueryEntityBuilder<K, V> detach(IBiManyToManyLinkDef<K, V, CK, CV> parentLink) {
                 detaches.add(parentLink);
                 return this;
             }
@@ -240,7 +254,7 @@ public class JoinDef<MK, MV> {
         private final IEntityDef<K, V> entityDef;
         private final Map<String, IMultiGetter<K, V, ?, ?>> multis;
         private final Map<String, ISingleGetter<K, V, ?, ?>> singles;
-        private final Set<ISingleLinkDef<K, V, ?, ?>> detaches;
+        private final Set<ILinkDef<K, V, ?, ?>> detaches;
         private final Comparator<DataWrap<K, V>> sort;
         private final Map<String, IContextSingleGetter<K, V, ?>> attrs;
         private final Map<String, Function<DataWrap<K, V>, ?>> postattrs;
@@ -248,7 +262,7 @@ public class JoinDef<MK, MV> {
         private FetcherEntity(IEntityDef<K, V> entityDef,
                               Map<String, IMultiGetter<K, V, ?, ?>> multis,
                               Map<String, ISingleGetter<K, V, ?, ?>> singles,
-                              Set<ISingleLinkDef<K, V, ?, ?>> detaches,
+                              Set<ILinkDef<K, V, ?, ?>> detaches,
                               Map<String, IContextSingleGetter<K, V, ?>> attrs,
                               Map<String, Function<DataWrap<K, V>, ?>> postattrs,
                               Comparator<DataWrap<K, V>> sort) {
@@ -331,7 +345,7 @@ public class JoinDef<MK, MV> {
             for (Entry<String, ISingleGetter<K, V, ?, ?>> entry : entity.singles.entrySet()) {
                 killChild(velvet, entry.getValue(), key);
             }
-            for (ISingleLinkDef<K, V, ?, ?> parent : entity.detaches) {
+            for (ILinkDef<K, V, ?, ?> parent : entity.detaches) {
                 detachParent(velvet, parent, key);
             }
         }
@@ -392,9 +406,10 @@ public class JoinDef<MK, MV> {
         }
     }
 
-    private <K, V, CK, CV> void detachParent(IVelvet velvet, ISingleLinkDef<K, V, CK, CV> parentLinkDef, K key) {
-        CK parentKey = parentLinkDef.key(velvet, key);
-        if (parentKey != null) {
+    private <K, V, CK, CV> void detachParent(IVelvet velvet, ILinkDef<K, V, CK, CV> parentLinkDef, K key) {
+        IMultiGetter<K, V, CK, CV> multiGetter = Links.toMultiGetter(parentLinkDef);
+        List<CK> keys = multiGetter.keys(velvet, key);
+        for (CK parentKey : keys) {
             parentLinkDef.disconnectKeys(velvet, key, parentKey);
         }
     }
