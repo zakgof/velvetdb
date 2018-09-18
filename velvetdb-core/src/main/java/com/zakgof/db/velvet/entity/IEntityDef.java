@@ -290,8 +290,8 @@ public interface IEntityDef<K, V> {
 
     /**
      * Test if values are equal by comparing their keys.
-     * @param value1
-     * @param value2
+     * @param value1 value 1
+     * @param value2 value 2
      * @return true if keys are the same.
      */
     public default boolean equals(V value1, V value2) {

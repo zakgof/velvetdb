@@ -20,7 +20,7 @@ import com.zakgof.db.velvet.impl.entity.SortedSetEntityDef;
 final public class Entities {
 
     /**
-     * Creates an entity definition from a class. The class should have one {@link Key} annotation that identifies primary key field or method.
+     * Creates an entity definition from a class. The class should have one {@code Key} annotation that identifies primary key field or method.
      * @param valueClass value class
      * @param <K> key class
      * @param <V> value class
@@ -41,7 +41,7 @@ final public class Entities {
     }
 
     /**
-     * Creates a sortable entity definition from a class. The class should have one {@link SortedKey} annotation.
+     * Creates a sortable entity definition from a class. The class should have one {@code SortedKey} annotation.
      * @param valueClass value class
      * @param <K> sortable key class
      * @param <V> value class
@@ -93,7 +93,8 @@ final public class Entities {
          * Adds secondary index to the entity definition being constructed.
          * @param name index name
          * @param metric function returning index value from the entity
-         * @param metricClass
+         * @param metricClass index value class
+         * @param <M> index value class
          * @return this builder
          */
         public <M extends Comparable<? super M>> Builder<V> index(String name, Function<V, M> metric, Class<M> metricClass) {
@@ -112,7 +113,7 @@ final public class Entities {
         }
 
         /**
-         * Creates an entity definition. Primary key should be assigned using the {@link Key} annotation.
+         * Creates an entity definition. Primary key should be assigned using the {@code Key} annotation.
          * @param <K> primary key type
          * @return entity definition
          */
@@ -140,7 +141,7 @@ final public class Entities {
         }
 
         /**
-         * Creates an entity definition. Primary key must be specified using the {@link Key} annotation.
+         * Creates an entity definition. Primary key must be specified using the {@code Key} annotation.
          * @return entity definition
          */
         public IKeylessEntityDef<V> makeKeyless() {
@@ -148,7 +149,7 @@ final public class Entities {
         }
 
         /**
-         * Creates a sortable entity definition. Primary key must be specified using the {@link SortedKey} annotation and must implement {@link Comparable}.
+         * Creates a sortable entity definition. Primary key must be specified using the {@code SortedKey} annotation and must implement {@code Comparable}.
          * @param <K> primary key type
          * @return entity definition
          */
@@ -160,6 +161,7 @@ final public class Entities {
         /**
          * Creates a sortable entity definition explicitly specifying the primary key.
          * @param keyClass primary key class
+         * @param <K> primary key class
          * @param keyFunction function returning primary key from an entity
          * @return entity definition
          */
@@ -176,7 +178,7 @@ final public class Entities {
         }
 
         /**
-         * Creates a sorted set entity definition - entity which key is its value itself. The entity class must implement {@link Comparable}.
+         * Creates a sorted set entity definition - entity which key is its value itself. The entity class must implement {@code Comparable}.
          * @return entity definition
          */
         @SuppressWarnings({ "unchecked", "rawtypes" })

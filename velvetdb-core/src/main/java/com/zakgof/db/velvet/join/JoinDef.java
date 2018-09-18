@@ -43,6 +43,8 @@ public class JoinDef<MK, MV> {
      * Create a QueryDef builder.
      *
      * @param mainEntity main entity definition
+     * @param <MK> main entity key class
+     * @param <MV> main entity value class
      * @return builder
      */
     public static <MK, MV> Builder<MK, MV>.QueryEntityBuilder<MK, MV> builderFor(IEntityDef<MK, MV> mainEntity) {
@@ -68,6 +70,8 @@ public class JoinDef<MK, MV> {
          * Registers a linked entity definition.
          *
          * @param entityDef entity definition
+         * @param <K> entity key class
+         * @param <V> entity value class
          * @return QueryEntityBuilder for this entity
          */
         public <K, V> QueryEntityBuilder<K, V> entity(IEntityDef<K, V> entityDef) {
@@ -77,8 +81,8 @@ public class JoinDef<MK, MV> {
         /**
          * Linked entity definition builder.
          *
-         * @param <MK> main entity key type
-         * @param <MV> main entity value type
+         * @param <K> entity key type
+         * @param <V> entity value type
          */
         public class QueryEntityBuilder<K, V> {
 
@@ -101,8 +105,8 @@ public class JoinDef<MK, MV> {
              *
              * @param name        name for child data.
              * @param multigetter IMultiGetter for child data
-             * @param CK          child entity key type
-             * @param CV          child entity value type
+             * @param <CK>        child entity key type
+             * @param <CV>        child entity value type
              * @return this entity builder
              */
             public <CK, CV> QueryEntityBuilder<K, V> include(String name, IMultiGetter<K, V, CK, CV> multigetter) {
@@ -116,8 +120,8 @@ public class JoinDef<MK, MV> {
              * The child data will be available as a List from the resulting DataWrap via {@link DataWrap#multiLink(IMultiLinkDef)}
              *
              * @param linkDef child link definition
-             * @param CK      child entity key type
-             * @param CV      child entity value type
+             * @param <CK>    child entity key type
+             * @param <CV>    child entity value type
              * @return this entity builder
              */
             public <CK, CV> QueryEntityBuilder<K, V> include(IMultiLinkDef<K, V, CK, CV> linkDef) {
@@ -127,12 +131,12 @@ public class JoinDef<MK, MV> {
             /**
              * Registers a ISingleGetter to be fetched with this entity as child data.
              *
-             * The child data will be available from the resulting DataWrap via {@link DataWrap#singleLink(ISingleGetter)}
+             * The child data will be available from the resulting DataWrap via {@code DataWrap#singleLink(ISingleGetter)}
              *
              * @param name        name for child data.
-             * @param multigetter ISingleGetter for child data
-             * @param CK          child entity key type
-             * @param CV          child entity value type
+             * @param             <CK> child entity key type
+             * @param             <CV> child entity value type
+             * @param getter  ISingleGetter for child dat
              * @return this entity builder
              */
             public <CK, CV> QueryEntityBuilder<K, V> include(String name, ISingleGetter<K, V, CK, CV> getter) {
@@ -143,11 +147,10 @@ public class JoinDef<MK, MV> {
             /**
              * Registers a one-to-one link to be fetched with this entity as child data.
              *
-             * The child data will be available from the resulting DataWrap via {@link DataWrap#multiLink(ISingleLinkDef)}
+             * The child data will be available from the resulting DataWrap via {@code DataWrap#multiLink(ISingleLinkDef)}
              *
              * @param linkDef child link definition
-             * @param CK      child entity key type
-             * @param CV      child entity value type
+             * @param         <L> child entity value type
              * @return this entity builder
              */
             public <L> QueryEntityBuilder<K, V> include(ISingleLinkDef<K, V, ?, L> linkDef) {
@@ -158,6 +161,8 @@ public class JoinDef<MK, MV> {
              * Registers a link to be detached from when deleting the entity.
              *
              * @param parentLink link to this entity to be disconnected when removing this entity
+             * @param            <CK> child entity key type
+             * @param            <CV> child entity value type
              * @return this entity builder
              */
             public <CK, CV> QueryEntityBuilder<K, V> detach(ISingleLinkDef<K, V, CK, CV> parentLink) {
@@ -169,6 +174,8 @@ public class JoinDef<MK, MV> {
              * Registers a link to be detached from when deleting the entity.
              *
              * @param parentLink link to this entity to be disconnected when removing this entity
+             * @param            <CK> child entity key type
+             * @param            <CV> child entity value type
              * @return this entity builder
              */
             public <CK, CV> QueryEntityBuilder<K, V> detach(IBiManyToManyLinkDef<K, V, CK, CV> parentLink) {
@@ -177,9 +184,10 @@ public class JoinDef<MK, MV> {
             }
 
             /**
-             *  Registers an attribute to be added to entity's DataWrap when fetching.
+             * Registers an attribute to be added to entity's DataWrap when fetching.
              *
-             * @param name attribute name
+             * @param name                attribute name
+             * @param                     <CV> attribute type
              * @param contextSingleGetter IContextSingleGetter that returns attribute value from context
              * @return this entity builder
              */
@@ -189,10 +197,11 @@ public class JoinDef<MK, MV> {
             }
 
             /**
-             *  Registers an attribute to be added to entity's DataWrap when fetching.
+             * Registers an attribute to be added to entity's DataWrap when fetching.
              *
-             * @param name attribute name
+             * @param name     attribute name
              * @param function function that returns attribute value from DataWrap
+             * @param          <CV> attribute type
              * @return this entity builder
              */
             public <CV> QueryEntityBuilder<K, V> attribute(String name, Function<DataWrap<K, V>, CV> function) {
