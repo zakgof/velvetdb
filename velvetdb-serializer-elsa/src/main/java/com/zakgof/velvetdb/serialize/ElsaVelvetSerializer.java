@@ -5,12 +5,15 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.util.List;
 
 import org.mapdb.elsa.ElsaMaker;
 import org.mapdb.elsa.ElsaSerializer;
 
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.serialize.ISerializer;
+import com.zakgof.serialize.IUpgrader;
 
 public class ElsaVelvetSerializer implements ISerializer {
 
@@ -50,6 +53,16 @@ public class ElsaVelvetSerializer implements ISerializer {
 
     public ElsaSerializer getElsa() {
         return elsa;
+    }
+
+    @Override
+    public void setUpgrader(IUpgrader upgrader) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<Field> getFields(Class<?> clazz) {
+        throw new UnsupportedOperationException();
     }
 
 }
