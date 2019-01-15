@@ -4,7 +4,7 @@ import org.junit.Rule;
 
 import com.zakgof.db.velvet.IVelvet;
 
-public abstract class AVelvetTxnTest {
+public abstract class AVelvetTxnTest extends AVelvetBaseTest {
 
     @Rule
     public VelvetTxnRule rule = new VelvetTxnRule(this);
