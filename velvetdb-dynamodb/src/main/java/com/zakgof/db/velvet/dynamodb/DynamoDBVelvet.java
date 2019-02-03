@@ -68,6 +68,8 @@ public class DynamoDBVelvet implements IVelvet {
 
     private Supplier<ISerializer> serializerSupplier;
     private DynamoDB db;
+	private long provisionedThroughputRead;
+	private long provisionedThroughputWrite;
 
     private ScalarAttributeType keyType(Class<?> cl) {
         if (cl.equals(String.class))
@@ -146,11 +148,15 @@ public class DynamoDBVelvet implements IVelvet {
     }
 
     private CreateTableRequest makeTableRequest(String kind, KeySchemaElement[] keySchemaElements, AttributeDefinition[] attributeDefinitions) {
-        return new CreateTableRequest()
-           .withTableName(kind)
-           .withKeySchema(keySchemaElements)
-           .withAttributeDefinitions(attributeDefinitions)
-           .withProvisionedThroughput(new ProvisionedThroughput(1L, 1L));
+    	CreateTableRequest tableRequest = new CreateTableRequest()
+	        .withTableName(kind)
+	        .withKeySchema(keySchemaElements)
+	        .withAttributeDefinitions(attributeDefinitions);
+    	if (provisionedThroughputRead > 0L) {
+    		tableRequest.withProvisionedThroughput(new ProvisionedThroughput(provisionedThroughputRead, provisionedThroughputWrite));
+    	}
+        return tableRequest;
+           
     }
 
     private CreateTableRequest makeTableRequest(String kind, String hashKeyName, ScalarAttributeType hashKeyType) {
@@ -353,9 +359,11 @@ public class DynamoDBVelvet implements IVelvet {
         return map;
     }
 
-    DynamoDBVelvet(DynamoDB db, Supplier<ISerializer> serializerSupplier) {
+    DynamoDBVelvet(DynamoDB db, Supplier<ISerializer> serializerSupplier,long provisionedThroughputRead, long provisionedThroughputWrite) {
         this.db = db;
         this.serializerSupplier = serializerSupplier;
+        this.provisionedThroughputRead = provisionedThroughputRead;
+        this.provisionedThroughputWrite = provisionedThroughputWrite;
     }
 
     @Override

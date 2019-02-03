@@ -19,7 +19,9 @@ import com.zakgof.db.velvet.impl.AVelvetEnvironment;
 public class DynamoDBVelvetEnv extends AVelvetEnvironment {
 
     private final DynamoDB db;
-
+    private long readUnits = 0;
+    private long writeUnits = 0;
+    
     public DynamoDBVelvetEnv(URI uri) {
         String region = uri.getPath().replaceAll("/", "");
         String query = uri.getQuery();
@@ -53,11 +55,25 @@ public class DynamoDBVelvetEnv extends AVelvetEnvironment {
         if (awsAccessKeyId != null) {
             builder = builder.withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsAccessKeyId, awsSecretKey)));
         }
+        
+        readUnits = parseLong(params.get("readUnits"), 0L);
+        writeUnits = parseLong(params.get("writeUnits"), 0L);
 
         this.db = new DynamoDB(builder.build());
     }
 
-    public DynamoDBVelvetEnv(AmazonDynamoDB amazonDynamoDB) {
+    private long parseLong(String str, long def) {
+		if (str != null) {
+			try {
+				return Long.parseLong(str);
+			} catch (NumberFormatException e) {
+				throw new VelvetException("Invalid param: expected long, found : " + str);
+			}
+		}
+		return def;
+	}
+
+	public DynamoDBVelvetEnv(AmazonDynamoDB amazonDynamoDB) {
         this(new DynamoDB(amazonDynamoDB));
     }
 
@@ -68,7 +84,7 @@ public class DynamoDBVelvetEnv extends AVelvetEnvironment {
     @Override
     public void execute(ITransactionCall<IVelvet> transaction) {
         try {
-            transaction.execute(new DynamoDBVelvet(db, this::instantiateSerializer));
+            transaction.execute(new DynamoDBVelvet(db, this::instantiateSerializer, readUnits, writeUnits));
         } catch (Throwable e) {
             if (e instanceof RuntimeException)
                 throw (RuntimeException)e;
