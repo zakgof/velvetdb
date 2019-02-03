@@ -1,17 +1,7 @@
 package com.zakgof.db.velvet.dynamodb;
 
 import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -19,48 +9,14 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.amazonaws.services.dynamodbv2.document.BatchGetItemOutcome;
-import com.amazonaws.services.dynamodbv2.document.BatchWriteItemOutcome;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Index;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.KeyAttribute;
-import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
-import com.amazonaws.services.dynamodbv2.document.RangeKeyCondition;
-import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.TableCollection;
-import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes;
-import com.amazonaws.services.dynamodbv2.document.TableWriteItems;
-import com.amazonaws.services.dynamodbv2.document.spec.BatchGetItemSpec;
-import com.amazonaws.services.dynamodbv2.document.spec.BatchWriteItemSpec;
-import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
-import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
-import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
-import com.amazonaws.services.dynamodbv2.model.GlobalSecondaryIndex;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.KeyType;
-import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
-import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
-import com.amazonaws.services.dynamodbv2.model.LocalSecondaryIndex;
-import com.amazonaws.services.dynamodbv2.model.Projection;
-import com.amazonaws.services.dynamodbv2.model.ProjectionType;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+import com.amazonaws.services.dynamodbv2.document.*;
+import com.amazonaws.services.dynamodbv2.document.spec.*;
+import com.amazonaws.services.dynamodbv2.model.*;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Primitives;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
-import com.zakgof.db.velvet.query.IKeyAnchor;
-import com.zakgof.db.velvet.query.IKeyQuery;
-import com.zakgof.db.velvet.query.ISecAnchor;
-import com.zakgof.db.velvet.query.ISecQuery;
+import com.zakgof.db.velvet.query.*;
 import com.zakgof.serialize.ISerializer;
 import com.zakgof.tools.generic.Pair;
 
@@ -148,15 +104,15 @@ public class DynamoDBVelvet implements IVelvet {
     }
 
     private CreateTableRequest makeTableRequest(String kind, KeySchemaElement[] keySchemaElements, AttributeDefinition[] attributeDefinitions) {
-    	CreateTableRequest tableRequest = new CreateTableRequest()
-	        .withTableName(kind)
-	        .withKeySchema(keySchemaElements)
-	        .withAttributeDefinitions(attributeDefinitions);
-    	if (provisionedThroughputRead > 0L) {
-    		tableRequest.withProvisionedThroughput(new ProvisionedThroughput(provisionedThroughputRead, provisionedThroughputWrite));
-    	}
+        CreateTableRequest tableRequest = new CreateTableRequest().withTableName(kind).withKeySchema(keySchemaElements).withAttributeDefinitions(attributeDefinitions);
+        if (provisionedThroughputRead > 0L) {
+            tableRequest.withBillingMode(BillingMode.PROVISIONED);
+            tableRequest.withProvisionedThroughput(new ProvisionedThroughput(provisionedThroughputRead, provisionedThroughputWrite));
+        } else {
+            tableRequest.withBillingMode(BillingMode.PAY_PER_REQUEST);
+        }
         return tableRequest;
-           
+
     }
 
     private CreateTableRequest makeTableRequest(String kind, String hashKeyName, ScalarAttributeType hashKeyType) {
