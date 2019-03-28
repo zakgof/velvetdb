@@ -67,7 +67,7 @@ final public class Entities {
      * @param <V> key and value class
      * @return entity definition
      */
-    public static <V extends Comparable<? super V>> ISetEntityDef<V> sortedSet(Class<V> valueClass) {
+    public static <V extends Comparable<? super V>> ISortableSetEntityDef<V> sortedSet(Class<V> valueClass) {
         return from(valueClass).makeSortedSet();
     }
 
@@ -192,7 +192,7 @@ final public class Entities {
          * @return entity definition
          */
         @SuppressWarnings({ "unchecked", "rawtypes" })
-        public ISetEntityDef<V> makeSortedSet() {
+        public <VS extends Comparable<? super VS>> ISortableSetEntityDef<VS> makeSortedSet() {
             return new SortedSetEntityDef(clazz, kind, indexes);
         }
 
