@@ -88,8 +88,10 @@ public class JoinDef<MK, MV> {
 
             private final IEntityDef<K, V> entityDef;
             private final Map<String, ISingleGetter<K, V, ?, ?>> singles = new HashMap<>();
+            private final Map<String, ISingleGetter<K, V, ?, ?>> singlesNR = new HashMap<>();
             private final Set<ILinkDef<K, V, ?, ?>> detaches = new HashSet<>();
             private final Map<String, IMultiGetter<K, V, ?, ?>> multis = new HashMap<>();
+            private final Map<String, IMultiGetter<K, V, ?, ?>> multisNR = new HashMap<>();
             private final Map<String, IContextSingleGetter<K, V, ?>> attrs = new HashMap<>();
             private final Map<String, Function<DataWrap<K, V>, ?>> postattrs = new HashMap<>();
             private Comparator<DataWrap<K, V>> sort = null;
@@ -113,6 +115,11 @@ public class JoinDef<MK, MV> {
                 multis.put(name, multigetter);
                 return this;
             }
+            
+            public <CK, CV> QueryEntityBuilder<K, V> includeNonRecursive(String name, IMultiGetter<K, V, CK, CV> multigetter) {
+                multisNR.put(name, multigetter);
+                return this;
+            }
 
             /**
              * Registers a one-to-many link to be fetched with this entity as child data.
@@ -128,6 +135,10 @@ public class JoinDef<MK, MV> {
                 return include(linkDef.getKind(), linkDef);
             }
 
+            public <CK, CV> QueryEntityBuilder<K, V> includeNonRecursive(IMultiLinkDef<K, V, CK, CV> linkDef) {
+                return includeNonRecursive(linkDef.getKind(), linkDef);
+            }
+            
             /**
              * Registers a ISingleGetter to be fetched with this entity as child data.
              *
@@ -143,6 +154,11 @@ public class JoinDef<MK, MV> {
                 singles.put(name, getter);
                 return this;
             }
+            
+            public <CK, CV> QueryEntityBuilder<K, V> includeNonRecursive(String name, ISingleGetter<K, V, CK, CV> getter) {
+                singlesNR.put(name, getter);
+                return this;
+            }
 
             /**
              * Registers a one-to-one link to be fetched with this entity as child data.
@@ -155,6 +171,19 @@ public class JoinDef<MK, MV> {
              */
             public <L> QueryEntityBuilder<K, V> include(ISingleLinkDef<K, V, ?, L> linkDef) {
                 return include(linkDef.getKind(), linkDef);
+            }
+            
+            /**
+             * Registers a one-to-one link to be fetched with this entity as child data.
+             *
+             * The child data will be available from the resulting DataWrap via {@code DataWrap#multiLink(ISingleLinkDef)}
+             *
+             * @param linkDef child link definition
+             * @param         <L> child entity value type
+             * @return this entity builder
+             */
+            public <L> QueryEntityBuilder<K, V> includeNonRecursive(ISingleLinkDef<K, V, ?, L> linkDef) {
+                return includeNonRecursive(linkDef.getKind(), linkDef);
             }
 
             /**
@@ -238,7 +267,7 @@ public class JoinDef<MK, MV> {
              * @return query definition builder
              */
             public Builder<MK, MV> done() {
-                Builder.this.addEntity(new FetcherEntity<>(entityDef, multis, singles, detaches, attrs, postattrs, sort));
+                Builder.this.addEntity(new FetcherEntity<>(entityDef, multis, singles, multisNR, singlesNR, detaches, attrs, postattrs, sort));
                 return Builder.this;
             }
 
@@ -263,6 +292,8 @@ public class JoinDef<MK, MV> {
         private final IEntityDef<K, V> entityDef;
         private final Map<String, IMultiGetter<K, V, ?, ?>> multis;
         private final Map<String, ISingleGetter<K, V, ?, ?>> singles;
+        private final Map<String, IMultiGetter<K, V, ?, ?>> multisNR;
+        private final Map<String, ISingleGetter<K, V, ?, ?>> singlesNR;
         private final Set<ILinkDef<K, V, ?, ?>> detaches;
         private final Comparator<DataWrap<K, V>> sort;
         private final Map<String, IContextSingleGetter<K, V, ?>> attrs;
@@ -271,6 +302,8 @@ public class JoinDef<MK, MV> {
         private FetcherEntity(IEntityDef<K, V> entityDef,
                               Map<String, IMultiGetter<K, V, ?, ?>> multis,
                               Map<String, ISingleGetter<K, V, ?, ?>> singles,
+                              Map<String, IMultiGetter<K, V, ?, ?>> multisNR,
+                              Map<String, ISingleGetter<K, V, ?, ?>> singlesNR,
                               Set<ILinkDef<K, V, ?, ?>> detaches,
                               Map<String, IContextSingleGetter<K, V, ?>> attrs,
                               Map<String, Function<DataWrap<K, V>, ?>> postattrs,
@@ -278,6 +311,8 @@ public class JoinDef<MK, MV> {
             this.entityDef = entityDef;
             this.multis = multis;
             this.singles = singles;
+            this.multisNR = multisNR;
+            this.singlesNR = singlesNR;
             this.detaches = detaches;
             this.attrs = attrs;
             this.postattrs = postattrs;
@@ -509,13 +544,13 @@ public class JoinDef<MK, MV> {
                 return null;
             }
             preFetch(startEntity, Arrays.asList(node));
-            DataWrap<KK, VV> wrap = wrap(startEntity, node, null);
+            DataWrap<KK, VV> wrap = wrap(startEntity, node, null, true);
             return wrap;
         }
 
         private List<DataWrap<KK, VV>> make(List<VV> startNodes) {
             preFetch(startEntity, startNodes);
-            Stream<DataWrap<KK, VV>> wrapstream = startNodes.stream().map(node -> wrap(startEntity, node, null));
+            Stream<DataWrap<KK, VV>> wrapstream = startNodes.stream().map(node -> wrap(startEntity, node, null, true));
             wrapstream = sortWraps(startEntity, wrapstream);
             return wrapstream.collect(Collectors.toList());
         }
@@ -529,31 +564,43 @@ public class JoinDef<MK, MV> {
 
             for (Entry<String, ? extends IMultiGetter<K, V, ?, ?>> entry : fentity.multis.entrySet()) {
                 IMultiGetter<K, V, ?, ?> multi = entry.getValue();
-                preFetchMulti(multi, nodes);
+                preFetchMulti(multi, nodes, true);
+            }
+            for (Entry<String, ? extends IMultiGetter<K, V, ?, ?>> entry : fentity.multisNR.entrySet()) {
+                IMultiGetter<K, V, ?, ?> multi = entry.getValue();
+                preFetchMulti(multi, nodes, false);
             }
             for (Entry<String, ? extends ISingleGetter<K, V, ?, ?>> entry : fentity.singles.entrySet()) {
                 ISingleGetter<K, V, ?, ?> single = entry.getValue();
-                preFetchSingle(single, nodes);
+                preFetchSingle(single, nodes, true);
+            }
+            for (Entry<String, ? extends ISingleGetter<K, V, ?, ?>> entry : fentity.singlesNR.entrySet()) {
+                ISingleGetter<K, V, ?, ?> single = entry.getValue();
+                preFetchSingle(single, nodes, false);
             }
         }
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
-        private <K, V, CK, CV> void preFetchSingle(ISingleGetter<K, V, CK, CV> single, List<V> nodes) {
+        private <K, V, CK, CV> void preFetchSingle(ISingleGetter<K, V, CK, CV> single, List<V> nodes, boolean recursive) {
             Map<K, CV> children = single.batchGet(velvet, nodes);
             singles.computeIfAbsent(single, s -> new LinkedHashMap<>()).putAll((Map) children);
-            List<CV> childnodes = children.values().stream().filter(v -> v != null).collect(Collectors.toList());
-            preFetch(single.getChildEntity(), childnodes);
+            if (recursive) {
+	            List<CV> childnodes = children.values().stream().filter(v -> v != null).collect(Collectors.toList());
+	            preFetch(single.getChildEntity(), childnodes);
+            }
         }
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
-        private <K, V, CK, CV> void preFetchMulti(IMultiGetter<K, V, CK, CV> multi, List<V> nodes) {
+        private <K, V, CK, CV> void preFetchMulti(IMultiGetter<K, V, CK, CV> multi, List<V> nodes, boolean recursive) {
             Map<K, List<CV>> children = multi.batchGet(velvet, nodes);
             multis.computeIfAbsent(multi, m -> new LinkedHashMap<>()).putAll((Map) children);
-            List<CV> childnodes = children.values().stream().flatMap(List::stream).collect(Collectors.toList());
-            preFetch(multi.getChildEntity(), childnodes);
+            if (recursive) {
+	            List<CV> childnodes = children.values().stream().flatMap(List::stream).collect(Collectors.toList());
+	            preFetch(multi.getChildEntity(), childnodes);
+            }
         }
 
-        private <K, V> DataWrap<K, V> wrap(IEntityDef<K, V> entityDef, V node, Context<?, ?> parentContext) {
+        private <K, V> DataWrap<K, V> wrap(IEntityDef<K, V> entityDef, V node, Context<?, ?> parentContext, boolean recursive) {
             Context<K, V> context = new Context<>(parentContext, entityDef, node);
             DataWrap.Builder<K, V> wrapBuilder = new DataWrap.Builder<>(node);
             @SuppressWarnings("unchecked")
@@ -565,15 +612,26 @@ public class JoinDef<MK, MV> {
             wrapBuilder.key(key);
             context.setKey(key);
 
-            if (entity != null) {
+            if (recursive && entity != null) {
                 for (Entry<String, ? extends IMultiGetter<K, V, ?, ?>> entry : entity.multis.entrySet()) {
                     IMultiGetter<K, V, ?, ?> multiLinkDef = entry.getValue();
-                    List<? extends DataWrap<?, ?>> wrappedLinks = wrapChildren(context, key, multiLinkDef);
+                    List<? extends DataWrap<?, ?>> wrappedLinks = wrapChildren(context, key, multiLinkDef, true);
+                    wrapBuilder.addList(entry.getKey(), wrappedLinks);
+                }
+                for (Entry<String, ? extends IMultiGetter<K, V, ?, ?>> entry : entity.multisNR.entrySet()) {
+                    IMultiGetter<K, V, ?, ?> multiLinkDef = entry.getValue();
+                    List<? extends DataWrap<?, ?>> wrappedLinks = wrapChildren(context, key, multiLinkDef, false);
                     wrapBuilder.addList(entry.getKey(), wrappedLinks);
                 }
                 for (Entry<String, ? extends ISingleGetter<K, V, ?, ?>> entry : entity.singles.entrySet()) {
                     ISingleGetter<K, V, ?, ?> singleConn = entry.getValue();
-                    DataWrap<?, ?> wrappedLink = wrapChild(context, key, singleConn);
+                    DataWrap<?, ?> wrappedLink = wrapChild(context, key, singleConn, true);
+                    if (wrappedLink != null)
+                        wrapBuilder.add(entry.getKey(), wrappedLink);
+                }
+                for (Entry<String, ? extends ISingleGetter<K, V, ?, ?>> entry : entity.singlesNR.entrySet()) {
+                    ISingleGetter<K, V, ?, ?> singleConn = entry.getValue();
+                    DataWrap<?, ?> wrappedLink = wrapChild(context, key, singleConn, false);
                     if (wrappedLink != null)
                         wrapBuilder.add(entry.getKey(), wrappedLink);
                 }
@@ -594,21 +652,21 @@ public class JoinDef<MK, MV> {
             return wrap;
         }
 
-        private <K, V, CK, CV> DataWrap<CK, CV> wrapChild(Context<K, V> context, K key, ISingleGetter<K, V, CK, CV> single) {
+        private <K, V, CK, CV> DataWrap<CK, CV> wrapChild(Context<K, V> context, K key, ISingleGetter<K, V, CK, CV> single, boolean recursive) {
             @SuppressWarnings("unchecked")
             CV childValue = (CV) singles.get(single).get(key);
             if (childValue == null)
                 return null;
-            return wrap(single.getChildEntity(), childValue, context);
+            return wrap(single.getChildEntity(), childValue, context, recursive);
         }
 
-        private <K, V, CK, CV> List<DataWrap<CK, CV>> wrapChildren(Context<K, V> context, K key, IMultiGetter<K, V, CK, CV> multi) {
+        private <K, V, CK, CV> List<DataWrap<CK, CV>> wrapChildren(Context<K, V> context, K key, IMultiGetter<K, V, CK, CV> multi, boolean recursive) {
             @SuppressWarnings("unchecked")
             FetcherEntity<CK, CV> childFetcher = (FetcherEntity<CK, CV>) entities.get(multi.getChildEntity());
             Comparator<DataWrap<CK, CV>> comparator = (childFetcher == null) ? null : childFetcher.sort;
             @SuppressWarnings("unchecked")
             List<CV> cvs = (List<CV>) multis.get(multi).get(key);
-            Stream<DataWrap<CK, CV>> stream = cvs.stream().map(o -> wrap(multi.getChildEntity(), o, context));
+            Stream<DataWrap<CK, CV>> stream = cvs.stream().map(o -> wrap(multi.getChildEntity(), o, context, recursive));
             if (comparator != null) {
                 stream = stream.sorted(comparator);
             }
