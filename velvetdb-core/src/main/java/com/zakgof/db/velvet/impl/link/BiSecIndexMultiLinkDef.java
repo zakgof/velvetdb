@@ -74,4 +74,9 @@ public class BiSecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super
     public Function<CV, M> getMetric() {
         return oneWay.getMetric();
     }
+
+    @Override
+    public Class<M> getMetricClass() {
+    	return oneWay.getMetricClass();
+    }
 }
