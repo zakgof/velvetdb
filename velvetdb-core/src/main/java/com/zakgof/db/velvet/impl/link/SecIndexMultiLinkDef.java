@@ -43,6 +43,11 @@ public class SecIndexMultiLinkDef<HK, HV, CK, CV, M extends Comparable<? super M
     }
 
     @Override
+    public Class<M> getMetricClass() {
+    	return mclazz;
+    }
+
+    @Override
     public IMultiGetter<HK, HV, CK, CV> indexed(ISecQuery<CK, M> indexQuery) {
         return new IMultiGetter<HK, HV, CK, CV>() {
 

@@ -6,11 +6,12 @@ public interface ILinkDef<HK, HV, CK, CV> extends IReadOnlyLinkDef<HK, HV, CK, C
 
     public void connectKeys(IVelvet velvet, HK akey, CK bkey);
 
-    // TODO:
     // public void batchConnectKeys(IVelvet velvet, Map<HK, CK> connections);
 
     public void disconnectKeys(IVelvet velvet, HK akey, CK bkey);
 
+    // public void batchDisconnectKeys(IVelvet velvet, Map<HK, CK> connections);
+    
     public default void connect(IVelvet velvet, HV a, CV b) {
         connectKeys(velvet, getHostEntity().keyOf(a), getChildEntity().keyOf(b));
     }
