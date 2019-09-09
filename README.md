@@ -34,7 +34,7 @@ Velvetdb's design is based on these principles making it distinct:
 
 - Transactional (on backends that support transactions)
 - Pure Java 8. No xmls or other config files needed
-- Pluggable serialization library (built-in Ze serializer / [kryo] (https://github.com/EsotericSoftware/kryo) / [elsa](https://github.com/jankotek/elsa))
+- Pluggable serialization library (built-in Ze serializer / [kryo](https://github.com/EsotericSoftware/kryo) / [elsa](https://github.com/jankotek/elsa))
 - Android support (on xodus)
 
 In development
@@ -52,12 +52,12 @@ Select the artifact matching your choice of backend: velvetdb-xodus, velvetdb-ma
 <dependency>
     <groupId>com.github.zakgof</groupId>
     <artifactId>velvetdb-xodus</artifactId>
-    <version>0.6.0</version>
+    <version>0.7.0</version>
 </dependency>
 ```
 or, using Gradle:
 ```groovy
-compile 'com.github.zakgof:velvetdb-xodus:0.6.0'    
+compile 'com.github.zakgof:velvetdb-xodus:0.7.0'    
 ```
 
 For Android version:
@@ -109,13 +109,13 @@ compile 'com.github.zakgof:velvetdb-xodus-android:0.3.3'
     AUTHOR_BOOKS.connect(velvet, author, book);
     
     // Get all books
-    List<Book> allBooks = BOOK.getAll(velvet);
+    List<Book> allBooks = BOOK.batchGetAll(velvet);
     
     // Or fetch by a key
     Book book = BOOK.get(velvet, isbn);
     
     // Now get all books of a specific author:
-    List<Book> authorsBooks = AUTHOR_BOOKS.multi(velvet, author);
+    List<Book> authorsBooks = AUTHOR_BOOKS.get(velvet, author);
 ```
 
-[More on API on Wiki...](https://github.com/zakgof/velvetdb/wiki/Getting-started)
+[More on Wiki...](https://github.com/zakgof/velvetdb/wiki)

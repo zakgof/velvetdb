@@ -52,13 +52,23 @@ final public class Entities {
     }
 
     /**
-     * Creates a set entity definition - entity which key is its value itself.
+     * Creates a set entity definition - an entity which key is its value itself.
      * @param valueClass key and value class
      * @param <V> key and value class
      * @return entity definition
      */
     public static <V> ISetEntityDef<V> set(Class<V> valueClass) {
         return from(valueClass).makeSet();
+    }
+    
+    /**
+     * Creates a set entity definition - an entity which sortable key is its value itself.
+     * @param valueClass key and value class
+     * @param <V> key and value class
+     * @return entity definition
+     */
+    public static <V extends Comparable<? super V>> ISortableSetEntityDef<V> sortedSet(Class<V> valueClass) {
+        return from(valueClass).makeSortedSet();
     }
 
     /**
@@ -182,7 +192,7 @@ final public class Entities {
          * @return entity definition
          */
         @SuppressWarnings({ "unchecked", "rawtypes" })
-        public ISetEntityDef<V> makeSortedSet() {
+        public <VS extends Comparable<? super VS>> ISortableSetEntityDef<VS> makeSortedSet() {
             return new SortedSetEntityDef(clazz, kind, indexes);
         }
 

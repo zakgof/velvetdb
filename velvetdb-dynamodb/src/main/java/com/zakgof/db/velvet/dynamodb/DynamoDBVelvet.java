@@ -40,6 +40,7 @@ import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
+import com.amazonaws.services.dynamodbv2.model.BillingMode;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.GlobalSecondaryIndex;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
@@ -68,6 +69,8 @@ public class DynamoDBVelvet implements IVelvet {
 
     private Supplier<ISerializer> serializerSupplier;
     private DynamoDB db;
+	private long provisionedThroughputRead;
+	private long provisionedThroughputWrite;
 
     private ScalarAttributeType keyType(Class<?> cl) {
         if (cl.equals(String.class))
@@ -146,11 +149,15 @@ public class DynamoDBVelvet implements IVelvet {
     }
 
     private CreateTableRequest makeTableRequest(String kind, KeySchemaElement[] keySchemaElements, AttributeDefinition[] attributeDefinitions) {
-        return new CreateTableRequest()
-           .withTableName(kind)
-           .withKeySchema(keySchemaElements)
-           .withAttributeDefinitions(attributeDefinitions)
-           .withProvisionedThroughput(new ProvisionedThroughput(1L, 1L));
+        CreateTableRequest tableRequest = new CreateTableRequest().withTableName(kind).withKeySchema(keySchemaElements).withAttributeDefinitions(attributeDefinitions);
+        if (provisionedThroughputRead > 0L) {
+            tableRequest.withBillingMode(BillingMode.PROVISIONED);
+            tableRequest.withProvisionedThroughput(new ProvisionedThroughput(provisionedThroughputRead, provisionedThroughputWrite));
+        } else {
+            tableRequest.withBillingMode(BillingMode.PAY_PER_REQUEST);
+        }
+        return tableRequest;
+
     }
 
     private CreateTableRequest makeTableRequest(String kind, String hashKeyName, ScalarAttributeType hashKeyType) {
@@ -353,9 +360,11 @@ public class DynamoDBVelvet implements IVelvet {
         return map;
     }
 
-    DynamoDBVelvet(DynamoDB db, Supplier<ISerializer> serializerSupplier) {
+    DynamoDBVelvet(DynamoDB db, Supplier<ISerializer> serializerSupplier,long provisionedThroughputRead, long provisionedThroughputWrite) {
         this.db = db;
         this.serializerSupplier = serializerSupplier;
+        this.provisionedThroughputRead = provisionedThroughputRead;
+        this.provisionedThroughputWrite = provisionedThroughputWrite;
     }
 
     @Override
@@ -594,11 +603,12 @@ public class DynamoDBVelvet implements IVelvet {
                 for (IStoreIndexDef<?, V> index : indexes) {
                     GlobalSecondaryIndex gsi = new GlobalSecondaryIndex()
                         .withIndexName("index-" + index.name())
-                        .withProvisionedThroughput(new ProvisionedThroughput(1L, 1L))
                         .withProjection(new Projection().withProjectionType(ProjectionType.KEYS_ONLY))
                         .withKeySchema(new KeySchemaElement("partition", KeyType.HASH),
                                        new KeySchemaElement("i-" + index.name(), KeyType.RANGE));
-
+                    if (provisionedThroughputRead > 0L) {
+                    	gsi.withProvisionedThroughput(new ProvisionedThroughput(provisionedThroughputRead, provisionedThroughputWrite));
+                    }
                     tableRequest.withAttributeDefinitions(new AttributeDefinition("i-" + index.name(), keyType(index.clazz())))
                         .withGlobalSecondaryIndexes(gsi);
                 }
