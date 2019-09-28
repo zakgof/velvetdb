@@ -9,7 +9,7 @@ archivesBaseName = 'velvetdb-core'
 
 dependencies {
     compile 'com.google.guava:guava:18.0'
-    compile 'com.github.zakgof:tools:0.8.0-SNAPSHOT'
+    compile 'com.github.zakgof:tools:0.7.0-SNAPSHOT'
     testCompile 'junit:junit:4.12'
     testCompile 'org.apache.commons:commons-text:1.2'
     testCompile 'org.ow2.asm:asm:6.2.1'
