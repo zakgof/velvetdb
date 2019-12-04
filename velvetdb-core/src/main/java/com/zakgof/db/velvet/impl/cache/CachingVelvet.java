@@ -16,6 +16,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
+import com.zakgof.db.velvet.impl.Utils;
 import com.zakgof.db.velvet.query.IKeyQuery;
 import com.zakgof.tools.generic.Pair;
 
@@ -94,7 +95,7 @@ class CachingVelvet implements IVelvet {
                  hks.stream().distinct().filter(hk -> !hitMap.containsKey(hk)).forEach(hk -> ((Cache)cache).put(hk, NULL_VALUE));
              }
              Map<K, V> fixedHitMap = hitMap.entrySet().stream().filter(e -> e.getValue() != NULL_VALUE).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-             return hks.stream().distinct().collect(Collectors.toMap(hk -> hk, fixedHitMap::get, (u,v) -> {throw new VelvetException("Duplicate key");}, LinkedHashMap::new));
+             return Utils.makeLinkedHashMap(hks, fixedHitMap::get);
         }
 
         @Override
@@ -173,7 +174,7 @@ class CachingVelvet implements IVelvet {
                 cache.putAll(missMap);
                 hitMap.putAll(missMap);
             }
-            return keys.stream().distinct().collect(Collectors.toMap(hk -> hk, hitMap::get, (u,v) -> {throw new VelvetException("Duplicate key");}, LinkedHashMap::new));
+            return Utils.makeLinkedHashMap(keys, hitMap::get);
         }
 
         @Override
