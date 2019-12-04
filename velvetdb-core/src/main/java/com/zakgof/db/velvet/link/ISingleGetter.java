@@ -3,9 +3,9 @@ package com.zakgof.db.velvet.link;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Maps;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.tools.generic.Pair;
 
@@ -20,7 +20,7 @@ public interface ISingleGetter<HK, HV, CK, CV> extends IRelation<HK, HV, CK, CV>
         Map<HK, CK> keyMap = batchKeys(velvet, hks);
         List<CK> allCKs = new ArrayList<>(keyMap.values());
         Map<CK, CV> childMap = getChildEntity().batchGetMap(velvet, allCKs);
-        Map<HK, CV> result = keyMap.entrySet().stream().collect(Collectors.toMap(Entry::getKey, e -> childMap.get(e.getValue())));
+        Map<HK, CV> result = Maps.transformValues(keyMap, childMap::get);
         return result;
     }
 
