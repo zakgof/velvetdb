@@ -66,4 +66,9 @@ public class TestEnt3 implements Serializable {
     public String toString() {
         return key + " " + weight + " " + str;
     }
+
+    public void setWeightAndStr(long weight, String str) {
+        this.weight = weight;
+        this.str = str;
+    }
 }
