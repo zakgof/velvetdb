@@ -83,14 +83,15 @@ class XodusVelvet implements IVelvet {
         }
 
         private <M extends Comparable<? super M>> StoreIndexProcessor<K, V, M> createStoreReq(IStoreIndexDef<M, V> indexDef) {
-            return new StoreIndexProcessor<>(keyClass, indexDef.metric(), keyMetric(indexDef), "#s" + kind + "/" + indexDef.name());
+            return new StoreIndexProcessor<>(keyClass, indexDef.metric(), keyMetric(indexDef), "#s" + kind + "/" + indexDef.name(), this);
         }
 
         private <M extends Comparable<? super M>> Function<K, M> keyMetric(IStoreIndexDef<M, V> indexDef) {
             return key -> {
                 V v = get(key);
                 if (v == null) {
-                    throw new VelvetException("null value for key " + key + " received during secondary index retrieval");
+                    System.err.println("null value for key " + key + " received during secondary index retrieval ");
+                    return null;
                 }
                 return indexDef.metric().apply(v);
             };
@@ -184,7 +185,7 @@ class XodusVelvet implements IVelvet {
         @SuppressWarnings("unchecked")
         @Override
         public <M extends Comparable<? super M>> IStoreIndex<K, M> index(String name) {
-            return query -> ((StoreIndexProcessor<K, V, M>) indexes.get(name)).go(query);
+            return ((StoreIndexProcessor<K, V, M>) indexes.get(name));
         }
 
     }
@@ -279,7 +280,10 @@ class XodusVelvet implements IVelvet {
                 if (m == null) {
                     return !get().equals(anchor.getKey());
                 }
-                int compare = indexValue().compareTo(m);
+                M indexValue = indexValue();
+                if (indexValue == null)
+                    return false;
+                int compare = indexValue.compareTo(m);
                 if (compare == 0 && anchor.isIncluding())
                     return true;
                 return compare < 0 && below || compare > 0 && !below; // TODO XOR
@@ -398,16 +402,18 @@ class XodusVelvet implements IVelvet {
         }
     }
 
-    private class StoreIndexProcessor<K, V, M extends Comparable<? super M>> extends AStoreProcessor<K, M> {
+    private class StoreIndexProcessor<K, V, M extends Comparable<? super M>> extends AStoreProcessor<K, M> implements IStoreIndex<K, M> {
 
-        private Store store;
-        private Function<K, M> keyMetric;
-        private Function<V, M> valueMetric;
+        private final Store store;
+        private final Function<K, M> keyMetric;
+        private final Function<V, M> valueMetric;
+        private final IStore<K, V> parentStore;
 
-        StoreIndexProcessor(Class<K> keyClass, Function<V, M> valueMetric, Function<K, M> keyMetric, String storeName) {
+        StoreIndexProcessor(Class<K> keyClass, Function<V, M> valueMetric, Function<K, M> keyMetric, String storeName, IStore<K, V> parentStore) {
             super(keyClass, keyMetric);
             this.keyMetric = keyMetric;
             this.valueMetric = valueMetric;
+            this.parentStore = parentStore;
             this.store = env.openStore(storeName, StoreConfig.WITH_DUPLICATES, tx);
         }
 
@@ -425,7 +431,8 @@ class XodusVelvet implements IVelvet {
                 if (find) {
                     cursor.deleteCurrent();
                 } else {
-                    throw new VelvetException("Delete key not found " + metricBi);
+                    System.err.println("Warning: cannot find index " + key + " -> " + oldValue + "  actual value is " + keyMetric.apply(key));
+                    // throw new VelvetException("Delete key not found " + metricBi);
                 }
             }
         }
@@ -440,8 +447,20 @@ class XodusVelvet implements IVelvet {
             return keyMetric.apply(get());
         }
 
-        List<K> go(ISecQuery<K, M> query) {
+        @Override
+        public List<K> keys(ISecQuery<K, M> query) {
             return go(store, query);
+        }
+
+        @Override
+        public void recalculate() {
+            try (Cursor cursor = store.openCursor(tx)) {
+                while(cursor.deleteCurrent());
+            }
+            List<K> keys = parentStore.keys();
+            for (K key : keys) {
+                add(parentStore.get(key), key);
+            }
         }
     }
 

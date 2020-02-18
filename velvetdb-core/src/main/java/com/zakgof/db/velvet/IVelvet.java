@@ -96,10 +96,15 @@ public interface IVelvet {
 
         @Deprecated
         byte[] getRaw(K key);
+
     }
 
     public interface IStoreIndex<K, M extends Comparable<? super M>> {
         List<K> keys(ISecQuery<K, M> query);
+
+        default void recalculate() {
+            throw new UnsupportedOperationException();
+        }
     }
 
     public interface IStoreIndexDef<M extends Comparable<? super M>, V> {
