@@ -9,7 +9,7 @@ allprojects {
        ossrhUsername = ossrhUser
        ossrhPassword = ossrhPass
    }
-   version = '0.8.1-SNAPSHOT'
+   version = '0.8.2-SNAPSHOT'
 
    configurations.all {
       resolutionStrategy {
