@@ -190,10 +190,10 @@ final public class Entities {
         /**
          * Creates a sorted set entity definition - entity which key is its value itself. The entity class must implement {@code Comparable}.
          * @return entity definition
-         * @param <V> key and value class
+         * @param <VS> key and value class
          */
         @SuppressWarnings({ "unchecked", "rawtypes" })
-        public <V extends Comparable<? super V>> ISortableSetEntityDef<V> makeSortedSet() {
+        public <VS extends Comparable<? super VS>> ISortableSetEntityDef<VS> makeSortedSet() {
             return new SortedSetEntityDef(clazz, kind, indexes);
         }
 
