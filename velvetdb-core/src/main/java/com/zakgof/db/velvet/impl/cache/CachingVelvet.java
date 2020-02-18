@@ -138,12 +138,6 @@ class CachingVelvet implements IVelvet {
             return proxyStore.index(name);
         }
 
-        @Override
-        public byte[] getRaw(K key) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
     }
 
     private class CachedSortedStore<K extends Comparable<? super K>, V> implements ISortedStore<K, V> {
@@ -215,11 +209,6 @@ class CachingVelvet implements IVelvet {
         @Override
         public <M extends Comparable<? super M>> IStoreIndex<K, M> index(String name) {
             return proxyStore.index(name);
-        }
-
-        @Override
-        public byte[] getRaw(K key) {
-            return null;
         }
 
         @Override

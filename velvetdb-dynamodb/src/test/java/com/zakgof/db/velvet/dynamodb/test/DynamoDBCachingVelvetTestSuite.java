@@ -5,12 +5,14 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.apache.commons.text.StrSubstitutor;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvetEnvironment;
 import com.zakgof.db.velvet.VelvetFactory;
 import com.zakgof.db.velvet.test.VelvetTestSuite;
 
+@Ignore
 public class DynamoDBCachingVelvetTestSuite extends VelvetTestSuite {
 
     @BeforeClass

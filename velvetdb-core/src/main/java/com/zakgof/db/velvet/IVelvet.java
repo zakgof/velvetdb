@@ -93,10 +93,6 @@ public interface IVelvet {
         }
 
         <M extends Comparable<? super M>> IStoreIndex<K, M> index(String name);
-
-        @Deprecated
-        byte[] getRaw(K key);
-
     }
 
     public interface IStoreIndex<K, M extends Comparable<? super M>> {

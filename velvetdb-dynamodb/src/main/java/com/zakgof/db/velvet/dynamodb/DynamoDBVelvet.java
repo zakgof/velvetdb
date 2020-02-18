@@ -476,11 +476,6 @@ public class DynamoDBVelvet implements IVelvet {
         }
 
         @Override
-        public byte[] getRaw(K key) {
-            return null;
-        }
-
-        @Override
         public void put(K key, V value) {
             Object v = valueToObject(value);
             Item item = createPutItem(key, v, value);
