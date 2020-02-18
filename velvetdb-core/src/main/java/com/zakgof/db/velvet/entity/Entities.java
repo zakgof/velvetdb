@@ -60,7 +60,7 @@ final public class Entities {
     public static <V> ISetEntityDef<V> set(Class<V> valueClass) {
         return from(valueClass).makeSet();
     }
-    
+
     /**
      * Creates a set entity definition - an entity which sortable key is its value itself.
      * @param valueClass key and value class
@@ -190,6 +190,7 @@ final public class Entities {
         /**
          * Creates a sorted set entity definition - entity which key is its value itself. The entity class must implement {@code Comparable}.
          * @return entity definition
+         * @param <V> key/value class
          */
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public <VS extends Comparable<? super VS>> ISortableSetEntityDef<VS> makeSortedSet() {
