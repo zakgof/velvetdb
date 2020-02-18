@@ -8,8 +8,9 @@ group = 'com.github.zakgof'
 archivesBaseName = 'velvetdb-serializer-kryo'
 
 dependencies {
-    compile 'com.github.zakgof:velvetdb-core:0.3.3-SNAPSHOT'
-    compile 'com.esotericsoftware:kryo:4.0.0'
+    implementation 'com.github.zakgof:velvetdb-core:' + version
+    implementation 'com.github.zakgof:tools:' + toolsVersion
+    implementation 'com.esotericsoftware:kryo:4.0.0'
 }
 
 tasks.withType(JavaCompile) {

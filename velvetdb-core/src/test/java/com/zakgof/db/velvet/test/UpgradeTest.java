@@ -22,6 +22,7 @@ import com.zakgof.db.velvet.upgrader.IVelvetUpgrader.Mode;
 import com.zakgof.serialize.IFixer;
 import com.zakgof.serialize.ZeSerializer;
 
+@Ignore
 public class UpgradeTest extends AVelvetTest {
 
     private Original orig;

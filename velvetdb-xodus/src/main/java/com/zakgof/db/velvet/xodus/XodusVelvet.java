@@ -108,14 +108,14 @@ class XodusVelvet implements IVelvet {
         K toObj(ByteIterable bi) {
             return XodusVelvet.this.toObj(keyClass, bi);
         }
-
-        @Override
-        public byte[] getRaw(K key) {
-            ByteIterable keyBi = toBi(key);
-            debug(valueMap);
-            ByteIterable valueBi = valueMap.get(tx, keyBi);
-            return valueBi == null ? null : biToByteArray(valueBi);
-        }
+//
+//        @Override
+//        public byte[] getRaw(K key) {
+//            ByteIterable keyBi = toBi(key);
+//            debug(valueMap);
+//            ByteIterable valueBi = valueMap.get(tx, keyBi);
+//            return valueBi == null ? null : biToByteArray(valueBi);
+//        }
 
         @Override
         public V get(K key) {
@@ -472,11 +472,11 @@ class XodusVelvet implements IVelvet {
         return ze.deserialize(inputStream, clazz);
     }
 
-    private byte[] biToByteArray(ByteIterable bi) {
-        byte[] bytes = bi.getBytesUnsafe();
-        int length = bi.getLength();
-        return Arrays.copyOf(bytes, length);
-    }
+//    private byte[] biToByteArray(ByteIterable bi) {
+//        byte[] bytes = bi.getBytesUnsafe();
+//        int length = bi.getLength();
+//        return Arrays.copyOf(bytes, length);
+//    }
 
     private <T> ByteIterable toBi(T obj, Class<T> clazz) {
         ISerializer ze = serializerSupplier.get();
