@@ -207,7 +207,7 @@ public class UpgradeTest extends AVelvetTest {
 
         public <N> N as(Class<N> newClass) {
             try {
-                N object = newClass.newInstance();
+                N object = newClass.getConstructor().newInstance();
                 copyFields(object, instance);
                 return object;
             } catch (ReflectiveOperationException e) {
