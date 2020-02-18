@@ -455,11 +455,18 @@ class XodusVelvet implements IVelvet {
         @Override
         public void recalculate() {
             try (Cursor cursor = store.openCursor(tx)) {
-                while(cursor.deleteCurrent());
+                while (cursor.getNext()) {
+//                     K k = BytesUtil.keyBiToObj(keyClass, cursor.getValue());
+//                     String m = BytesUtil.keyBiToObj(String.class, cursor.getKey());
+//                     System.err.println("Removing: " + m + "   ->   " + k);
+                     cursor.deleteCurrent();
+                }
             }
             List<K> keys = parentStore.keys();
             for (K key : keys) {
-                add(parentStore.get(key), key);
+                V newValue = parentStore.get(key);
+                // System.err.println("" + key + "   -> " + keyMetric.apply(key) + "     -->   " + newValue);
+                add(newValue, key);
             }
         }
     }

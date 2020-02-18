@@ -298,4 +298,6 @@ public interface IEntityDef<K, V> {
         return keyOf(value1).equals(keyOf(value2));
     }
 
+    void recalcIndexes(IVelvet velvet);
+
 }
