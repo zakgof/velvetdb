@@ -8,7 +8,12 @@ import org.junit.Test;
 
 import com.zakgof.db.velvet.entity.Entities;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.db.velvet.link.*;
+import com.zakgof.db.velvet.link.IBiManyToManyLinkDef;
+import com.zakgof.db.velvet.link.IBiMultiLinkDef;
+import com.zakgof.db.velvet.link.IBiSingleLinkDef;
+import com.zakgof.db.velvet.link.IMultiLinkDef;
+import com.zakgof.db.velvet.link.ISingleLinkDef;
+import com.zakgof.db.velvet.link.Links;
 
 public class SimpleLinkTest extends AVelvetTxnTest {
 
@@ -299,7 +304,7 @@ public class SimpleLinkTest extends AVelvetTxnTest {
         Assert.assertEquals("v5", t2.getVal());
 
         Integer t2key = single.key(velvet, "key2");
-        Assert.assertEquals(new Integer(4), t2key);
+        Assert.assertEquals(Integer.valueOf(4), t2key);
 
         TestEnt2 tz = single.get(velvet, ze);
         Assert.assertNull(tz);
