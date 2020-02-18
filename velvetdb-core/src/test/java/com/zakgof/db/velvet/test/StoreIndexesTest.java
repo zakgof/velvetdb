@@ -91,6 +91,20 @@ public class StoreIndexesTest extends AVelvetTxnTest {
         check("str", SecQueries.<Integer, Integer> builder().build(), "abdefghijklm");
     }
 
+    @Test
+    public void testOverwrite() {
+        TestEnt3 entZ = new TestEnt3(7, 1050L, "z");
+        ENTITY3.put(velvet, entZ);
+        check("key", SecQueries.<Integer, Integer> builder().build(), "limhefzkgabdj");
+        check("weight", SecQueries.<Integer, Integer> builder().build(), "lgejabhmizkfd");
+        check("str", SecQueries.<Integer, Integer> builder().build(), "abdefghijklmz");
+        entZ.setWeightAndStr(650L, "_");
+        ENTITY3.put(velvet, entZ);
+        check("key", SecQueries.<Integer, Integer> builder().build(), "limhef_kgabdj");
+        check("weight", SecQueries.<Integer, Integer> builder().build(), "lgeja_bhmikfd");
+        check("str", SecQueries.<Integer, Integer> builder().build(), "_abdefghijklm");
+    }
+
     private <K, M extends Comparable<? super M>> void check(String name, ISecQuery<Integer, M> query, String ref) {
         List<Integer> keys = ENTITY3.<M> queryKeys(velvet, name, query);
         List<TestEnt3> values = ENTITY3.batchGetList(velvet, keys);
