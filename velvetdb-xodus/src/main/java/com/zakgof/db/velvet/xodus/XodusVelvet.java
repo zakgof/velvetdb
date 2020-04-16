@@ -419,7 +419,11 @@ class XodusVelvet implements IVelvet {
 
         public void add(V newValue, K key) {
             ByteIterable keyBi = BytesUtil.keyToBi(key);
-            ByteIterable metricBi = BytesUtil.keyToBi(valueMetric.apply(newValue));
+            M indexValue = valueMetric.apply(newValue);
+            if (indexValue == null) {
+                throw new VelvetException("Null value for index [" + store.getName() + "] from value [" + newValue + "]");
+            }
+            ByteIterable metricBi = BytesUtil.keyToBi(indexValue);
             store.put(tx, metricBi, keyBi);
         }
 
@@ -456,16 +460,16 @@ class XodusVelvet implements IVelvet {
         public void recalculate() {
             try (Cursor cursor = store.openCursor(tx)) {
                 while (cursor.getNext()) {
-//                     K k = BytesUtil.keyBiToObj(keyClass, cursor.getValue());
-//                     String m = BytesUtil.keyBiToObj(String.class, cursor.getKey());
-//                     System.err.println("Removing: " + m + "   ->   " + k);
+                     K k = BytesUtil.keyBiToObj(keyClass, cursor.getValue());
+                     String m = BytesUtil.keyBiToObj(String.class, cursor.getKey());
+                     System.err.println("Removing: " + m + "   ->   " + k);
                      cursor.deleteCurrent();
                 }
             }
             List<K> keys = parentStore.keys();
             for (K key : keys) {
                 V newValue = parentStore.get(key);
-                // System.err.println("" + key + "   -> " + keyMetric.apply(key) + "     -->   " + newValue);
+                 System.err.println("" + key + "   -> " + keyMetric.apply(key) + "     -->   " + newValue);
                 add(newValue, key);
             }
         }
