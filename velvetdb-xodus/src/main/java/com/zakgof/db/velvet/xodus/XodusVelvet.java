@@ -83,7 +83,7 @@ class XodusVelvet implements IVelvet {
         }
 
         private <M extends Comparable<? super M>> StoreIndexProcessor<K, V, M> createStoreReq(IStoreIndexDef<M, V> indexDef) {
-            return new StoreIndexProcessor<>(keyClass, indexDef.metric(), keyMetric(indexDef), "#s" + kind + "/" + indexDef.name(), this);
+            return new StoreIndexProcessor<>(keyClass, keyMetric(indexDef), indexDef, kind, this);
         }
 
         private <M extends Comparable<? super M>> Function<K, M> keyMetric(IStoreIndexDef<M, V> indexDef) {
@@ -408,20 +408,22 @@ class XodusVelvet implements IVelvet {
         private final Function<K, M> keyMetric;
         private final Function<V, M> valueMetric;
         private final IStore<K, V> parentStore;
+        private final String indexName;
 
-        StoreIndexProcessor(Class<K> keyClass, Function<V, M> valueMetric, Function<K, M> keyMetric, String storeName, IStore<K, V> parentStore) {
+        StoreIndexProcessor(Class<K> keyClass, Function<K, M> keyMetric, IStoreIndexDef<M, V> indexDef, String kind, IStore<K, V> parentStore) {
             super(keyClass, keyMetric);
             this.keyMetric = keyMetric;
-            this.valueMetric = valueMetric;
+            this.valueMetric =  indexDef.metric();
             this.parentStore = parentStore;
-            this.store = env.openStore(storeName, StoreConfig.WITH_DUPLICATES, tx);
+            this.indexName = indexDef.name();
+            this.store = env.openStore("#s" + kind + "/" + indexDef.name(), StoreConfig.WITH_DUPLICATES, tx);
         }
 
         public void add(V newValue, K key) {
             ByteIterable keyBi = BytesUtil.keyToBi(key);
             M indexValue = valueMetric.apply(newValue);
             if (indexValue == null) {
-                throw new VelvetException("Null value for index [" + store.getName() + "] from value [" + newValue + "]");
+                throw new VelvetException("Null value for index [" + indexName + "] from value [" + newValue + "]");
             }
             ByteIterable metricBi = BytesUtil.keyToBi(indexValue);
             store.put(tx, metricBi, keyBi);
@@ -429,13 +431,18 @@ class XodusVelvet implements IVelvet {
 
         public void remove(V oldValue, K key) {
             ByteIterable keyBi = BytesUtil.keyToBi(key);
-            ByteIterable metricBi = BytesUtil.keyToBi(valueMetric.apply(oldValue));
+            M oldIndexValue = valueMetric.apply(oldValue);
+            if (oldIndexValue == null) {
+                System.err.println("Warning: null value for index [" + indexName + "] found when deleting the value [" + oldValue + "]");
+                return;
+            }
+            ByteIterable metricBi = BytesUtil.keyToBi(oldIndexValue);
             try (Cursor cursor = store.openCursor(tx)) {
                 boolean find = cursor.getSearchBoth(metricBi, keyBi);
                 if (find) {
                     cursor.deleteCurrent();
                 } else {
-                    System.err.println("Warning: cannot find index " + key + " -> " + oldValue + "  actual value is " + keyMetric.apply(key));
+                    System.err.println("Warning: cannot find index [" + indexName + "] = " + oldIndexValue + " for "+ key + " -> " + oldValue + "  actual value is " + keyMetric.apply(key));
                     // throw new VelvetException("Delete key not found " + metricBi);
                 }
             }

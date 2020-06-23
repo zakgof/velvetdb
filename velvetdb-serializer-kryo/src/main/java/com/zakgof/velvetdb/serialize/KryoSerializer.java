@@ -17,6 +17,7 @@ import org.objenesis.strategy.StdInstantiatorStrategy;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoException;
+import com.esotericsoftware.kryo.Registration;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -72,11 +73,13 @@ public class KryoSerializer implements ISerializer {
             super(kryo, clazz);
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public T read(Kryo kryo, Input input, Class<T> type) {
             int version = input.readVarInt(true);
             if (upgrader != null) {
                 byte currentVersion = upgrader.getCurrentVersionOf(type);
+
                 if (version != currentVersion) {
                     ClassStructure cs = upgrader.getStructureFor(type, (byte)version);
                     if (cs == null) {
@@ -90,16 +93,26 @@ public class KryoSerializer implements ISerializer {
 
                     for (Entry<String, Class<?>> entry : cs.getFields().entrySet()) {
                         String fieldName = entry.getKey();
-                        Class<?> storedFieldType = entry.getValue();
-                        Object fieldValue = storedFieldType.isPrimitive() ? kryo.readObject(input, storedFieldType) : kryo.readObjectOrNull(input, storedFieldType);
-                        oldFieldValues.put(fieldName, fieldValue);
-                        Field field = ZeSerializer.findSerializableField(type, fieldName, storedFieldType);
-                        if (field != null) {
-                            field.setAccessible(true);
-                            try {
-                                field.set(object, fieldValue);
-                            } catch (IllegalArgumentException | IllegalAccessException e) {
-                                throw new ZeSerializerException(e);
+
+                        try {
+                            CachedField<?> cachedField = getField(fieldName);
+                            // Existing field
+                            cachedField.read(input, object);
+                        } catch (IllegalArgumentException e) {
+                            // Removed field - read and ignore
+                            Class<?> concreteType = concreteTypeFor(entry.getValue());
+                            if (concreteType == null) {
+                                Registration registration = kryo.readClass(input);
+                                if (registration != null) {
+                                    Serializer<?> serializer = registration.getSerializer();
+                                    kryo.readObject(input, registration.getType(), serializer);
+                                }
+                            } else {
+                                Serializer<?> serializer = kryo.getSerializer(concreteType);
+                                if (canBeNull(concreteType))
+                                    kryo.readObjectOrNull(input, concreteType, serializer);
+                                else
+                                    kryo.readObject(input, concreteType, serializer);
                             }
                         }
                     }
@@ -111,6 +124,14 @@ public class KryoSerializer implements ISerializer {
                 }
             }
             return super.read(kryo, input, type);
+        }
+
+        private boolean canBeNull(Class<?> clazz) {
+            return !clazz.isPrimitive();
+        }
+
+        private Class<?> concreteTypeFor(Class<?> clazz) {
+            return Modifier.isFinal(clazz.getModifiers()) ? clazz : null;
         }
 
         @Override
