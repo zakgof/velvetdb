@@ -20,7 +20,7 @@ allprojects {
       ossrhPassword = ossrhPass
       toolsVersion = '0.7.3-SNAPSHOT'
    }
-   version = '0.8.4-SNAPSHOT'
+   version = '0.8.5-SNAPSHOT'
 
    configurations.all {
       resolutionStrategy {
