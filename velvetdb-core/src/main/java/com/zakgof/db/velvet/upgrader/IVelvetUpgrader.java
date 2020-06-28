@@ -1,7 +1,7 @@
 package com.zakgof.db.velvet.upgrader;
 
+import com.zakgof.db.velvet.IFixer;
 import com.zakgof.db.velvet.entity.IEntityDef;
-import com.zakgof.serialize.IFixer;
 
 public interface IVelvetUpgrader {
 

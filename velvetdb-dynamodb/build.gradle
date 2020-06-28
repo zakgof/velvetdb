@@ -14,7 +14,6 @@ compileTestJava.dependsOn tasks.getByPath(':velvetdb-core:testClasses')
 
 dependencies {
     implementation 'com.github.zakgof:velvetdb-core:' + version
-    implementation 'com.github.zakgof:tools:' + toolsVersion
     implementation 'com.google.guava:guava:18.0'
     implementation 'com.amazonaws:aws-java-sdk-dynamodb:1.11.490'
     

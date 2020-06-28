@@ -1,5 +1,6 @@
 package com.zakgof.db.velvet.xodus;
 
+import com.zakgof.db.velvet.ISerializer;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.query.IKeyQuery;
@@ -7,7 +8,6 @@ import com.zakgof.db.velvet.query.ISecAnchor;
 import com.zakgof.db.velvet.query.ISecQuery;
 import com.zakgof.db.velvet.query.KeyQueries;
 import com.zakgof.db.velvet.query.SecQueries;
-import com.zakgof.serialize.ISerializer;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -474,7 +474,6 @@ class XodusVelvet implements IVelvet {
 
         @Override
         boolean check() {
-            ByteIterable key = cursor.getKey();
             return cursorValid;
         }
     }
