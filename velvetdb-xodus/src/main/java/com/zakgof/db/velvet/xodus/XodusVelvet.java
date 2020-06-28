@@ -1,5 +1,13 @@
 package com.zakgof.db.velvet.xodus;
 
+import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.VelvetException;
+import com.zakgof.db.velvet.query.IKeyQuery;
+import com.zakgof.db.velvet.query.ISecAnchor;
+import com.zakgof.db.velvet.query.ISecQuery;
+import com.zakgof.db.velvet.query.KeyQueries;
+import com.zakgof.db.velvet.query.SecQueries;
+import com.zakgof.serialize.ISerializer;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -11,16 +19,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.VelvetException;
-import com.zakgof.db.velvet.query.IKeyQuery;
-import com.zakgof.db.velvet.query.ISecAnchor;
-import com.zakgof.db.velvet.query.ISecQuery;
-import com.zakgof.db.velvet.query.KeyQueries;
-import com.zakgof.db.velvet.query.SecQueries;
-import com.zakgof.serialize.ISerializer;
-
 import jetbrains.exodus.ArrayByteIterable;
 import jetbrains.exodus.ByteIterable;
 import jetbrains.exodus.env.Cursor;
@@ -32,7 +30,7 @@ import jetbrains.exodus.env.Transaction;
 /**
  * Simple store:        No duplicates     ze(key)       ->  ze(value)
  * Sorted store:        No duplicates     xodus(key)    ->  ze(value)
- * Additional index:    With duplicates   xodus(metric) ->  ze(key) ??
+ * Additional index:    With duplicates   xodus(metric) ->  ze(key)
  *
  * TODO: add index on existing store ?
  *
@@ -282,7 +280,7 @@ class XodusVelvet implements IVelvet {
                 }
                 M indexValue = indexValue();
                 if (indexValue == null)
-                    return false;
+                    return below;
                 int compare = indexValue.compareTo(m);
                 if (compare == 0 && anchor.isIncluding())
                     return true;
@@ -314,12 +312,6 @@ class XodusVelvet implements IVelvet {
         @Override
         K get() {
             return BytesUtil.keyBiToObj(keyClass, cursor.getKey());
-        }
-
-        @Override
-        boolean check() {
-            ByteIterable key = cursor.getKey();
-            return cursorValid && key.getLength() != 0;
         }
 
         @Override
@@ -400,6 +392,12 @@ class XodusVelvet implements IVelvet {
         K indexValue() {
             return get();
         }
+
+        @Override
+        boolean check() {
+            ByteIterable key = cursor.getKey();
+            return cursorValid && key.getLength() != 0;
+        }
     }
 
     private class StoreIndexProcessor<K, V, M extends Comparable<? super M>> extends AStoreProcessor<K, M> implements IStoreIndex<K, M> {
@@ -422,9 +420,6 @@ class XodusVelvet implements IVelvet {
         public void add(V newValue, K key) {
             ByteIterable keyBi = BytesUtil.keyToBi(key);
             M indexValue = valueMetric.apply(newValue);
-            if (indexValue == null) {
-                throw new VelvetException("Null value for index [" + indexName + "] from value [" + newValue + "]");
-            }
             ByteIterable metricBi = BytesUtil.keyToBi(indexValue);
             store.put(tx, metricBi, keyBi);
         }
@@ -432,10 +427,6 @@ class XodusVelvet implements IVelvet {
         public void remove(V oldValue, K key) {
             ByteIterable keyBi = BytesUtil.keyToBi(key);
             M oldIndexValue = valueMetric.apply(oldValue);
-            if (oldIndexValue == null) {
-                System.err.println("Warning: null value for index [" + indexName + "] found when deleting the value [" + oldValue + "]");
-                return;
-            }
             ByteIterable metricBi = BytesUtil.keyToBi(oldIndexValue);
             try (Cursor cursor = store.openCursor(tx)) {
                 boolean find = cursor.getSearchBoth(metricBi, keyBi);
@@ -479,6 +470,12 @@ class XodusVelvet implements IVelvet {
                  System.err.println("" + key + "   -> " + keyMetric.apply(key) + "     -->   " + newValue);
                 add(newValue, key);
             }
+        }
+
+        @Override
+        boolean check() {
+            ByteIterable key = cursor.getKey();
+            return cursorValid;
         }
     }
 
