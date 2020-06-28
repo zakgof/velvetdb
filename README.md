@@ -34,7 +34,7 @@ Velvetdb's design is based on these principles making it distinct:
 
 - Transactional (on backends that support transactions)
 - Pure Java 8. No xmls or other config files needed
-- Pluggable serialization library (built-in Ze serializer / [kryo](https://github.com/EsotericSoftware/kryo) / [elsa](https://github.com/jankotek/elsa))
+- Pluggable serialization library ([kryo](https://github.com/EsotericSoftware/kryo) is the default; [elsa](https://github.com/jankotek/elsa) also supported)
 - Android support (on xodus)
 
 In development
@@ -52,12 +52,12 @@ Select the artifact matching your choice of backend: velvetdb-xodus, velvetdb-ma
 <dependency>
     <groupId>com.github.zakgof</groupId>
     <artifactId>velvetdb-xodus</artifactId>
-    <version>0.7.0</version>
+    <version>0.9.0</version>
 </dependency>
 ```
 or, using Gradle:
 ```groovy
-compile 'com.github.zakgof:velvetdb-xodus:0.7.0'    
+compile 'com.github.zakgof:velvetdb-xodus:0.9.0'
 ```
 
 For Android version:
