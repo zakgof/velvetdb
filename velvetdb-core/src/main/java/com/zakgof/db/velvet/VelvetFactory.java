@@ -1,13 +1,13 @@
 package com.zakgof.db.velvet;
 
+import com.zakgof.db.velvet.impl.cache.CachingVelvetEnvironment;
+import com.zakgof.tools.generic.Functions;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
-
-import com.zakgof.db.velvet.impl.cache.CachingVelvetEnvironment;
-import com.zakgof.tools.generic.Functions;
 
 /**
  * Manage velvetdb providers.
@@ -53,5 +53,20 @@ public class VelvetFactory {
     public static List<IVelvetProvider> getProviders() {
         ServiceLoader<IVelvetProvider> serviceLoader = ServiceLoader.load(IVelvetProvider.class);
         return Functions.stream(serviceLoader.iterator()).collect(Collectors.toList());
+    }
+
+    /**
+     * Generates velvetdb url for a file.
+     * @param provider velvetvb provider
+     * @param path file or directory path
+     * @return velvetdb url
+     */
+    public static String urlFromPath(String provider, Path path) {
+        String pathstr = path.toAbsolutePath().toUri().getPath();
+        try {
+            return new URI("velvetdb", provider, pathstr, null).toString();
+        } catch (URISyntaxException e) {
+            throw new VelvetException(e);
+        }
     }
 }
