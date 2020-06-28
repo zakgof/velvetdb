@@ -8,8 +8,8 @@ group = 'com.github.zakgof'
 archivesBaseName = 'velvetdb-serializer-elsa'
 
 dependencies {
-    compile group: 'com.github.zakgof', name: 'velvetdb-core', version: version
-    compile 'org.mapdb:elsa:3.0.0-M5'
+    implementation 'com.github.zakgof:velvetdb-core:' + version
+    implementation 'org.mapdb:elsa:3.0.0-M5'
 }
 
 tasks.withType(JavaCompile) {

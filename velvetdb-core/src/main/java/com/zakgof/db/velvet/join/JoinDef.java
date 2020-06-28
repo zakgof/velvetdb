@@ -555,16 +555,17 @@ public class JoinDef<MK, MV> {
 
         private <K, V> DataWrap<K, V> wrap(IEntityDef<K, V> entityDef, V node, Context<?, ?> parentContext) {
             Context<K, V> context = new Context<>(parentContext, entityDef, node);
-            DataWrap.Builder<K, V> wrapBuilder = new DataWrap.Builder<>(node);
+            
+            K key = entityDef.keyOf(node);
+            DataWrap.Builder<K, V> wrapBuilder = new DataWrap.Builder<K, V>(node).key(key);
+            context.setKey(key);
+            
             @SuppressWarnings("unchecked")
             FetcherEntity<K, V> entity = (FetcherEntity<K, V>) entities.get(entityDef);
             if (entity == null) {
                 return wrapBuilder.build();
             }
-            K key = entity.entityDef.keyOf(node);
-            wrapBuilder.key(key);
-            context.setKey(key);
-
+            
             if (entity != null) {
                 for (Entry<String, ? extends IMultiGetter<K, V, ?, ?>> entry : entity.multis.entrySet()) {
                     IMultiGetter<K, V, ?, ?> multiLinkDef = entry.getValue();

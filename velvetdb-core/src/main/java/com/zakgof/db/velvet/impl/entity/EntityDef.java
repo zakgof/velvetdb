@@ -178,4 +178,11 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     public String toString() {
         return "[" + kind + "]";
     }
+
+    @Override
+    public void recalcIndexes(IVelvet velvet) {
+        for (IStoreIndexDef<?, V> index : indexes) {
+            store(velvet).index(index.name()).recalculate();
+        }
+    }
 }

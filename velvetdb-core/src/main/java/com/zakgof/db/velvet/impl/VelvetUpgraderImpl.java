@@ -7,6 +7,8 @@ import java.util.concurrent.ExecutionException;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.zakgof.db.velvet.IFixer;
+import com.zakgof.db.velvet.IUpgrader;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.annotation.Key;
 import com.zakgof.db.velvet.entity.Entities;
@@ -14,8 +16,6 @@ import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.query.SecQueries;
 import com.zakgof.db.velvet.upgrader.IVelvetUpgrader;
 import com.zakgof.serialize.ClassStructure;
-import com.zakgof.serialize.IFixer;
-import com.zakgof.serialize.IUpgrader;
 
 class VelvetUpgraderImpl implements IVelvetUpgrader, IUpgrader {
 

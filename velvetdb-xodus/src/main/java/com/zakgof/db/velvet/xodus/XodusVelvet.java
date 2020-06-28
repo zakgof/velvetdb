@@ -1,5 +1,13 @@
 package com.zakgof.db.velvet.xodus;
 
+import com.zakgof.db.velvet.ISerializer;
+import com.zakgof.db.velvet.IVelvet;
+import com.zakgof.db.velvet.VelvetException;
+import com.zakgof.db.velvet.query.IKeyQuery;
+import com.zakgof.db.velvet.query.ISecAnchor;
+import com.zakgof.db.velvet.query.ISecQuery;
+import com.zakgof.db.velvet.query.KeyQueries;
+import com.zakgof.db.velvet.query.SecQueries;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -11,16 +19,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import com.zakgof.db.velvet.IVelvet;
-import com.zakgof.db.velvet.VelvetException;
-import com.zakgof.db.velvet.query.IKeyQuery;
-import com.zakgof.db.velvet.query.ISecAnchor;
-import com.zakgof.db.velvet.query.ISecQuery;
-import com.zakgof.db.velvet.query.KeyQueries;
-import com.zakgof.db.velvet.query.SecQueries;
-import com.zakgof.serialize.ISerializer;
-
 import jetbrains.exodus.ArrayByteIterable;
 import jetbrains.exodus.ByteIterable;
 import jetbrains.exodus.env.Cursor;
@@ -32,7 +30,7 @@ import jetbrains.exodus.env.Transaction;
 /**
  * Simple store:        No duplicates     ze(key)       ->  ze(value)
  * Sorted store:        No duplicates     xodus(key)    ->  ze(value)
- * Additional index:    With duplicates   xodus(metric) ->  ze(key) ??
+ * Additional index:    With duplicates   xodus(metric) ->  ze(key)
  *
  * TODO: add index on existing store ?
  *
@@ -83,14 +81,15 @@ class XodusVelvet implements IVelvet {
         }
 
         private <M extends Comparable<? super M>> StoreIndexProcessor<K, V, M> createStoreReq(IStoreIndexDef<M, V> indexDef) {
-            return new StoreIndexProcessor<>(keyClass, indexDef.metric(), keyMetric(indexDef), "#s" + kind + "/" + indexDef.name());
+            return new StoreIndexProcessor<>(keyClass, keyMetric(indexDef), indexDef, kind, this);
         }
 
         private <M extends Comparable<? super M>> Function<K, M> keyMetric(IStoreIndexDef<M, V> indexDef) {
             return key -> {
                 V v = get(key);
                 if (v == null) {
-                    throw new VelvetException("null value for key " + key + " received during secondary index retrieval");
+                    System.err.println("null value for key " + key + " received during secondary index retrieval ");
+                    return null;
                 }
                 return indexDef.metric().apply(v);
             };
@@ -107,14 +106,14 @@ class XodusVelvet implements IVelvet {
         K toObj(ByteIterable bi) {
             return XodusVelvet.this.toObj(keyClass, bi);
         }
-
-        @Override
-        public byte[] getRaw(K key) {
-            ByteIterable keyBi = toBi(key);
-            debug(valueMap);
-            ByteIterable valueBi = valueMap.get(tx, keyBi);
-            return valueBi == null ? null : biToByteArray(valueBi);
-        }
+//
+//        @Override
+//        public byte[] getRaw(K key) {
+//            ByteIterable keyBi = toBi(key);
+//            debug(valueMap);
+//            ByteIterable valueBi = valueMap.get(tx, keyBi);
+//            return valueBi == null ? null : biToByteArray(valueBi);
+//        }
 
         @Override
         public V get(K key) {
@@ -184,7 +183,7 @@ class XodusVelvet implements IVelvet {
         @SuppressWarnings("unchecked")
         @Override
         public <M extends Comparable<? super M>> IStoreIndex<K, M> index(String name) {
-            return query -> ((StoreIndexProcessor<K, V, M>) indexes.get(name)).go(query);
+            return ((StoreIndexProcessor<K, V, M>) indexes.get(name));
         }
 
     }
@@ -279,7 +278,10 @@ class XodusVelvet implements IVelvet {
                 if (m == null) {
                     return !get().equals(anchor.getKey());
                 }
-                int compare = indexValue().compareTo(m);
+                M indexValue = indexValue();
+                if (indexValue == null)
+                    return below;
+                int compare = indexValue.compareTo(m);
                 if (compare == 0 && anchor.isIncluding())
                     return true;
                 return compare < 0 && below || compare > 0 && !below; // TODO XOR
@@ -310,12 +312,6 @@ class XodusVelvet implements IVelvet {
         @Override
         K get() {
             return BytesUtil.keyBiToObj(keyClass, cursor.getKey());
-        }
-
-        @Override
-        boolean check() {
-            ByteIterable key = cursor.getKey();
-            return cursorValid && key.getLength() != 0;
         }
 
         @Override
@@ -396,36 +392,49 @@ class XodusVelvet implements IVelvet {
         K indexValue() {
             return get();
         }
+
+        @Override
+        boolean check() {
+            ByteIterable key = cursor.getKey();
+            return cursorValid && key.getLength() != 0;
+        }
     }
 
-    private class StoreIndexProcessor<K, V, M extends Comparable<? super M>> extends AStoreProcessor<K, M> {
+    private class StoreIndexProcessor<K, V, M extends Comparable<? super M>> extends AStoreProcessor<K, M> implements IStoreIndex<K, M> {
 
-        private Store store;
-        private Function<K, M> keyMetric;
-        private Function<V, M> valueMetric;
+        private final Store store;
+        private final Function<K, M> keyMetric;
+        private final Function<V, M> valueMetric;
+        private final IStore<K, V> parentStore;
+        private final String indexName;
 
-        StoreIndexProcessor(Class<K> keyClass, Function<V, M> valueMetric, Function<K, M> keyMetric, String storeName) {
+        StoreIndexProcessor(Class<K> keyClass, Function<K, M> keyMetric, IStoreIndexDef<M, V> indexDef, String kind, IStore<K, V> parentStore) {
             super(keyClass, keyMetric);
             this.keyMetric = keyMetric;
-            this.valueMetric = valueMetric;
-            this.store = env.openStore(storeName, StoreConfig.WITH_DUPLICATES, tx);
+            this.valueMetric =  indexDef.metric();
+            this.parentStore = parentStore;
+            this.indexName = indexDef.name();
+            this.store = env.openStore("#s" + kind + "/" + indexDef.name(), StoreConfig.WITH_DUPLICATES, tx);
         }
 
         public void add(V newValue, K key) {
             ByteIterable keyBi = BytesUtil.keyToBi(key);
-            ByteIterable metricBi = BytesUtil.keyToBi(valueMetric.apply(newValue));
+            M indexValue = valueMetric.apply(newValue);
+            ByteIterable metricBi = BytesUtil.keyToBi(indexValue);
             store.put(tx, metricBi, keyBi);
         }
 
         public void remove(V oldValue, K key) {
             ByteIterable keyBi = BytesUtil.keyToBi(key);
-            ByteIterable metricBi = BytesUtil.keyToBi(valueMetric.apply(oldValue));
+            M oldIndexValue = valueMetric.apply(oldValue);
+            ByteIterable metricBi = BytesUtil.keyToBi(oldIndexValue);
             try (Cursor cursor = store.openCursor(tx)) {
                 boolean find = cursor.getSearchBoth(metricBi, keyBi);
                 if (find) {
                     cursor.deleteCurrent();
                 } else {
-                    throw new VelvetException("Delete key not found " + metricBi);
+                    System.err.println("Warning: cannot find index [" + indexName + "] = " + oldIndexValue + " for "+ key + " -> " + oldValue + "  actual value is " + keyMetric.apply(key));
+                    // throw new VelvetException("Delete key not found " + metricBi);
                 }
             }
         }
@@ -440,8 +449,32 @@ class XodusVelvet implements IVelvet {
             return keyMetric.apply(get());
         }
 
-        List<K> go(ISecQuery<K, M> query) {
+        @Override
+        public List<K> keys(ISecQuery<K, M> query) {
             return go(store, query);
+        }
+
+        @Override
+        public void recalculate() {
+            try (Cursor cursor = store.openCursor(tx)) {
+                while (cursor.getNext()) {
+                     K k = BytesUtil.keyBiToObj(keyClass, cursor.getValue());
+                     String m = BytesUtil.keyBiToObj(String.class, cursor.getKey());
+                     System.err.println("Removing: " + m + "   ->   " + k);
+                     cursor.deleteCurrent();
+                }
+            }
+            List<K> keys = parentStore.keys();
+            for (K key : keys) {
+                V newValue = parentStore.get(key);
+                 System.err.println("" + key + "   -> " + keyMetric.apply(key) + "     -->   " + newValue);
+                add(newValue, key);
+            }
+        }
+
+        @Override
+        boolean check() {
+            return cursorValid;
         }
     }
 
@@ -453,11 +486,11 @@ class XodusVelvet implements IVelvet {
         return ze.deserialize(inputStream, clazz);
     }
 
-    private byte[] biToByteArray(ByteIterable bi) {
-        byte[] bytes = bi.getBytesUnsafe();
-        int length = bi.getLength();
-        return Arrays.copyOf(bytes, length);
-    }
+//    private byte[] biToByteArray(ByteIterable bi) {
+//        byte[] bytes = bi.getBytesUnsafe();
+//        int length = bi.getLength();
+//        return Arrays.copyOf(bytes, length);
+//    }
 
     private <T> ByteIterable toBi(T obj, Class<T> clazz) {
         ISerializer ze = serializerSupplier.get();

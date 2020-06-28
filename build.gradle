@@ -1,22 +1,32 @@
-apply plugin: 'java'
-compileJava.options.encoding = 'UTF-8'
+plugins {
+   id 'java'
+   id "maven"
+   id "maven-publish"
+   id 'com.adarshr.test-logger' version '1.6.0'
+}
 
 def ossrhUser = hasProperty('ossrhUsername') ? ossrhUsername : System.getenv('ossrhUsername')
 def ossrhPass = hasProperty('ossrhPassword') ? ossrhPassword : System.getenv('ossrhPassword')
 
 allprojects {
+
+   apply plugin: 'java'
+   sourceCompatibility = 1.8
+   targetCompatibility = 1.8
+   compileJava.options.encoding = 'UTF-8'
+
    ext {
-       ossrhUsername = ossrhUser
-       ossrhPassword = ossrhPass
+      ossrhUsername = ossrhUser
+      ossrhPassword = ossrhPass
    }
-   version = '0.7.3'
+   version = '0.9.0'
 
    configurations.all {
       resolutionStrategy {
-          dependencySubstitution {
-              substitute module("com.github.zakgof:velvetdb-core") with project(":velvetdb-core")
-          }
-       }
+         dependencySubstitution {
+            substitute module("com.github.zakgof:velvetdb-core") with project(":velvetdb-core")
+         }
+      }      
    }
 
    repositories {

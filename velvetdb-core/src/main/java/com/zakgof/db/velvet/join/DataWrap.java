@@ -1,6 +1,9 @@
 package com.zakgof.db.velvet.join;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.zakgof.db.velvet.entity.IEntityDef;
 import com.zakgof.db.velvet.link.IMultiLinkDef;
@@ -112,7 +115,8 @@ public class DataWrap<K, V> {
 
     @SuppressWarnings("unchecked")
     public <CK, CV> CV singleNode(ISingleLinkDef<K, V, CK, CV> linkDef) {
-        return (CV) singles.get(linkDef.getKind()).getNode();
+        DataWrap<?, ?> wrap = singles.get(linkDef.getKind());
+		return wrap == null ? null : (CV) wrap.getNode();
     }
 
     @SuppressWarnings("unchecked")

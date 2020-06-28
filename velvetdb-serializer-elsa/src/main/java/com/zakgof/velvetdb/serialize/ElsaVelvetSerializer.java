@@ -10,10 +10,9 @@ import java.util.List;
 
 import org.mapdb.elsa.ElsaMaker;
 import org.mapdb.elsa.ElsaSerializer;
-
+import com.zakgof.db.velvet.ISerializer;
+import com.zakgof.db.velvet.IUpgrader;
 import com.zakgof.db.velvet.VelvetException;
-import com.zakgof.serialize.ISerializer;
-import com.zakgof.serialize.IUpgrader;
 
 public class ElsaVelvetSerializer implements ISerializer {
 

@@ -2,11 +2,13 @@ package com.zakgof.db.velvet.dynamodb.test;
 
 import org.apache.commons.text.StrSubstitutor;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 
 import com.zakgof.db.velvet.IVelvetEnvironment;
 import com.zakgof.db.velvet.VelvetFactory;
 import com.zakgof.db.velvet.test.VelvetTestSuite;
 
+@Ignore
 public class DynamoDBVelvetTestSuite extends VelvetTestSuite {
 
     @BeforeClass

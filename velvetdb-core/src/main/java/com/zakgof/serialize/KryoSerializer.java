@@ -1,19 +1,6 @@
-package com.zakgof.velvetdb.serialize;
+package com.zakgof.serialize;
 
 import static com.esotericsoftware.kryo.Kryo.NULL;
-
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.objenesis.strategy.StdInstantiatorStrategy;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoException;
@@ -25,9 +12,18 @@ import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.zakgof.db.velvet.IFixer;
 import com.zakgof.db.velvet.ISerializer;
 import com.zakgof.db.velvet.IUpgrader;
-import com.zakgof.serialize.ClassStructure;
-import com.zakgof.serialize.ZeSerializer;
-import com.zakgof.serialize.ZeSerializerException;
+import com.zakgof.db.velvet.VelvetException;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import org.objenesis.strategy.StdInstantiatorStrategy;
 
 public class KryoSerializer implements ISerializer {
 
@@ -83,7 +79,7 @@ public class KryoSerializer implements ISerializer {
                 if (version != currentVersion) {
                     ClassStructure cs = upgrader.getStructureFor(type, (byte)version);
                     if (cs == null) {
-                        throw new ZeSerializerException("Upgrader cannot provide " + type.getName() + " ver." + version);
+                        throw new VelvetException("Upgrader cannot provide " + type.getName() + " ver." + version);
                     }
 
                     Map<String, Object> oldFieldValues = new HashMap<>();
@@ -164,7 +160,7 @@ public class KryoSerializer implements ISerializer {
 
         } catch (Exception e) {
         }
-        return ZeSerializer.getAllFields(clazz);
+        return ClassUtil.getAllFields(clazz);
     }
 
     private class UpgradableEnumSerializer<T extends Enum<T>> extends Serializer<T> {
@@ -200,7 +196,7 @@ public class KryoSerializer implements ISerializer {
                 if (version != currentVersion) {
                     ClassStructure cs = upgrader.getStructureFor(type, (byte)version);
                     if (cs == null) {
-                        throw new ZeSerializerException("Upgrader cannot provide " + type.getName() + " ver." + version);
+                        throw new VelvetException("Upgrader cannot provide " + type.getName() + " ver." + version);
                     }
                     String name = cs.getEnumLabel(input.readVarInt(true) - 1);
                     return Enum.valueOf(enumType, name);

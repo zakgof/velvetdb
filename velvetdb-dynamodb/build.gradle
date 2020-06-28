@@ -1,6 +1,9 @@
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'signing'
+plugins {
+    id 'java'
+    id "maven"
+    id "maven-publish"
+    id "signing"
+}
 
 compileJava.options.encoding = 'UTF-8'
 
@@ -10,12 +13,13 @@ archivesBaseName = 'velvetdb-dynamodb'
 compileTestJava.dependsOn tasks.getByPath(':velvetdb-core:testClasses')
 
 dependencies {
-    compile group: 'com.github.zakgof', name: 'velvetdb-core', version: version
-    compile 'com.google.guava:guava:18.0'
-    compile 'com.amazonaws:aws-java-sdk-dynamodb:1.11.490'
-    testCompile project(':velvetdb-core').sourceSets.test.output
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.apache.commons:commons-text:1.2'
+    implementation 'com.github.zakgof:velvetdb-core:' + version
+    implementation 'com.google.guava:guava:18.0'
+    implementation 'com.amazonaws:aws-java-sdk-dynamodb:1.11.490'
+    
+    testImplementation project(':velvetdb-core').sourceSets.test.output
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.apache.commons:commons-text:1.2'    
 }
 
 tasks.withType(JavaCompile) {

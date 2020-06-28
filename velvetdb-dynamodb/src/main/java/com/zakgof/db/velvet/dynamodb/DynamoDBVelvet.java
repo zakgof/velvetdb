@@ -1,24 +1,5 @@
 package com.zakgof.db.velvet.dynamodb;
 
-import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
 import com.amazonaws.services.dynamodbv2.document.BatchGetItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.BatchWriteItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
@@ -56,14 +37,33 @@ import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Primitives;
+import com.zakgof.db.velvet.ISerializer;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.db.velvet.query.IKeyAnchor;
 import com.zakgof.db.velvet.query.IKeyQuery;
 import com.zakgof.db.velvet.query.ISecAnchor;
 import com.zakgof.db.velvet.query.ISecQuery;
-import com.zakgof.serialize.ISerializer;
-import com.zakgof.tools.generic.Pair;
+import java.io.ByteArrayInputStream;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class DynamoDBVelvet implements IVelvet {
 
@@ -356,7 +356,11 @@ public class DynamoDBVelvet implements IVelvet {
             Map<K, V> partialResult = outcome.getTableItems().get(kind).stream().collect(Collectors.toMap(kGetter, vGetter));
             result.putAll(partialResult);
         }
-        LinkedHashMap<K, V> map = keys.stream().distinct().map(key -> Pair.create(key, result.get(key))).filter(p -> p.second() != null).collect(Collectors.toMap(Pair::first, Pair::second, (u, v) -> u, LinkedHashMap::new));
+        LinkedHashMap<K, V> map = keys.stream()
+            .distinct()
+            .map(key -> new AbstractMap.SimpleEntry<>(key, result.get(key)))
+            .filter(e -> e.getValue() != null)
+            .collect(Collectors.toMap(Entry::getKey, Entry::getValue, (u, v) -> u, LinkedHashMap::new));
         return map;
     }
 
@@ -473,11 +477,6 @@ public class DynamoDBVelvet implements IVelvet {
             return DynamoDBVelvet.this.batchGet(keys, kind, this::keyFor, Arrays.asList("id", "v"),
                                                 item -> valueFromItem(item, keyClass, "id", true),
                                                 item -> valueFromItem(item, valueClass, "v", false),  this::createTable);
-        }
-
-        @Override
-        public byte[] getRaw(K key) {
-            return null;
         }
 
         @Override
