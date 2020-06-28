@@ -9,7 +9,6 @@ archivesBaseName = 'velvetdb-serializer-elsa'
 
 dependencies {
     implementation 'com.github.zakgof:velvetdb-core:' + version
-    implementation 'com.github.zakgof:tools:' + toolsVersion
     implementation 'org.mapdb:elsa:3.0.0-M5'
 }
 

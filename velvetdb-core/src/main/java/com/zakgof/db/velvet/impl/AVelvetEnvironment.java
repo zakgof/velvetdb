@@ -1,16 +1,15 @@
 package com.zakgof.db.velvet.impl;
 
-import java.util.function.Supplier;
-
+import com.zakgof.db.velvet.ISerializer;
 import com.zakgof.db.velvet.IVelvetEnvironment;
 import com.zakgof.db.velvet.upgrader.IVelvetUpgrader;
-import com.zakgof.serialize.ISerializer;
-import com.zakgof.serialize.ZeSerializer;
+import com.zakgof.serialize.KryoSerializer;
+import java.util.function.Supplier;
 
 public abstract class AVelvetEnvironment implements IVelvetEnvironment {
 
     private VelvetUpgraderImpl upgrader;
-    private Supplier<ISerializer> serializerSupplier = () -> new ZeSerializer();
+    private Supplier<ISerializer> serializerSupplier = () -> new KryoSerializer();
 
     @Override
     public void setSerializer(Supplier<ISerializer> serializer) {

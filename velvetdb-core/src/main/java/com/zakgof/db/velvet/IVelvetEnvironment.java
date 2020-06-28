@@ -4,7 +4,6 @@ import java.util.function.Supplier;
 
 import com.zakgof.db.txn.ITransactionalEnvironment;
 import com.zakgof.db.velvet.upgrader.IVelvetUpgrader;
-import com.zakgof.serialize.ISerializer;
 
 /**
  * Velvet environment wraps an open database handle. Velvet environment provides velvet handles for transactions.

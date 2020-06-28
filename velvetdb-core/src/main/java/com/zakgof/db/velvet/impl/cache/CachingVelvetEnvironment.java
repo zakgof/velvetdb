@@ -6,10 +6,10 @@ import java.util.function.Supplier;
 
 import com.google.common.cache.Cache;
 import com.zakgof.db.txn.ITransactionCall;
+import com.zakgof.db.velvet.ISerializer;
 import com.zakgof.db.velvet.IVelvet;
 import com.zakgof.db.velvet.IVelvetEnvironment;
 import com.zakgof.db.velvet.upgrader.IVelvetUpgrader;
-import com.zakgof.serialize.ISerializer;
 
 public class CachingVelvetEnvironment implements IVelvetEnvironment {
 
