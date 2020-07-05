@@ -10,8 +10,7 @@ Velvetdb abstracts out the underlying database concepts like columns or tables a
 
 Velvetdb is implemented on top the following backends:
 
-  - [xodus](https://github.com/JetBrains/xodus) - embedded database
-  - [mapdb](http://www.mapdb.org/) - embedded database
+  - [xodus](https://github.com/JetBrains/xodus) - extremely fast embedded database
   - [dynamodb](https://aws.amazon.com/dynamodb/) - cloud database
 
 
@@ -30,15 +29,20 @@ Velvetdb's design is based on these principles making it distinct:
 - **Secondary indexes** are supported with range queries applicable.
 - One-to-one, one-to-many and many-to-many **relationships** are supported. Range queries on linked entities are supported.
 
-## Other features
+## Main features
 
-- Transactional (on backends that support transactions)
 - Pure Java 8. No xmls or other config files needed
+- Transactional (on backends that support transactions)
 - Pluggable serialization library ([kryo](https://github.com/EsotericSoftware/kryo) is the default; [elsa](https://github.com/jankotek/elsa) also supported)
-- Android support (on xodus)
+- Android support (on xodus), min SDK version is 19
+- Join queries
+- Automatic schema migration support
 
-In development
-- Schema migration support
+
+# Android notes
+
+Velvetdb uses Java 8 features and Java 8 APIs. In order to use them on older Android platforms, use Android Gradle plugin 4.0.0+ with [system lib desugaring](https://developer.android.com/studio/write/java8-support#library-desugaring).
+For ProGuard/R8 config refer to [consumer-rules.pro](https://github.com/zakgof/velvetdb/tree/master/velvetdb-core/consumer-rules.pro). 
 
 # Getting Started
 
