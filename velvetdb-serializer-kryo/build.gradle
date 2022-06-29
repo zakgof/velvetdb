@@ -1,6 +1,4 @@
 apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'signing'
 
 compileJava.options.encoding = 'UTF-8'
 
@@ -9,87 +7,5 @@ archivesBaseName = 'velvetdb-serializer-kryo'
 
 dependencies {
     implementation 'com.github.zakgof:velvetdb-core:' + version
-    implementation 'com.github.zakgof:tools:' + toolsVersion
-    implementation 'com.esotericsoftware:kryo:4.0.0'
-}
-
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
-
-tasks.withType(Javadoc) {
-    options.encoding = 'UTF-8'
-}
-
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task testJar(type: Jar) {
-    classifier = 'tests'
-    from sourceSets.test.output
-}
-
-test {
-    exclude "**"
-}
-
-artifacts {
-    archives javadocJar, sourcesJar, testJar
-}
-
-signing {
-    sign configurations.archives
-}
-
-uploadArchives {
-  repositories {
-    mavenDeployer {
-      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-        authentication(userName: ossrhUsername, password: ossrhPassword)
-      }
-
-      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-        authentication(userName: ossrhUsername, password: ossrhPassword)
-      }
-
-      pom.project {
-        packaging 'jar'
-        artifactId 'velvetdb-serializer-kryo'
-        url 'https://github.com/zakgof/velvetdb'
-
-        name 'velvetdb-serializer-kryo'
-        description 'Kryo serializer plugin for velvetdb'
-
-        scm {
-          connection 'scm:git:https://github.com/zakgof/velvetdb.git'
-          developerConnection 'scm:git:https://github.com/zakgof/velvetdb.git'
-          url 'https://github.com/zakgof/velvetdb/tree/master/velvetdb-serializer-kryo'
-        }
-
-        licenses {
-          license {
-            name 'The Apache License, Version 2.0'
-            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-          }
-        }
-
-        developers {
-          developer {
-            id 'zakgof'
-            name 'Oleksandr Zakusylo'
-            email 'zakgof@gmail.com'
-          }
-        }
-      }
-    }
-  }
+    implementation 'com.esotericsoftware:kryo:5.3.0'
 }

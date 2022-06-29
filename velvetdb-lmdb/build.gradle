@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+}
+
+compileJava.options.encoding = 'UTF-8'
+
+group = 'com.github.zakgof'
+archivesBaseName = 'velvetdb-lmdb'
+
+compileTestJava.dependsOn tasks.getByPath(':velvetdb-core:testClasses')
+
+dependencies {
+
+    implementation 'org.lmdbjava:lmdbjava:0.8.2'
+
+
+    implementation 'com.github.zakgof:velvetdb-core:' + version
+    testImplementation project(':velvetdb-core').sourceSets.test.output
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testImplementation 'org.junit.platform:junit-platform-suite-api:1.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-suite-engine:1.8.2'
+    testImplementation 'org.junit.platform:junit-platform-engine:1.8.2'
+    testImplementation 'org.junit.platform:junit-platform-launcher:1.8.2'
+    testImplementation 'org.assertj:assertj-core:3.22.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+test {
+    useJUnitPlatform()
+}
