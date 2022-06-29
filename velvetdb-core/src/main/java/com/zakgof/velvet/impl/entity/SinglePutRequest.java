@@ -1,7 +1,7 @@
 package com.zakgof.velvet.impl.entity;
 
 import com.zakgof.velvet.IVelvet;
-import com.zakgof.velvet.request.IEntityDef;
+import com.zakgof.velvet.entity.IEntityDef;
 import com.zakgof.velvet.request.IWriteRequest;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

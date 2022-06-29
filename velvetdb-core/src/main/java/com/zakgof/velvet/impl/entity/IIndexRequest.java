@@ -5,8 +5,10 @@ public interface IIndexRequest<K, V, M> {
 
     boolean descending();
 
-    IBound<K, V, M> upper(); // TODO
+    int limit();
+    int offset();
 
+    IBound<K, V, M> upper();
     IBound<K, V, M> lower();
 
     IndexDef<K, V, M> indexDef();

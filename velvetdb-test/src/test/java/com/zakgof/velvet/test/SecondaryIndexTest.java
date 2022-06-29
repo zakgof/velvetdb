@@ -1,7 +1,7 @@
 package com.zakgof.velvet.test;
 
 import com.zakgof.velvet.entity.Entities;
-import com.zakgof.velvet.request.IEntityDef;
+import com.zakgof.velvet.entity.IEntityDef;
 import com.zakgof.velvet.test.defs.Person;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -447,5 +447,31 @@ public class SecondaryIndexTest extends AVelvetTest {
                 "AX42", "AX32", "AX22", "AX12", "AX02",
                 "AX41", "AX31", "AX21", "AX11", "AX01",
                 "AX40", "AX30", "AX20", "AX10", "AX00"));
+    }
+
+    @Test
+    void first() {
+        List<String> keys = personEntity.<String>index("ln")
+                .query()
+                .first()
+                .descending(true)
+                .get()
+                .asKeyList()
+                .execute(velvetEnv);
+
+        assertThat(keys).isEqualTo(List.of("AX00"));
+    }
+
+    @Test
+    void last() {
+        List<String> keys = personEntity.<String>index("ln")
+                .query()
+                .first()
+                .descending(true)
+                .get()
+                .asKeyList()
+                .execute(velvetEnv);
+
+        assertThat(keys).isEqualTo(List.of("AX49"));
     }
 }

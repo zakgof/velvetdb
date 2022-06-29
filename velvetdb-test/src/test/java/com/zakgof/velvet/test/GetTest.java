@@ -1,7 +1,7 @@
 package com.zakgof.velvet.test;
 
 import com.zakgof.velvet.entity.Entities;
-import com.zakgof.velvet.request.IEntityDef;
+import com.zakgof.velvet.entity.IEntityDef;
 import com.zakgof.velvet.test.defs.Person;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -6,7 +6,7 @@ import com.zakgof.velvet.annotation.Key;
 import com.zakgof.velvet.annotation.Kind;
 import com.zakgof.velvet.impl.entity.EntityDef;
 import com.zakgof.velvet.impl.entity.IndexInfo;
-import com.zakgof.velvet.request.IEntityDef;
+import com.zakgof.velvet.impl.entity.SortedEntityDef;
 import lombok.SneakyThrows;
 
 import java.lang.annotation.Annotation;
@@ -200,8 +200,10 @@ final public class Entities {
          */
         @SuppressWarnings("unchecked")
         public <K extends Comparable<? super K>> ISortableEntityDef<K, V> makeSorted() {
-            // TODO
-            return null; // new SortedAnnoEntityDef<>(clazz, (AnnoKeyProvider<K, V>) annoKeyProvider, kind, indexes);
+            if (key == null) {
+                throw new VelvetException("No key defined");
+            }
+            return new SortedEntityDef<K, V>(kind, valueClass, (IndexInfo) key, indexes);
         }
 
         /**
@@ -213,8 +215,8 @@ final public class Entities {
          * @return entity definition
          */
         public <K extends Comparable<? super K>> ISortableEntityDef<K, V> makeSorted(Class<K> keyClass, Function<V, K> keyFunction) {
-            // TODO
-            return null; //new SortedEntityDef<>(keyClass, clazz, kind, keyFunction, indexes);
+            IndexInfo<K, V> keyIndex = new IndexInfo<>(null, keyClass, keyFunction);
+            return new SortedEntityDef<K, V>(kind, valueClass, keyIndex, indexes);
         }
 
         /**

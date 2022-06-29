@@ -1,13 +1,15 @@
 package com.zakgof.velvet.xodus;
 
+import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.velvet.ISerializer;
 import com.zakgof.velvet.IVelvet;
 import com.zakgof.velvet.impl.entity.EntityDef;
 import com.zakgof.velvet.impl.entity.IIndexRequest;
-import com.zakgof.velvet.request.IEntityDef;
+import com.zakgof.velvet.entity.IEntityDef;
 import com.zakgof.velvet.request.IIndexDef;
 import jetbrains.exodus.ArrayByteIterable;
 import jetbrains.exodus.ByteIterable;
+import jetbrains.exodus.ExodusException;
 import jetbrains.exodus.env.*;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,16 +37,8 @@ class XodusVelvet implements IVelvet {
 
     @Override
     public <K, V> void singlePut(IEntityDef<K, V> entityDef, V value) {
-        final Store store = storeForEntity(entityDef);
+        final Store store = writeStore(entityDef);
         put(entityDef, value, store);
-    }
-
-    private <K, V> Store storeForEntity(IEntityDef<K, V> entityDef) {
-        return env.openStore("s/" + entityDef.kind(), StoreConfig.WITHOUT_DUPLICATES, txn);
-    }
-
-    private <K, V, M> Store storeForIndex(IIndexDef<K, V, M> index) {
-        return env.openStore("s/" + index.entity().kind() + "/" + index.name(), StoreConfig.WITH_DUPLICATES, txn);
     }
 
     private <K, V> void put(IEntityDef<K, V> entityDef, V value, Store store) {
@@ -70,7 +64,7 @@ class XodusVelvet implements IVelvet {
 
     private <K, V, M> void deleteFromIndex(IIndexDef<K, V, M> index, K key, V value) {
         M indexValue = index.getter().apply(value);
-        Store store = storeForIndex(index);
+        Store store = writeStore(index);
         deleteFromIndexStore(store, key, index.entity().keyClass(), indexValue, index.type(), index.entity().sorted());
     }
 
@@ -91,7 +85,7 @@ class XodusVelvet implements IVelvet {
 
     private <K, V, M> void putToIndex(IIndexDef<K, V, M> index, K key, V value) {
         M indexValue = index.getter().apply(value);
-        Store store = storeForIndex(index);
+        Store store = writeStore(index);
         putToStore(store, indexValue, index.type(), key, index.entity().keyClass(), true);
     }
 
@@ -103,7 +97,7 @@ class XodusVelvet implements IVelvet {
 
     @Override
     public <K, V> void multiPut(IEntityDef<K, V> entityDef, Collection<V> values) {
-        final Store store = storeForEntity(entityDef);
+        final Store store = writeStore(entityDef);
         for (V value : values) {
             put(entityDef, value, store);
         }
@@ -111,8 +105,8 @@ class XodusVelvet implements IVelvet {
 
     @Override
     public <K, V> V singleGet(IEntityDef<K, V> entityDef, K key) {
-        final Store store = storeForEntity(entityDef);
-        return get(entityDef, key, store);
+        final Store store = readStore(entityDef);
+        return store == null ? null : get(entityDef, key, store);
     }
 
     @Nullable
@@ -124,7 +118,10 @@ class XodusVelvet implements IVelvet {
 
     @Override
     public <K, V> Map<K, V> multiGet(EntityDef<K, V> entityDef, Collection<K> keys) {
-        final Store store = storeForEntity(entityDef);
+        final Store store = readStore(entityDef);
+        if (store == null) {
+            return Map.of();
+        }
         return keys.stream()
                 .flatMap(key -> Stream.of(get(entityDef, key, store))
                         .filter(Objects::nonNull)
@@ -134,7 +131,10 @@ class XodusVelvet implements IVelvet {
 
     @Override
     public <K, V> Map<K, V> multiGetAll(EntityDef<K, V> entityDef) {
-        final Store store = storeForEntity(entityDef);
+        final Store store = readStore(entityDef);
+        if (store == null) {
+            return Map.of();
+        }
         Map<K, V> map = new LinkedHashMap<>();
         try (Cursor cursor = store.openCursor(txn)) {
             while (cursor.getNext()) {
@@ -151,10 +151,15 @@ class XodusVelvet implements IVelvet {
         IEntityDef<K, V> entityDef = indexRequest.indexDef().entity();
         Class<M> indexClass = indexRequest.indexDef().type();
         Class<K> keyClass = entityDef.keyClass();
-        final Store store = storeForEntity(entityDef);
-        final Store indexStore = storeForIndex(indexRequest.indexDef());
+        final Store store = readStore(entityDef);
+        boolean primary = indexRequest.indexDef().name().isEmpty();
+        final Store indexStore = primary ? readStore(entityDef) : readStore(indexRequest.indexDef());
 
         Map<K, V> map = new LinkedHashMap<>();
+
+        if (indexStore == null) {
+            return map;
+        }
 
         try (Cursor cursor = indexStore.openCursor(txn)) {
             while (cursor.getNext()) {
@@ -190,6 +195,7 @@ class XodusVelvet implements IVelvet {
             ByteIterable endKey = endBound != null && endBound.key() != null
                     ? serialize(keyClass, endBound.key(), false) : null;
 
+            int offsetToGo = indexRequest.offset();
             do {
 
                 ByteIterable indexBuffer = cursor.getKey();
@@ -202,10 +208,14 @@ class XodusVelvet implements IVelvet {
                     }
                 }
 
-                K key = deserialize(keyBuffer, keyClass);
-                V value = get(entityDef, key, store);
-                map.put(key, value);
-            } while (indexRequest.descending() ? cursor.getPrev() : cursor.getNext());
+                if (offsetToGo > 0) {
+                    offsetToGo--;
+                } else {
+                    K key = primary ? (K) deserializeXodus(indexBuffer, indexClass) : deserialize(keyBuffer, keyClass);
+                    V value = primary ? (V) deserialize(keyBuffer, entityDef.valueClass()) : get(entityDef, key, store);
+                    map.put(key, value);
+                }
+            } while ((indexRequest.descending() ? cursor.getPrev() : cursor.getNext()) && (indexRequest.limit() < 0 || map.size() < indexRequest.limit()));
         }
         return map;
     }
@@ -268,13 +278,34 @@ class XodusVelvet implements IVelvet {
         return false;
     }
 
+    @Override
+    public <K, V> void singleDelete(IEntityDef<K, V> entityDef, K key) {
+        Store store = writeStore(entityDef);
+        // TODO
+    }
+
+    @Override
+    public <K, V> void multiDelete(IEntityDef<K, V> entityDef, Collection<K> keys) {
+        Store store = writeStore(entityDef);
+        // TODO
+    }
+
+    @Override
+    public <K, V> void initialize(IEntityDef<K, V> entityDef) {
+        writeStore(entityDef);
+    }
+
     private <V> V deserialize(ByteIterable bi, Class<V> clazz) {
         byte[] bytes = bi.getBytesUnsafe();
         return serializer.deserialize(new ByteArrayInputStream(bytes), clazz);
     }
 
-    private <T> ByteIterable serialize(Class<T> clazz, T object, boolean keySorted) {
-        if (keySorted) {
+    private <V> V deserializeXodus(ByteIterable bi, Class<V> clazz) {
+        return KeyUtil.deserialize(clazz, bi);
+    }
+
+    private <T> ByteIterable serialize(Class<T> clazz, T object, boolean xodus) {
+        if (xodus) {
             return KeyUtil.serialize(object);
         } else {
             byte[] bytes = serializer.serialize(object, clazz);
@@ -282,4 +313,32 @@ class XodusVelvet implements IVelvet {
         }
     }
 
+    private <K, V> Store readStore(IEntityDef<K, V> entityDef) {
+        return openStore("s/" + entityDef.kind(), StoreConfig.USE_EXISTING);
+    }
+
+    private <K, V, M> Store readStore(IIndexDef<K, V, M> index) {
+        return openStore("s/" + index.entity().kind() + "/" + index.name(), StoreConfig.USE_EXISTING);
+    }
+
+    private <K, V> Store writeStore(IEntityDef<K, V> entityDef) {
+        return openStore("s/" + entityDef.kind(), StoreConfig.WITHOUT_DUPLICATES);
+    }
+
+    private <K, V, M> Store writeStore(IIndexDef<K, V, M> index) {
+        return openStore("s/" + index.entity().kind() + "/" + index.name(), StoreConfig.WITH_DUPLICATES);
+    }
+
+    private <K, V> Store openStore(String name, StoreConfig config) {
+        try {
+            return env.openStore(name, config, txn);
+        } catch (ExodusException e) {
+            if (StoreConfig.USE_EXISTING == config && e.getMessage().startsWith("Can't restore meta information for store")) {
+                return null;
+            }
+            throw new VelvetException(e);
+        }
+    }
+
 }
+

@@ -5,7 +5,7 @@ import com.zakgof.velvet.ISerializer;
 import com.zakgof.velvet.IVelvet;
 import com.zakgof.velvet.impl.entity.EntityDef;
 import com.zakgof.velvet.impl.entity.IIndexRequest;
-import com.zakgof.velvet.request.IEntityDef;
+import com.zakgof.velvet.entity.IEntityDef;
 import org.lmdbjava.*;
 
 import java.io.ByteArrayInputStream;
@@ -104,6 +104,21 @@ class LmdbVelvet implements IVelvet {
     public <K, V, M> Map<K, V> multiIndexGet(IIndexRequest<K, V, M> indexRequest) {
         // TODO implement me
         return null;
+    }
+
+    @Override
+    public <K, V> void singleDelete(IEntityDef<K, V> entityDef, K key) {
+
+    }
+
+    @Override
+    public <K, V> void multiDelete(IEntityDef<K, V> entityDef, Collection<K> keys) {
+
+    }
+
+    @Override
+    public <K, V> void initialize(IEntityDef<K, V> entityDef) {
+
     }
 
     @Override

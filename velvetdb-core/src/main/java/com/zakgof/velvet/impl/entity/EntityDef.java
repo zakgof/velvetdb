@@ -1,5 +1,6 @@
 package com.zakgof.velvet.impl.entity;
 
+import com.zakgof.velvet.entity.IEntityDef;
 import com.zakgof.velvet.properties.IPropertyAccessor;
 import com.zakgof.velvet.request.*;
 import lombok.Getter;
@@ -24,12 +25,17 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     private final String kind;
 
     @Getter
-    private final boolean sorted = false; // TODO
+    private final boolean sorted;
 
     private final Function<V, K> keyFunction;
     private final Map<String, IIndexDef<K,V,?>> indexes;
 
     public EntityDef(String kind, Class<V> valueClass, IndexInfo<K, V> key, List<IndexInfo<?, V>> indexes) {
+        this(false, kind, valueClass, key, indexes);
+    }
+
+    EntityDef(boolean sorted, String kind, Class<V> valueClass, IndexInfo<K, V> key, List<IndexInfo<?, V>> indexes) {
+        this.sorted = sorted;
         this.keyClass = key.type();
         this.valueClass = valueClass;
         this.kind = kind;
@@ -71,7 +77,11 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
 
     @Override
     public IEntityDelete<K, V> delete() {
-        return null;
+        return new EntityDelete(this);
     }
 
+    @Override
+    public IWriteRequest initialize() {
+        return velvet -> velvet.initialize(this);
+    }
 }

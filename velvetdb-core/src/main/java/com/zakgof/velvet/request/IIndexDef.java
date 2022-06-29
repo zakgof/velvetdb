@@ -1,5 +1,7 @@
 package com.zakgof.velvet.request;
 
+import com.zakgof.velvet.entity.IEntityDef;
+
 import java.util.function.Function;
 
 public interface IIndexDef<K, V, I> {

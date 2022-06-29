@@ -2,7 +2,7 @@ package com.zakgof.velvet.test;
 
 import com.zakgof.db.velvet.VelvetException;
 import com.zakgof.velvet.entity.Entities;
-import com.zakgof.velvet.request.IEntityDef;
+import com.zakgof.velvet.entity.IEntityDef;
 import com.zakgof.velvet.test.defs.NoKey;
 import com.zakgof.velvet.test.defs.OneKey;
 import com.zakgof.velvet.test.defs.TwoKeys;
