@@ -19,5 +19,4 @@ public interface IVelvetEnvironment extends AutoCloseable {
      */
     @Override
     void close(); // Not throwing anything
-
 }

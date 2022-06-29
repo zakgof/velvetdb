@@ -454,7 +454,6 @@ public class SecondaryIndexTest extends AVelvetTest {
         List<String> keys = personEntity.<String>index("ln")
                 .query()
                 .first()
-                .descending(true)
                 .get()
                 .asKeyList()
                 .execute(velvetEnv);
@@ -466,8 +465,7 @@ public class SecondaryIndexTest extends AVelvetTest {
     void last() {
         List<String> keys = personEntity.<String>index("ln")
                 .query()
-                .first()
-                .descending(true)
+                .last()
                 .get()
                 .asKeyList()
                 .execute(velvetEnv);

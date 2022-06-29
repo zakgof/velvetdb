@@ -3,6 +3,10 @@ plugins {
 }
 
 allprojects {
+
+   compileJava.options.encoding = 'UTF-8'
+   version = '0.9.0-SNAPSHOT'
+
    configurations.all {
       resolutionStrategy {
          dependencySubstitution {

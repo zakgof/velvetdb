@@ -2,19 +2,10 @@ plugins {
     id 'java'
 }
 
-compileJava.options.encoding = 'UTF-8'
-
-group = 'com.github.zakgof'
 archivesBaseName = 'velvetdb-xodus'
-
-compileTestJava.dependsOn tasks.getByPath(':velvetdb-core:testClasses')
 
 dependencies {
     implementation 'com.github.zakgof:velvetdb-core:' + version
     implementation 'org.jetbrains.xodus:xodus-environment:2.0.1'
-    testImplementation project(':velvetdb-core').sourceSets.test.output
-}
-
-repositories {
-    mavenCentral()
+    testImplementation project(':velvetdb-test').sourceSets.test.output
 }

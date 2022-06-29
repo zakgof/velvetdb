@@ -86,5 +86,4 @@ public class LmdbVelvetEnv implements IVelvetEnvironment {
     public void close() {
         env.close();
     }
-
 }

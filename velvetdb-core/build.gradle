@@ -2,14 +2,3 @@ plugins {
     id "io.freefair.lombok" version "6.4.2"
     id "java"
 }
-
-group = 'com.github.zakgof'
-
-dependencies {
-
-
-}
-
-test {
-    useJUnitPlatform()
-}
