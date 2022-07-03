@@ -1,6 +1,6 @@
 package com.zakgof.velvet.lmdb;
 
-import com.zakgof.db.velvet.VelvetException;
+import com.zakgof.velvet.VelvetException;
 import com.zakgof.velvet.ISerializer;
 import com.zakgof.velvet.IVelvet;
 import com.zakgof.velvet.impl.entity.EntityDef;
@@ -98,6 +98,15 @@ class LmdbVelvet implements IVelvet {
                     return map;
                 }
         );
+    }
+
+    @Override
+    public <K, V, M> V singleIndexGet(IIndexRequest<K, V, M> indexRequest) {
+        Map<K, V> result = multiIndexGet(indexRequest);
+        if (result.size() > 1) {
+            throw new VelvetException("singleIndexGet returned multiple entries");
+        }
+        return result.isEmpty() ? null : result.values().iterator().next();
     }
 
     @Override

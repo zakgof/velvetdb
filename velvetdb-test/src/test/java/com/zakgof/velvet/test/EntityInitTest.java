@@ -1,6 +1,6 @@
 package com.zakgof.velvet.test;
 
-import com.zakgof.db.velvet.VelvetException;
+import com.zakgof.velvet.VelvetException;
 import com.zakgof.velvet.entity.Entities;
 import com.zakgof.velvet.entity.IEntityDef;
 import com.zakgof.velvet.test.defs.NoKey;

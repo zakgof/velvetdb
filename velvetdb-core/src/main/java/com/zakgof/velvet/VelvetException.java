@@ -1,4 +1,4 @@
-package com.zakgof.db.velvet;
+package com.zakgof.velvet;
 
 /**
  * Velvetdb exception.

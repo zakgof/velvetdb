@@ -1,23 +1,27 @@
 package com.zakgof.velvet.test;
 
 import com.zakgof.velvet.entity.Entities;
-import com.zakgof.velvet.entity.ISortableEntityDef;
+import com.zakgof.velvet.entity.ISortedEntityDef;
 import com.zakgof.velvet.test.defs.Person;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.zakgof.velvet.test.AssertTools.assertKeyList;
+import static com.zakgof.velvet.test.AssertTools.assertKeyListEmpty;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class PrimaryIndexTest extends AVelvetTest {
 
-    private final ISortableEntityDef<String, Person> personEntity = Entities.from(Person.class)
+    private final ISortedEntityDef<String, Person> personEntity = Entities.from(Person.class)
             .makeSorted();
-    private final ISortableEntityDef<String, Person> personEntityEmpty = Entities.from(Person.class)
+    private final ISortedEntityDef<String, Person> personEntityEmpty = Entities.from(Person.class)
             .kind("person-empty")
             .makeSorted();
 
@@ -38,122 +42,308 @@ public class PrimaryIndexTest extends AVelvetTest {
     }
 
     @Test
-    void testGetAllOrder() {
+    void getAllOrder() {
         List<String> keys = personEntity.get()
                 .all()
                 .asKeyList()
                 .execute(velvetEnv);
 
-        assertThat(keys).isEqualTo(List.of("AX00", "AX01", "AX02", "AX03", "AX04", "AX05", "AX06", "AX07", "AX08", "AX09"));
+        assertKeyList("AX00|AX01|AX02|AX03|AX04|AX05|AX06|AX07|AX08|AX09", keys);
     }
 
-    @Test
-    void testEq() {
+    @ParameterizedTest
+    @CsvSource({
+            "AX00,AX00",
+            "AX05,AX05",
+            "AX09,AX09",
+            "AX0, ",
+            "AX050, ",
+            "AX091, "
+    })
+    void eq(String input, String expected) {
         List<String> keys = personEntity.index()
                 .query()
-                .eq("AX05")
+                .eq(input)
                 .get()
                 .asKeyList()
                 .execute(velvetEnv);
 
-        assertThat(keys).isEqualTo(List.of("AX05"));
+        assertKeyList(expected, keys);
     }
 
-    @Test
-    void testEqUp() {
+    @ParameterizedTest
+    @CsvSource({
+            "AX00,AX00",
+            "AX05,AX05",
+            "AX09,AX09",
+            "AX0, ",
+            "AX050, ",
+            "AX091, "
+    })
+    void eqDesc(String input, String expected) {
         List<String> keys = personEntity.index()
                 .query()
-                .eq("AX109")
+                .eq(input)
+                .descending(true)
                 .get()
                 .asKeyList()
                 .execute(velvetEnv);
 
-        assertThat(keys).isEmpty();
+        assertKeyList(expected, keys);
     }
 
     @Test
-    void testEqDown() {
-        List<String> keys = personEntity.index()
-                .query()
-                .eq("AX")
-                .get()
-                .asKeyList()
-                .execute(velvetEnv);
-
-        assertThat(keys).isEmpty();
-    }
-
-    @Test
-    void testEqMiddle() {
-        List<String> keys = personEntity.index()
-                .query()
-                .eq("AX056")
-                .get()
-                .asKeyList()
-                .execute(velvetEnv);
-
-        assertThat(keys).isEmpty();
-    }
-
-    @Test
-    void testFirst() {
-        List<String> keys = personEntity.index()
+    void first() {
+        Person person = personEntity.index()
                 .query()
                 .first()
-                .get()
-                .asKeyList()
                 .execute(velvetEnv);
 
-        assertThat(keys).isEqualTo(List.of("AX00"));
+        assertThat(person.passportNo()).isEqualTo("AX00");
     }
 
     @Test
-    void testLast() {
+    void last() {
+        Person person = personEntity.index()
+                .query()
+                .last()
+                .execute(velvetEnv);
+
+        assertThat(person.passportNo()).isEqualTo("AX09");
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "AX00, AX01|AX02|AX03|AX04|AX05|AX06|AX07|AX08|AX09",
+            "AX05, AX06|AX07|AX08|AX09",
+            "AX09, ",
+            "AX0,  AX00|AX01|AX02|AX03|AX04|AX05|AX06|AX07|AX08|AX09",
+            "AX050,AX06|AX07|AX08|AX09",
+            "AX091,"
+    })
+    void gt(String input, String expected) {
         List<String> keys = personEntity.index()
                 .query()
-                .last()
+                .gt(input)
                 .get()
                 .asKeyList()
                 .execute(velvetEnv);
 
-        assertThat(keys).isEqualTo(List.of("AX09"));
+        assertKeyList(expected, keys);
     }
 
-    @Test
-    void testEqEmpty() {
-        List<String> keys = personEntityEmpty.index()
+    @ParameterizedTest
+    @CsvSource({
+            "AX00, AX09|AX08|AX07|AX06|AX05|AX04|AX03|AX02|AX01",
+            "AX05, AX09|AX08|AX07|AX06",
+            "AX09, ",
+            "AX0,  AX09|AX08|AX07|AX06|AX05|AX04|AX03|AX02|AX01|AX00",
+            "AX050,AX09|AX08|AX07|AX06",
+            "AX091,"
+    })
+    void gtDesc(String input, String expected) {
+        List<String> keys = personEntity.index()
                 .query()
-                .eq("AX05")
+                .gt(input)
+                .descending(true)
                 .get()
                 .asKeyList()
                 .execute(velvetEnv);
 
-        assertThat(keys).isEmpty();
+        assertKeyList(expected, keys);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "AX00, AX00|AX01|AX02|AX03|AX04|AX05|AX06|AX07|AX08|AX09",
+            "AX05, AX05|AX06|AX07|AX08|AX09",
+            "AX09, AX09",
+            "AX0,  AX00|AX01|AX02|AX03|AX04|AX05|AX06|AX07|AX08|AX09",
+            "AX050,AX06|AX07|AX08|AX09",
+            "AX091,"
+    })
+    void gte(String input, String expected) {
+        List<String> keys = personEntity.index()
+                .query()
+                .gte(input)
+                .get()
+                .asKeyList()
+                .execute(velvetEnv);
+
+        assertKeyList(expected, keys);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "AX00, AX09|AX08|AX07|AX06|AX05|AX04|AX03|AX02|AX01|AX00",
+            "AX05, AX09|AX08|AX07|AX06|AX05",
+            "AX09, AX09",
+            "AX0,  AX09|AX08|AX07|AX06|AX05|AX04|AX03|AX02|AX01|AX00",
+            "AX050,AX09|AX08|AX07|AX06",
+            "AX091,"
+    })
+    void gteDesc(String input, String expected) {
+        List<String> keys = personEntity.index()
+                .query()
+                .gte(input)
+                .descending(true)
+                .get()
+                .asKeyList()
+                .execute(velvetEnv);
+
+        assertKeyList(expected, keys);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "AX00, ",
+            "AX05, AX00|AX01|AX02|AX03|AX04",
+            "AX09, AX00|AX01|AX02|AX03|AX04|AX05|AX06|AX07|AX08",
+            "AX0,  ",
+            "AX050,AX00|AX01|AX02|AX03|AX04|AX05",
+            "AX091,AX00|AX01|AX02|AX03|AX04|AX05|AX06|AX07|AX08|AX09",
+    })
+    void lt(String input, String expected) {
+        List<String> keys = personEntity.index()
+                .query()
+                .lt(input)
+                .get()
+                .asKeyList()
+                .execute(velvetEnv);
+
+        assertKeyList(expected, keys);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "AX00, ",
+            "AX05, AX04|AX03|AX02|AX01|AX00",
+            "AX09, AX08|AX07|AX06|AX05|AX04|AX03|AX02|AX01|AX00",
+            "AX0,  ",
+            "AX050,AX05|AX04|AX03|AX02|AX01|AX00",
+            "AX091,AX09|AX08|AX07|AX06|AX05|AX04|AX03|AX02|AX01|AX00",
+    })
+    void ltDesc(String input, String expected) {
+        List<String> keys = personEntity.index()
+                .query()
+                .lt(input)
+                .descending(true)
+                .get()
+                .asKeyList()
+                .execute(velvetEnv);
+
+        assertKeyList(expected, keys);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "AX00, AX00",
+            "AX05, AX00|AX01|AX02|AX03|AX04|AX05",
+            "AX09, AX00|AX01|AX02|AX03|AX04|AX05|AX06|AX07|AX08|AX09",
+            "AX0,  ",
+            "AX050,AX00|AX01|AX02|AX03|AX04|AX05",
+            "AX091,AX00|AX01|AX02|AX03|AX04|AX05|AX06|AX07|AX08|AX09",
+    })
+    void lte(String input, String expected) {
+        List<String> keys = personEntity.index()
+                .query()
+                .lte(input)
+                .get()
+                .asKeyList()
+                .execute(velvetEnv);
+
+        assertKeyList(expected, keys);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "AX00, AX00",
+            "AX05, AX05|AX04|AX03|AX02|AX01|AX00",
+            "AX09, AX09|AX08|AX07|AX06|AX05|AX04|AX03|AX02|AX01|AX00",
+            "AX0,  ",
+            "AX050,AX05|AX04|AX03|AX02|AX01|AX00",
+            "AX091,AX09|AX08|AX07|AX06|AX05|AX04|AX03|AX02|AX01|AX00",
+    })
+    void lteDesc(String input, String expected) {
+        List<String> keys = personEntity.index()
+                .query()
+                .lte(input)
+                .descending(true)
+                .get()
+                .asKeyList()
+                .execute(velvetEnv);
+
+        assertKeyList(expected, keys);
     }
 
     @Test
-    void testFirstEmpty() {
-        List<String> keys = personEntityEmpty.index()
+    void firstEmpty() {
+        Person person = personEntityEmpty.index()
                 .query()
                 .first()
-                .get()
-                .asKeyList()
                 .execute(velvetEnv);
 
-        assertThat(keys).isEmpty();
+        assertThat(person).isNull();
     }
 
     @Test
-    void testLastEmpty() {
-        List<String> keys = personEntityEmpty.index()
+    void lastEmpty() {
+        Person person = personEntityEmpty.index()
                 .query()
                 .last()
+                .execute(velvetEnv);
+
+        assertThat(person).isNull();
+    }
+
+    @Test
+    void ltEmpty() {
+        List<String> keys = personEntityEmpty.index()
+                .query()
+                .lt("value")
                 .get()
                 .asKeyList()
                 .execute(velvetEnv);
 
-        assertThat(keys).isEmpty();
+        assertKeyListEmpty(keys);
     }
+
+    @Test
+    void gtEmpty() {
+        List<String> keys = personEntityEmpty.index()
+                .query()
+                .gt("value")
+                .get()
+                .asKeyList()
+                .execute(velvetEnv);
+
+        assertKeyListEmpty(keys);
+    }
+
+    @Test
+    void lteEmpty() {
+        List<String> keys = personEntityEmpty.index()
+                .query()
+                .lte("value")
+                .get()
+                .asKeyList()
+                .execute(velvetEnv);
+
+        assertKeyListEmpty(keys);
+    }
+
+    @Test
+    void gteEmpty() {
+        List<String> keys = personEntityEmpty.index()
+                .query()
+                .gte("value")
+                .get()
+                .asKeyList()
+                .execute(velvetEnv);
+
+        assertKeyListEmpty(keys);
+    }
+
 
 
 }

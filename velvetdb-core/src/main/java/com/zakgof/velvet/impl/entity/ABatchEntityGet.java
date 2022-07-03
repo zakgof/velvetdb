@@ -1,14 +1,14 @@
 package com.zakgof.velvet.impl.entity;
 
 import com.zakgof.velvet.IVelvet;
-import com.zakgof.velvet.request.IBatchEntityGet;
+import com.zakgof.velvet.request.IBatchGet;
 import com.zakgof.velvet.request.IReadRequest;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-abstract class ABatchEntityGet<K, V> implements IBatchEntityGet<K, V> {
+abstract class ABatchEntityGet<K, V> implements IBatchGet<K, V> {
 
     @Override
     public IReadRequest<List<K>> asKeyList() {

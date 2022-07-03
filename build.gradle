@@ -1,23 +1,30 @@
 plugins {
-   id 'java'
+    id 'java'
+}
+
+ext {
+    groupId = 'com.github.zakgof'
+    ossrhUser = hasProperty('ossrhUsername') ? ossrhUsername : System.getenv('ossrhUsername')
+    ossrhPass = hasProperty('ossrhPassword') ? ossrhPassword : System.getenv('ossrhPassword')
 }
 
 allprojects {
 
-   compileJava.options.encoding = 'UTF-8'
-   version = '0.9.0-SNAPSHOT'
+    compileJava.options.encoding = 'UTF-8'
+    version = '0.9.0-SNAPSHOT'
 
-   configurations.all {
-      resolutionStrategy {
-         dependencySubstitution {
-            substitute module("com.github.zakgof:velvetdb-core") with project(":velvetdb-core")
-            substitute module("com.github.zakgof:velvetdb-lmdb") with project(":velvetdb-lmdb")
-            substitute module("com.github.zakgof:velvetdb-serializer-kryo") with project(":velvetdb-serializer-kryo")
-         }
-      }      
-   }
+    configurations.all {
+        resolutionStrategy {
+            dependencySubstitution {
+                substitute module("com.github.zakgof:velvetdb-core") with project(":velvetdb-core")
+                substitute module("com.github.zakgof:velvetdb-lmdb") with project(":velvetdb-lmdb")
+                substitute module("com.github.zakgof:velvetdb-serializer-kryo") with project(":velvetdb-serializer-kryo")
+            }
+        }
+    }
 
-   repositories {
-      mavenCentral()
-   }
+    repositories {
+        mavenCentral()
+    }
+
 }

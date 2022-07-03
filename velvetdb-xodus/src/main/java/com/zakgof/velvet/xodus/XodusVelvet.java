@@ -1,6 +1,6 @@
 package com.zakgof.velvet.xodus;
 
-import com.zakgof.db.velvet.VelvetException;
+import com.zakgof.velvet.VelvetException;
 import com.zakgof.velvet.ISerializer;
 import com.zakgof.velvet.IVelvet;
 import com.zakgof.velvet.impl.entity.EntityDef;
@@ -147,6 +147,15 @@ class XodusVelvet implements IVelvet {
     }
 
     @Override
+    public <K, V, M> V singleIndexGet(IIndexRequest<K, V, M> indexRequest) {
+        Map<K, V> result = multiIndexGet(indexRequest);
+        if (result.size() > 1) {
+            throw new VelvetException("singleIndexGet returned multiple entries");
+        }
+        return result.isEmpty() ? null : result.values().iterator().next();
+    }
+
+    @Override
     public <K, V, M> Map<K, V> multiIndexGet(IIndexRequest<K, V, M> indexRequest) {
         IEntityDef<K, V> entityDef = indexRequest.indexDef().entity();
         Class<M> indexClass = indexRequest.indexDef().type();
@@ -169,7 +178,7 @@ class XodusVelvet implements IVelvet {
 
         try (Cursor cursor = indexStore.openCursor(txn)) {
 
-            IIndexRequest.IBound<K, V, M> start = indexRequest.descending() ? indexRequest.upper() : indexRequest.lower();
+            IIndexRequest.IBound<K, M> start = indexRequest.descending() ? indexRequest.upper() : indexRequest.lower();
             if (start != null) {
                 if (start.index() != null) {
                     ByteIterable indexBi = serialize(indexClass, start.index(), true);
@@ -188,7 +197,7 @@ class XodusVelvet implements IVelvet {
                 return map;
             }
 
-            IIndexRequest.IBound<K, V, M> endBound = indexRequest.descending() ? indexRequest.lower() : indexRequest.upper();
+            IIndexRequest.IBound<K, M> endBound = indexRequest.descending() ? indexRequest.lower() : indexRequest.upper();
 
             ByteIterable endIndex = endBound != null && endBound.index() != null
                     ? serialize(indexClass, endBound.index(), true) : null;
@@ -248,22 +257,15 @@ class XodusVelvet implements IVelvet {
                     return true;
                 }
             }
-            if (!cursor.getPrevNoDup()) {
-                return false;
-            }
+            return cursor.getPrevNoDup();
         } else {
             key = cursor.getSearchKeyRange(indexBi);
             if (key != null) {
-                if (!cursor.getPrevNoDup()) {
-                    return false;
-                }
+                return cursor.getPrevNoDup();
             } else {
-                if (!cursor.getLast()) {
-                    return false;
-                }
+                return cursor.getLast();
             }
         }
-        return true;
     }
 
     private boolean gotoStart(Cursor cursor, boolean inclusive, boolean descending, ByteIterable indexBi, ByteIterable keyBi) {
@@ -271,11 +273,25 @@ class XodusVelvet implements IVelvet {
     }
 
     private boolean gotoStartAsc(Cursor cursor, boolean inclusive, ByteIterable indexBi, ByteIterable keyBi) {
-        return false;
+        ByteIterable bi = cursor.getSearchBothRange(indexBi, keyBi);
+        if (bi == null) {
+            return false;
+        }
+        if (bi.equals(keyBi) && !inclusive) {
+            return cursor.getNext();
+        }
+        return true;
     }
 
     private boolean gotoStartDesc(Cursor cursor, boolean inclusive, ByteIterable indexBi, ByteIterable keyBi) {
-        return false;
+        ByteIterable bi = cursor.getSearchBothRange(indexBi, keyBi);
+        if (bi == null) {
+            return false;
+        }
+        if (bi.equals(keyBi) && !inclusive) {
+            return cursor.getPrev();
+        }
+        return true;
     }
 
     @Override

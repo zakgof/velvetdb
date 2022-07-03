@@ -1,7 +1,7 @@
 package com.zakgof.velvet.impl.entity;
 
 import com.zakgof.velvet.IVelvet;
-import com.zakgof.velvet.request.IBatchEntityGet;
+import com.zakgof.velvet.request.IBatchGet;
 import com.zakgof.velvet.request.IEntityGet;
 import com.zakgof.velvet.request.IReadRequest;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +20,12 @@ public class EntityGet<K, V> implements IEntityGet<K, V> {
     }
 
     @Override
-    public IBatchEntityGet<K, V> keys(Collection<K> keys) {
+    public IBatchGet<K, V> keys(Collection<K> keys) {
         return new MultiGetRequest(keys);
     }
 
     @Override
-    public IBatchEntityGet<K, V> all() {
+    public IBatchGet<K, V> all() {
         return new MultiGetAllRequest();
     }
 

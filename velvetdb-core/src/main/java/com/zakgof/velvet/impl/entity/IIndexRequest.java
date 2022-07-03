@@ -8,12 +8,12 @@ public interface IIndexRequest<K, V, M> {
     int limit();
     int offset();
 
-    IBound<K, V, M> upper();
-    IBound<K, V, M> lower();
+    IBound<K, M> upper();
+    IBound<K, M> lower();
 
     IndexDef<K, V, M> indexDef();
 
-    interface IBound<K, V, M> {
+    interface IBound<K, M> {
         K key();
         M index();
         boolean inclusive();

@@ -1,6 +1,7 @@
 package com.zakgof.velvet;
 
-import com.zakgof.db.velvet.VelvetException;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -15,7 +16,8 @@ import java.util.stream.StreamSupport;
 /**
  * Manage velvetdb providers.
  */
-public class VelvetFactory {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class VelvetFactory {
 
     /**
      * Connects to a velvetdb database.

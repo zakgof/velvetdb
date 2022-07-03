@@ -1,8 +1,7 @@
 package com.zakgof.velvet.impl.entity;
 
 import com.zakgof.velvet.IVelvet;
-import com.zakgof.velvet.request.IBatchEntityGet;
-import com.zakgof.velvet.request.IIndexQuery;
+import com.zakgof.velvet.request.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
@@ -12,7 +11,7 @@ import java.util.Map;
 @Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor
-public class IndexQuery<K, V, M> implements IIndexQuery<K, V, M>, IIndexRequest<K, V, M> {
+public class IndexQuery<K, V, M> implements IBatchIndexQuery<K, V, M>, IIndexRequest<K, V, M> {
 
     private final IndexDef<K, V, M> indexDef;
 
@@ -23,88 +22,88 @@ public class IndexQuery<K, V, M> implements IIndexQuery<K, V, M>, IIndexRequest<
     @RequiredArgsConstructor
     @Getter
     @Accessors(fluent = true)
-    public static class Bound<K, V, M> implements IBound<K, V, M> {
+    public static class Bound<K, M> implements IBound<K, M> {
         private final K key;
         private final M index;
         private final boolean inclusive;
     }
 
-    private Bound<K, V, M> upper;
-    private Bound<K, V, M> lower;
+    private Bound<K, M> upper;
+    private Bound<K, M> lower;
 
     @Override
-    public IIndexQuery<K, V, M> eq(M index) {
+    public IndexQuery<K, V, M> eq(M index) {
         lower = new Bound<>(null, index, true);
         upper = new Bound<>(null, index, true);
         return this;
     }
 
     @Override
-    public IIndexQuery<K, V, M> gt(M index) {
+    public IndexQuery<K, V, M> gt(M index) {
         lower = new Bound<>(null, index, false);
         return this;
     }
 
     @Override
-    public IIndexQuery<K, V, M> gte(M index) {
+    public IndexQuery<K, V, M> gte(M index) {
         lower = new Bound<>(null, index, true);
         return this;
     }
 
     @Override
-    public IIndexQuery<K, V, M> lt(M index) {
+    public IndexQuery<K, V, M> lt(M index) {
         upper = new Bound<>(null, index, false);
         return this;
     }
 
     @Override
-    public IIndexQuery<K, V, M> lte(M index) {
+    public IndexQuery<K, V, M> lte(M index) {
         upper = new Bound<>(null, index, true);
         return this;
     }
 
     @Override
-    public IIndexQuery<K, V, M> limit(int limit) {
+    public IndexQuery<K, V, M> limit(int limit) {
         this.limit = limit;
         return this;
     }
 
     @Override
-    public IIndexQuery<K, V, M> offset(int offset) {
+    public IndexQuery<K, V, M> offset(int offset) {
         this.offset = offset;
         return this;
     }
 
     @Override
-    public IIndexQuery<K, V, M> descending(boolean descending) {
+    public IndexQuery<K, V, M> descending(boolean descending) {
         this.descending = descending;
         return this;
     }
 
     @Override
-    public IIndexQuery<K, V, M> first() {
-        return descending(false).limit(1).offset(0);
+    public IReadRequest<V> first() {
+        return velvet -> velvet.singleIndexGet(descending(false).limit(1));
     }
 
     @Override
-    public IIndexQuery<K, V, M> next(V value) {
-        lower = new Bound<>(indexDef.entity().keyOf(value), null, false);
-        return descending(false).limit(1).offset(0);
+    public IReadRequest<V> next(V value) {
+        lower = new Bound<>(indexDef.entity().keyOf(value), indexDef.getter().apply(value), false);
+        return velvet -> velvet.singleIndexGet(descending(false).limit(1));
     }
 
     @Override
-    public IIndexQuery<K, V, M> last() {
-        return descending(true).limit(1).offset(0);
+    public IReadRequest<V> last() {
+        return velvet -> velvet.singleIndexGet(descending(true).limit(1));
     }
 
     @Override
-    public IIndexQuery<K, V, M> prev(V value) {
-        upper = new Bound<>(indexDef.entity().keyOf(value), null, false);
-        return descending(true).limit(1).offset(0);
+    public IReadRequest<V> prev(V value) {
+        upper = new Bound<>(indexDef.entity().keyOf(value), indexDef.getter().apply(value), false);
+        return velvet -> velvet.singleIndexGet(descending(true).limit(1));
     }
 
     @Override
-    public IBatchEntityGet<K, V> get() {
+    public IBatchGet<K, V> get() {
         return new MultiIndexGetRequest();
     }
 

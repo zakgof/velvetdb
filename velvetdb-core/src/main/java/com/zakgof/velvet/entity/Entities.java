@@ -1,12 +1,14 @@
 package com.zakgof.velvet.entity;
 
-import com.zakgof.db.velvet.VelvetException;
+import com.zakgof.velvet.VelvetException;
 import com.zakgof.velvet.annotation.Index;
 import com.zakgof.velvet.annotation.Key;
 import com.zakgof.velvet.annotation.Kind;
 import com.zakgof.velvet.impl.entity.EntityDef;
 import com.zakgof.velvet.impl.entity.IndexInfo;
 import com.zakgof.velvet.impl.entity.SortedEntityDef;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
 import java.lang.annotation.Annotation;
@@ -21,7 +23,8 @@ import java.util.stream.Stream;
 /**
  * Utility class for creating entities.
  */
-final public class Entities {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class Entities {
 
     public static <K, V> IEntityDef<K, V> create(Class<V> valueClass) {
         return from(valueClass).make();
@@ -31,7 +34,7 @@ final public class Entities {
         return from(valueClass).makeKeyless();
     }
 
-    public static <K extends Comparable<? super K>, V> ISortableEntityDef<K, V> sorted(Class<V> valueClass) {
+    public static <K extends Comparable<? super K>, V> ISortedEntityDef<K, V> sorted(Class<V> valueClass) {
         return from(valueClass).makeSorted();
     }
 
@@ -39,7 +42,7 @@ final public class Entities {
         return from(valueClass).makeSet();
     }
 
-    public static <V extends Comparable<? super V>> ISortableSetEntityDef<V> sortedSet(Class<V> valueClass) {
+    public static <V extends Comparable<? super V>> ISortedSetEntityDef<V> sortedSet(Class<V> valueClass) {
         return from(valueClass).makeSortedSet();
     }
 
@@ -87,7 +90,7 @@ final public class Entities {
         private IndexInfo<?, V> key(List<Field> fields, List<Method> methods) {
             List<IndexInfo> keyInfos = fields.stream()
                     .flatMap(field -> anno(field, Key.class)
-                            .map(anno -> createKey(field, anno))
+                            .map(anno -> createKey(field))
                     ).collect(Collectors.toList());
 
             // TODO: scan methods
@@ -101,7 +104,7 @@ final public class Entities {
             }
         }
 
-        private IndexInfo createKey(Field field, Key anno) {
+        private IndexInfo createKey(Field field) {
             field.setAccessible(true);
             return new IndexInfo(null, field.getType(), v -> fieldGet(field, v));
         }
@@ -134,12 +137,11 @@ final public class Entities {
             Kind annotation = clazz.getAnnotation(Kind.class);
             if (annotation != null)
                 return annotation.value();
-            String kind = clazz.getSimpleName().toLowerCase(Locale.ENGLISH);
-            return kind;
+            return clazz.getSimpleName().toLowerCase(Locale.ENGLISH);
         }
 
         public <M extends Comparable<? super M>> Builder<V> index(String name, Function<V, M> metric, Class<M> metricClass) {
-            indexes.add(new IndexInfo<M, V>(name, metricClass, metric));
+            indexes.add(new IndexInfo<>(name, metricClass, metric));
             return this;
         }
 
@@ -165,7 +167,7 @@ final public class Entities {
             if (key == null) {
                 throw new VelvetException("No key defined");
             }
-            return new EntityDef<K, V>(kind, valueClass, (IndexInfo) key, indexes);
+            return new EntityDef<>(kind, valueClass, (IndexInfo) key, indexes);
         }
 
         /**
@@ -179,7 +181,7 @@ final public class Entities {
         @SuppressWarnings({"unchecked", "rawtypes"})
         public <K> IEntityDef<K, V> make(Class<K> keyClass, Function<V, K> keyFunction) {
             IndexInfo<K, V> keyIndex = new IndexInfo<>(null, keyClass, keyFunction);
-            return new EntityDef<K, V>(kind, valueClass, keyIndex, indexes);
+            return new EntityDef<>(kind, valueClass, keyIndex, indexes);
         }
 
         /**
@@ -199,7 +201,7 @@ final public class Entities {
          * @return entity definition
          */
         @SuppressWarnings("unchecked")
-        public <K extends Comparable<? super K>> ISortableEntityDef<K, V> makeSorted() {
+        public <K extends Comparable<? super K>> ISortedEntityDef<K, V> makeSorted() {
             if (key == null) {
                 throw new VelvetException("No key defined");
             }
@@ -214,9 +216,9 @@ final public class Entities {
          * @param keyFunction function returning primary key from an entity
          * @return entity definition
          */
-        public <K extends Comparable<? super K>> ISortableEntityDef<K, V> makeSorted(Class<K> keyClass, Function<V, K> keyFunction) {
+        public <K extends Comparable<? super K>> ISortedEntityDef<K, V> makeSorted(Class<K> keyClass, Function<V, K> keyFunction) {
             IndexInfo<K, V> keyIndex = new IndexInfo<>(null, keyClass, keyFunction);
-            return new SortedEntityDef<K, V>(kind, valueClass, keyIndex, indexes);
+            return new SortedEntityDef<>(kind, valueClass, keyIndex, indexes);
         }
 
         /**
@@ -232,11 +234,11 @@ final public class Entities {
         /**
          * Creates a sorted set entity definition - entity which key is its value itself. The entity class must implement {@code Comparable}.
          *
-         * @param <VS> key and value class
+         * @param <S> key and value class
          * @return entity definition
          */
         @SuppressWarnings({"unchecked", "rawtypes"})
-        public <VS extends Comparable<? super VS>> ISortableSetEntityDef<VS> makeSortedSet() {
+        public <S extends Comparable<? super S>> ISortedSetEntityDef<S> makeSortedSet() {
             // TODO
             return null; //new SortedSetEntityDef(clazz, kind, indexes);
         }

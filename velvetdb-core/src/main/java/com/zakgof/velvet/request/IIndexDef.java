@@ -14,5 +14,5 @@ public interface IIndexDef<K, V, I> {
 
     Class<I> type();
 
-    IIndexQuery<K, V, I> query();
+    IBatchIndexQuery<K, V, I> query();
 }

@@ -5,5 +5,5 @@ package com.zakgof.velvet.entity;
  *
  * @param <V> value type
  */
-public interface IKeylessEntityDef<V> extends ISortableEntityDef<Long, V> {
+public interface IKeylessEntityDef<V> extends ISortedEntityDef<Long, V> {
 }

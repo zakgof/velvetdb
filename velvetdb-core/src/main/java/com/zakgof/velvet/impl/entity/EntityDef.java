@@ -67,17 +67,17 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
 
     @Override
     public IEntityGet<K, V> get() {
-        return new EntityGet(this);
+        return new EntityGet<>(this);
     }
 
     @Override
     public IEntityPut<K, V> put() {
-        return new EntityPut(this);
+        return new EntityPut<>(this);
     }
 
     @Override
     public IEntityDelete<K, V> delete() {
-        return new EntityDelete(this);
+        return new EntityDelete<>(this);
     }
 
     @Override

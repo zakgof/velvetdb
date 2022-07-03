@@ -22,6 +22,8 @@ public interface IVelvet {
 
     <K, V, M> Map<K, V> multiIndexGet(IIndexRequest<K, V, M> indexRequest);
 
+    <K, V, M> V singleIndexGet(IIndexRequest<K, V, M> indexRequest);
+
     <K, V> void singleDelete(IEntityDef<K, V> entityDef, K key);
 
     <K, V> void multiDelete(IEntityDef<K, V> entityDef, Collection<K> keys);

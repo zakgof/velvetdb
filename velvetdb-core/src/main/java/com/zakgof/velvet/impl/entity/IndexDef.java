@@ -2,7 +2,7 @@ package com.zakgof.velvet.impl.entity;
 
 import com.zakgof.velvet.entity.IEntityDef;
 import com.zakgof.velvet.request.IIndexDef;
-import com.zakgof.velvet.request.IIndexQuery;
+import com.zakgof.velvet.request.IBatchIndexQuery;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
@@ -19,7 +19,7 @@ public class IndexDef<K, V, M> implements IIndexDef<K, V, M> {
     private final Class<M> type;
 
     @Override
-    public IIndexQuery<K, V, M> query() {
-        return new IndexQuery(this);
+    public IBatchIndexQuery<K, V, M> query() {
+        return new IndexQuery<>(this);
     }
 }
