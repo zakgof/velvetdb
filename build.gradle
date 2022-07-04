@@ -2,12 +2,6 @@ plugins {
     id 'java'
 }
 
-ext {
-    groupId = 'com.github.zakgof'
-    ossrhUser = hasProperty('ossrhUsername') ? ossrhUsername : System.getenv('ossrhUsername')
-    ossrhPass = hasProperty('ossrhPassword') ? ossrhPassword : System.getenv('ossrhPassword')
-}
-
 allprojects {
 
     compileJava.options.encoding = 'UTF-8'

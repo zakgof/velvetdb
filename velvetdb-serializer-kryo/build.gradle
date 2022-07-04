@@ -1,11 +1,93 @@
-apply plugin: 'java'
+plugins {
+    id "java"
+    id 'maven-publish'
+    id 'jacoco'
+    id "io.freefair.lombok" version "6.4.2"
+    id 'org.sonarqube' version '3.4.0.2513'
+}
 
-compileJava.options.encoding = 'UTF-8'
-
-group = 'com.github.zakgof'
 archivesBaseName = 'velvetdb-serializer-kryo'
 
 dependencies {
     implementation 'com.github.zakgof:velvetdb-core:' + version
     implementation 'com.esotericsoftware:kryo:5.3.0'
 }
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+test {
+    finalizedBy jacocoTestReport
+    useJUnitPlatform()
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = archivesBaseName
+            groupId = 'com.github.zakgof'
+            version = version
+            from(components["java"])
+            pom {
+                name = 'velvetdb-serializer-kryo'
+                description = 'Java-centric NoSql database - Kryo serializer'
+                url = 'https://github.com/zakgof/velvetdb'
+
+                scm {
+                    connection = 'scm:git:https://github.com/zakgof/velvetdb.git'
+                    developerConnection = 'scm:git:https://github.com/zakgof/velvetdb.git'
+                    url = 'https://github.com/zakgof/velvetdb/tree/master/velvetdb-serializer-kryo'
+                }
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'zakgof'
+                        name = 'Oleksandr Zakusylo'
+                        email = 'zakgof@gmail.com'
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = 'https://oss.sonatype.org/content/repositories/snapshots'
+            credentials {
+                username = ossrhUsername
+                password = ossrhPassword
+            }
+        }
+        mavenLocal()
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "zakgof_" + archivesBaseName
+        property "sonar.organization", "zakgof"
+        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.login", project.hasProperty('sonarlogin') ? sonarlogin : null
+    }
+}
+
+tasks['sonarqube'].dependsOn test
+

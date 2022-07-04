@@ -24,12 +24,12 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             artifactId = archivesBaseName
-            groupId = group
+            groupId = 'com.github.zakgof'
             version = version
             from(components["java"])
             pom {
                 name = 'velvetdb-core'
-                description = 'Simple Java actor model implementation'
+                description = 'Java-centric NoSql database'
                 url = 'https://github.com/zakgof/velvetdb'
 
                 scm {
@@ -59,8 +59,8 @@ publishing {
         maven {
             url = 'https://oss.sonatype.org/content/repositories/snapshots'
             credentials {
-                username = ossrhUser
-                password = ossrhPass
+                username = ossrhUsername
+                password = ossrhPassword
             }
         }
         mavenLocal()

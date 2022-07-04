@@ -33,8 +33,7 @@ public class KryoSerializer implements ISerializer {
     @Override
     public <T> T deserialize(InputStream stream, Class<T> clazz) {
         Input input = new Input(stream);
-        T object = kryo.readObject(input, clazz);
-        return object;
+        return kryo.readObject(input, clazz);
     }
 
     public Kryo getKryo() {

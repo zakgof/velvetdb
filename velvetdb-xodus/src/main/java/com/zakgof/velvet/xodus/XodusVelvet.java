@@ -297,13 +297,29 @@ class XodusVelvet implements IVelvet {
     @Override
     public <K, V> void singleDelete(IEntityDef<K, V> entityDef, K key) {
         Store store = writeStore(entityDef);
-        // TODO
+        delete(entityDef, key, store);
     }
 
     @Override
     public <K, V> void multiDelete(IEntityDef<K, V> entityDef, Collection<K> keys) {
         Store store = writeStore(entityDef);
-        // TODO
+        for (K key : keys) {
+            delete(entityDef, key, store);
+        }
+    }
+
+    private <V, K> void delete(IEntityDef<K,V> entityDef, K key, Store store) {
+        ByteIterable keyBuffer = serialize(entityDef.keyClass(), key, entityDef.sorted());
+        if (!entityDef.indexes().isEmpty()) {
+            V oldValue = get(entityDef, key, store);
+            for (String indexName : entityDef.indexes()) {
+                IIndexDef<K, V, ?> index = entityDef.index(indexName);
+                if (oldValue != null) {
+                    deleteFromIndex(index, key, oldValue);
+                }
+            }
+        }
+        store.delete(txn, keyBuffer);
     }
 
     @Override
