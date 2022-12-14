@@ -9,13 +9,13 @@ archivesBaseName = 'velvetdb-core'
 
 dependencies {
     implementation 'com.google.guava:guava:18.0'
-    implementation 'com.esotericsoftware:kryo:4.0.0'
+    implementation 'com.esotericsoftware:kryo:4.0.2'
 
     testImplementation 'junit:junit:4.13'
     testImplementation 'org.apache.commons:commons-text:1.2'
     testImplementation 'org.ow2.asm:asm:7.3.1'
     testImplementation 'org.ow2.asm:asm-commons:7.3.1'
-    testImplementation 'org.objenesis:objenesis:2.6'
+    testImplementation 'org.objenesis:objenesis:3.3'
 }
 
 tasks.withType(JavaCompile) {
