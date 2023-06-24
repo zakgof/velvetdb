@@ -5,7 +5,7 @@ import com.zakgof.velvet.annotation.Index;
 import com.zakgof.velvet.annotation.Key;
 import com.zakgof.velvet.annotation.Kind;
 import com.zakgof.velvet.impl.entity.EntityDef;
-import com.zakgof.velvet.impl.entity.IndexInfo;
+import com.zakgof.velvet.impl.index.IndexInfo;
 import com.zakgof.velvet.impl.entity.SortedEntityDef;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

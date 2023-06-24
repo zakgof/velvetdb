@@ -1,6 +1,4 @@
 include 'velvetdb-core'
 include 'velvetdb-serializer-kryo'
-include 'velvetdb-lmdb'
 include 'velvetdb-xodus'
-include 'velvetdb-test'
 

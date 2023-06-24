@@ -1,7 +1,5 @@
 package com.zakgof.velvet;
 
-import java.net.URI;
-
 /**
  * Interface to be implemented by backed implementations.
  */
@@ -12,7 +10,7 @@ public interface IVelvetProvider {
      * @param url in format velvetdb://&lt;backendname&gt;/&lt;path&gt;
      * @return velvet environment handle
      */
-    IVelvetEnvironment open(URI url);
+    IVelvetEnvironment open(String url, ISerializerProvider serializerProvider);
 
     /**
      * Returns backend implementation name.

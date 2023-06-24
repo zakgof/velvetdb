@@ -1,6 +1,8 @@
 package com.zakgof.velvet.impl.entity;
 
 import com.zakgof.velvet.entity.ISortedEntityDef;
+import com.zakgof.velvet.impl.index.IndexDef;
+import com.zakgof.velvet.impl.index.IndexInfo;
 import com.zakgof.velvet.request.IIndexDef;
 
 import java.util.List;

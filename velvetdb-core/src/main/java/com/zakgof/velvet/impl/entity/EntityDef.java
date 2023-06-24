@@ -1,6 +1,11 @@
 package com.zakgof.velvet.impl.entity;
 
 import com.zakgof.velvet.entity.IEntityDef;
+import com.zakgof.velvet.impl.index.IndexDef;
+import com.zakgof.velvet.impl.index.IndexInfo;
+import com.zakgof.velvet.impl.request.EntityDelete;
+import com.zakgof.velvet.impl.request.EntityGet;
+import com.zakgof.velvet.impl.request.EntityPut;
 import com.zakgof.velvet.properties.IPropertyAccessor;
 import com.zakgof.velvet.request.*;
 import lombok.Getter;
@@ -78,10 +83,5 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     @Override
     public IEntityDelete<K, V> delete() {
         return new EntityDelete<>(this);
-    }
-
-    @Override
-    public IWriteRequest initialize() {
-        return velvet -> velvet.initialize(this);
     }
 }

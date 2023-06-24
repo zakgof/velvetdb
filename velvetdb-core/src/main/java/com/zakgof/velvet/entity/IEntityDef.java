@@ -21,6 +21,4 @@ public interface IEntityDef<K, V> {
     IEntityGet<K, V> get();
     IEntityPut<K, V> put();
     IEntityDelete<K, V> delete();
-
-    IWriteRequest initialize();
 }

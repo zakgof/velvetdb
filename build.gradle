@@ -11,7 +11,7 @@ allprojects {
         resolutionStrategy {
             dependencySubstitution {
                 substitute module("com.github.zakgof:velvetdb-core") with project(":velvetdb-core")
-                substitute module("com.github.zakgof:velvetdb-lmdb") with project(":velvetdb-lmdb")
+                substitute module("com.github.zakgof:velvetdb-xodus") with project(":velvetdb-xodus")
                 substitute module("com.github.zakgof:velvetdb-serializer-kryo") with project(":velvetdb-serializer-kryo")
             }
         }

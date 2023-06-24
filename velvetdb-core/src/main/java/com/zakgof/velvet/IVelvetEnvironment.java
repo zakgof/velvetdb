@@ -8,11 +8,9 @@ import java.util.function.Function;
  */
 public interface IVelvetEnvironment extends AutoCloseable {
 
-    IVelvet velvet();
+    void txnWrite(Consumer<IVelvetWriteTransaction> action);
 
-    void txnWrite(Consumer<IVelvet> action);
-
-    <R> R txnRead(Function<IVelvet, R> action);
+    <R> R txnRead(Function<IVelvetReadTransaction, R> action);
 
     /**
      * Close the handle freeing all the resources.

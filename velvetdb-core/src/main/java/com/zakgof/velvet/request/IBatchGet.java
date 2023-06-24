@@ -4,7 +4,10 @@ import java.util.List;
 import java.util.Map;
 
 public interface IBatchGet<K, V> {
-    IReadRequest<List<K>> asKeyList();
-    IReadRequest<List<V>> asValueList();
-    IReadRequest<Map<K, V>> asMap();
+
+    IReadCommand<List<K>> asKeyList();
+
+    IReadCommand<List<V>> asValueList();
+
+    IReadCommand<Map<K, V>> asMap();
 }
