@@ -1,7 +1,7 @@
 package com.zakgof.velvet;
 
 import com.zakgof.velvet.serializer.ISerializerProvider;
-import com.zakgof.velvet.serializer.ISerializerSchemaMigrator;
+import com.zakgof.velvet.serializer.migrator.ISerializerSchemaMigrator;
 import com.zakgof.velvet.serializer.SerializerFactory;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

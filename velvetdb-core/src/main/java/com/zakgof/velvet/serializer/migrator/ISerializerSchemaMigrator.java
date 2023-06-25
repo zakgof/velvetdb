@@ -1,4 +1,4 @@
-package com.zakgof.velvet.serializer;
+package com.zakgof.velvet.serializer.migrator;
 
 public interface ISerializerSchemaMigrator {
 }

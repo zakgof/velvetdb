@@ -1,6 +1,7 @@
 package com.zakgof.velvet.serializer;
 
 import com.zakgof.velvet.VelvetException;
+import com.zakgof.velvet.serializer.migrator.ISerializerSchemaMigrator;
 
 import java.util.Map;
 import java.util.ServiceLoader;

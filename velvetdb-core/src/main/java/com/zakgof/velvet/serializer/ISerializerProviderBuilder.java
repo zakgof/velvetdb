@@ -1,5 +1,7 @@
 package com.zakgof.velvet.serializer;
 
+import com.zakgof.velvet.serializer.migrator.ISerializerSchemaMigrator;
+
 import java.util.Map;
 
 public interface ISerializerProviderBuilder {
