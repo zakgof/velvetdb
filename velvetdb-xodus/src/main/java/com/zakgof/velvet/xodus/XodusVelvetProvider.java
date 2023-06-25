@@ -1,7 +1,6 @@
 package com.zakgof.velvet.xodus;
 
-import com.zakgof.velvet.ISerializer;
-import com.zakgof.velvet.ISerializerProvider;
+import com.zakgof.velvet.serializer.ISerializerProvider;
 import com.zakgof.velvet.IVelvetEnvironment;
 import com.zakgof.velvet.IVelvetProvider;
 

@@ -4,7 +4,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.SerializerFactory;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import com.zakgof.velvet.ISerializer;
+import com.zakgof.velvet.serializer.ISerializer;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 
 import java.io.ByteArrayOutputStream;
@@ -18,7 +18,7 @@ public class KryoSerializer implements ISerializer {
         this.kryo = new Kryo();
         kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
         kryo.setRegistrationRequired(false);
-        kryo.setDefaultSerializer(new SerializerFactory.CompatibleFieldSerializerFactory());
+        kryo.setDefaultSerializer(new SerializerFactory.FieldSerializerFactory());
     }
 
     @Override

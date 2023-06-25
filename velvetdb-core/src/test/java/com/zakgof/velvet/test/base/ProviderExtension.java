@@ -20,7 +20,11 @@ public class ProviderExtension implements BeforeEachCallback, AfterEachCallback 
         dir.mkdirs();
         for (File file : dir.listFiles())
             file.delete();
-        velvetEnv = VelvetFactory.open(provider, dir.toURI().toString());
+
+        velvetEnv = VelvetFactory.builder(provider, dir.toURI().toString())
+                .schemaMigrator("com.zakgof.velvet.entity", new TestSchemaMigrator())
+                .build();
+
         inject(context);
     }
 

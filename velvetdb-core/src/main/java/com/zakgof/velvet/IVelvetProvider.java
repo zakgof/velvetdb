@@ -1,5 +1,7 @@
 package com.zakgof.velvet;
 
+import com.zakgof.velvet.serializer.ISerializerProvider;
+
 /**
  * Interface to be implemented by backed implementations.
  */

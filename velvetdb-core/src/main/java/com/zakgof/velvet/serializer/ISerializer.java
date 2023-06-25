@@ -1,4 +1,4 @@
-package com.zakgof.velvet;
+package com.zakgof.velvet.serializer;
 
 import java.io.InputStream;
 

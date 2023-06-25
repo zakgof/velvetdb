@@ -1,12 +1,18 @@
 package com.zakgof.velvet;
 
+import com.zakgof.velvet.serializer.ISerializerProvider;
+import com.zakgof.velvet.serializer.ISerializerSchemaMigrator;
+import com.zakgof.velvet.serializer.SerializerFactory;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -16,18 +22,12 @@ import java.util.stream.StreamSupport;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class VelvetFactory {
 
-    public static IVelvetEnvironment open(String providerName, String url) {
-        ServiceLoader<IVelvetProvider> serviceLoader = ServiceLoader.load(IVelvetProvider.class);
-        IVelvetProvider provider = StreamSupport.stream(Spliterators.spliteratorUnknownSize(serviceLoader.iterator(), Spliterator.ORDERED), false)
-                .filter(reg -> reg.name().equals(providerName))
-                .findFirst()
-                .orElseThrow(() -> new VelvetException("Velvetdb backend not registered: " + providerName));
+    public static IVelvetEnvironment create(String providerName, String url) {
+        return builder(providerName, url).build();
+    }
 
-        // TODO: support multiple serializers
-        ISerializerProvider serializerProvider = ServiceLoader.load(ISerializerProvider.class)
-                .findFirst()
-                .orElseThrow(() ->  new VelvetException("No serializer implementation on classpath"));
-        return provider.open(url, serializerProvider);
+    public static IVelvetEnvironmentBuilder builder(String providerName, String url) {
+        return new VelvetEnvironmentBuilder(providerName, url);
     }
 
     /**
@@ -39,5 +39,41 @@ public final class VelvetFactory {
         ServiceLoader<IVelvetProvider> serviceLoader = ServiceLoader.load(IVelvetProvider.class);
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(serviceLoader.iterator(), Spliterator.ORDERED), false)
                 .collect(Collectors.toList());
+    }
+
+    @RequiredArgsConstructor
+    private static class VelvetEnvironmentBuilder implements IVelvetEnvironmentBuilder {
+        private final String velvetProviderName;
+        private final String velvetUrl;
+        private final Map<String, ISerializerSchemaMigrator> migrators = new TreeMap<>();
+        private String serializerProviderName;
+
+        @Override
+        public IVelvetEnvironmentBuilder serializer(String serializerProviderName) {
+            this.serializerProviderName = serializerProviderName;
+            return this;
+        }
+
+        @Override
+        public IVelvetEnvironmentBuilder schemaMigrator(String prefix, ISerializerSchemaMigrator schemaMigrator) {
+            migrators.put(prefix, schemaMigrator);
+            return this;
+        }
+
+        @Override
+        public IVelvetEnvironment build() {
+            ServiceLoader<IVelvetProvider> velverServiceLoader = ServiceLoader.load(IVelvetProvider.class);
+            IVelvetProvider velvetProvider = StreamSupport.stream(Spliterators.spliteratorUnknownSize(velverServiceLoader.iterator(), Spliterator.ORDERED), false)
+                    .filter(reg -> reg.name().equals(velvetProviderName))
+                    .findFirst()
+                    .orElseThrow(() -> new VelvetException("Velvetdb provider not registered: " + velvetProviderName));
+
+            ISerializerProvider serializerProvider = SerializerFactory.builder()
+                    .provider(serializerProviderName)
+                    .schemaMigrators(migrators)
+                    .build();
+
+            return velvetProvider.open(velvetUrl, serializerProvider);
+        }
     }
 }
