@@ -1,4 +1,4 @@
 include 'velvetdb-core'
+include 'velvetdb-serializer-kryo'
 include 'velvetdb-xodus'
-include 'velvetdb-dynamodb'
-include 'velvetdb-serializer-elsa'
+
