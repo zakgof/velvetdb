@@ -1,7 +1,11 @@
 package com.zakgof.velvet.serializer;
 
-import java.util.function.Supplier;
+import com.zakgof.velvet.serializer.migrator.IClassHistory;
 
-public interface ISerializerProvider extends Supplier<ISerializer> {
+public interface ISerializerProvider {
+
     String name();
+
+    ISerializer create(IClassHistory history);
+
 }

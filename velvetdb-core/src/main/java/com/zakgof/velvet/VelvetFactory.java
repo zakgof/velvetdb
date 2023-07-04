@@ -1,8 +1,9 @@
 package com.zakgof.velvet;
 
-import com.zakgof.velvet.serializer.ISerializerProvider;
-import com.zakgof.velvet.serializer.migrator.ISerializerSchemaMigrator;
+import com.zakgof.velvet.impl.history.VelvetClassHistory;
+import com.zakgof.velvet.serializer.ISerializer;
 import com.zakgof.velvet.serializer.SerializerFactory;
+import com.zakgof.velvet.serializer.migrator.ISerializerSchemaMigrator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import java.util.ServiceLoader;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -68,12 +70,17 @@ public final class VelvetFactory {
                     .findFirst()
                     .orElseThrow(() -> new VelvetException("Velvetdb provider not registered: " + velvetProviderName));
 
-            ISerializerProvider serializerProvider = SerializerFactory.builder()
+            VelvetClassHistory history = new VelvetClassHistory();
+
+            Supplier<ISerializer> serializerProvider = SerializerFactory.builder()
                     .provider(serializerProviderName)
                     .schemaMigrators(migrators)
+                    .classHistory(history)
                     .build();
 
-            return velvetProvider.open(velvetUrl, serializerProvider);
+            IVelvetEnvironment velvetEnvironment = velvetProvider.open(velvetUrl, serializerProvider);
+            history.setVelvet(velvetEnvironment);
+            return velvetEnvironment;
         }
     }
 }

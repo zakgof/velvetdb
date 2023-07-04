@@ -1,7 +1,5 @@
 package com.zakgof.velvet.xodus;
 
-import com.zakgof.velvet.serializer.ISerializer;
-import com.zakgof.velvet.serializer.ISerializerProvider;
 import com.zakgof.velvet.IVelvetEnvironment;
 import com.zakgof.velvet.IVelvetReadTransaction;
 import com.zakgof.velvet.IVelvetWriteTransaction;
@@ -11,6 +9,7 @@ import com.zakgof.velvet.impl.entity.EntityDef;
 import com.zakgof.velvet.impl.index.IndexDef;
 import com.zakgof.velvet.request.IIndexDef;
 import com.zakgof.velvet.request.IIndexQuery;
+import com.zakgof.velvet.serializer.ISerializer;
 import jetbrains.exodus.ArrayByteIterable;
 import jetbrains.exodus.ByteIterable;
 import jetbrains.exodus.ExodusException;
@@ -33,32 +32,33 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Simple store:        No duplicates     ze(key)       ->  ze(value)
- * Sorted store:        No duplicates     xodus(key)    ->  ze(value)
- * Additional index:    With duplicates   xodus(metric) ->  ze(key)
+ * Simple store:        No duplicates     ze(key)       -  ze(value)
+ * Sorted store:        No duplicates     xodus(key)    -  ze(value)
+ * Additional index:    With duplicates   xodus(metric) -  ze(key)
  */
 public class XodusVelvetEnv implements IVelvetEnvironment {
 
-    private final ISerializerProvider serializerProvider;
+    private final Supplier<ISerializer> serializerFactory;
     private final Environment env;
 
-    public XodusVelvetEnv(String url, ISerializerProvider serializerProvider) {
+    public XodusVelvetEnv(String url, Supplier<ISerializer> serializerFactory) {
         this.env = Environments.newInstance(Paths.get(URI.create(url)).toFile());
-        this.serializerProvider = serializerProvider;
+        this.serializerFactory = serializerFactory;
     }
 
     @Override
     public <R> R txnRead(Function<IVelvetReadTransaction, R> action) {
-        return env.computeInReadonlyTransaction(txn -> action.apply(new XodusTransaction(txn, serializerProvider.get())));
+        return env.computeInReadonlyTransaction(txn -> action.apply(new XodusTransaction(txn, serializerFactory.get())));
     }
 
     @Override
     public void txnWrite(Consumer<IVelvetWriteTransaction> action) {
-        env.executeInTransaction(txn -> action.accept(new XodusTransaction(txn, serializerProvider.get())));
+        env.executeInTransaction(txn -> action.accept(new XodusTransaction(txn, serializerFactory.get())));
     }
 
     public void close() {
