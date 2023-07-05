@@ -10,4 +10,4 @@ jobs:
       TERM: dumb
     steps:
       - checkout
-      - run: ./gradlew test publish
+      - run: ./gradlew test publish -PossrhUsername=zakgof -PossrhPassword=${OSSRH_PASSWORD}
