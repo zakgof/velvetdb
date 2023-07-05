@@ -118,143 +118,183 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
         }
 
         @Override
-        public <K, V, M> Map<K, V> batchGetIndexMap(IIndexQuery<K, V, M> indexQuery) {
-            IndexDef<K, V, M> indexDef = indexQuery.indexDef();
-            IEntityDef<K, V> entityDef = indexDef.entity();
-            Class<M> indexClass = indexDef.type();
-            Class<K> keyClass = entityDef.keyClass();
-            final Store store = readStore(entityDef);
-            boolean primary = indexDef.name().isEmpty();
-            final Store indexStore = primary ? readStore(entityDef) : readStore(indexDef);
+        public <K, V, I> Map<K, V> batchGetIndexMap(IIndexQuery<K, V, I> indexQuery) {
+            SecIndexWalker<K, V, I> walker = new SecIndexWalker<>(indexQuery);
+            return walker.walkMap();
+        }
 
-            Map<K, V> map = new LinkedHashMap<>();
+        private class SecIndexWalker<K, V, I> {
 
-            if (indexStore == null) {
+            private final IIndexQuery<K, V, I> indexQuery;
+            private final Function<K, V> valueMapper;
+            private final Function<V, I> indexMapper;
+
+            private final Store indexStore;
+            private final Class<I> indexClass;
+            private final Class<K> keyClass;
+            private final Map<K, V> map;
+
+            private SecIndexWalker(IIndexQuery<K, V, I> indexQuery) {
+
+                IndexDef<K, V, I> indexDef = indexQuery.indexDef();
+                IEntityDef<K, V> entityDef = indexDef.entity();
+                Store valueStore = readStore(entityDef);
+
+                this.indexQuery = indexQuery;
+                this.indexClass = indexDef.type();
+                this.keyClass = entityDef.keyClass();
+                this.indexStore = readStore(indexDef);
+
+                this.valueMapper = key -> (V) get(entityDef, key, valueStore);
+                this.indexMapper = indexDef.getter();
+                
+                this.map = new LinkedHashMap<>();
+            }
+
+            private Map<K, V> walkMap() {
+                try (Cursor cursor = indexStore.openCursor(txn)) {
+                    ByteIterable[] startBIs = collectBIs(0);
+                    if (!gotoStart(cursor, startBIs)) {
+                        return map;
+                    }
+                    ByteIterable[] endBIs = collectBIs(1);
+                    boolean endInclusive = isInclusive(1);
+
+                    for (int elements = 0; indexQuery.limit() < 0 || elements < indexQuery.limit(); elements++) {
+
+                        ByteIterable indexBuffer = cursor.getKey();
+                        ByteIterable keyBuffer = cursor.getValue();
+
+                        if (endBIs[1] != null) {
+                            if (keyBuffer.equals(endBIs[1])) {
+                                if (endInclusive) {
+                                    append(keyBuffer);
+                                }
+                                break;
+                            }
+                        } else if (endBIs[0] != null) {
+                            int comparison = indexBuffer.compareTo(endBIs[0]);
+                            if (comparison == 0 && !endInclusive) {
+                                break;
+                            }
+                            if (comparison < 0 && indexQuery.descending()
+                                    || comparison > 0 && !indexQuery.descending()) {
+                                break;
+                            }
+                        }
+
+                        append(keyBuffer);
+
+                        boolean stepResult = indexQuery.descending() ? cursor.getPrev() : cursor.getNext();
+                        if (!stepResult)
+                            break;
+                    }
+                }
                 return map;
             }
 
-            try (Cursor cursor = indexStore.openCursor(txn)) {
-                while (cursor.getNext()) {
-                    System.out.println(cursor.getKey() + "   ->   " + cursor.getValue());
-                }
+            private void append(ByteIterable keyBuffer) {
+                K key = deserialize(keyBuffer, keyClass);
+                V value = valueMapper.apply(key);
+                map.put(key, value);
             }
 
-            try (Cursor cursor = indexStore.openCursor(txn)) {
+            private boolean isInclusive(int order) {
+                IIndexQuery.IBound<K, I> bound = bound(order);
+                return bound != null && bound.inclusive();
+            }
 
-                IIndexQuery.IBound<K, M> start = indexQuery.descending() ? indexQuery.upper() : indexQuery.lower();
-                if (start != null) {
-                    if (start.index() != null) {
-                        ByteIterable indexBi = serialize(indexClass, start.index(), true);
-                        if (start.key() != null) {
-                            ByteIterable keyBi = serialize(keyClass, start.key(), false);
-                            if (!gotoStart(cursor, start.inclusive(), indexQuery.descending(), indexBi, keyBi)) {
-                                return map;
+            private IIndexQuery.IBound<K, I> bound(int order) {
+                return indexQuery.bounds()[indexQuery.descending() ? 1 - order : order];
+            }
+
+            private ByteIterable[] collectBIs(int order) {
+                ByteIterable[] bis = new ByteIterable[2];
+                IIndexQuery.IBound<K, I> bound = bound(order);
+                if (bound != null) {
+                    I index = bound.index();
+                    if (bound.key() != null) {
+                        V value = valueMapper.apply(bound.key());
+                        if (value == null) {
+                            throw new VelvetException("No value exists for index key " + bound.key());
+                        }
+                        index = indexMapper.apply(value);
+                    }
+                    if (index != null) {
+                        bis[0] = serialize(indexClass, index, true);
+                    }
+                    if (bound.key() != null) {
+                        bis[1] = serialize(keyClass, bound.key(), false);
+                    }
+                }
+                return bis;
+            }
+
+            private boolean gotoStart(Cursor cursor, ByteIterable[] startBIs) {
+                ByteIterable indexBi = startBIs[0];
+                ByteIterable keyBi = startBIs[1];
+                boolean inclusive = isInclusive(0);
+                if (indexQuery.descending()) {
+                    if (indexBi == null) {
+                        return cursor.getLast();
+                    }
+                    if (keyBi == null) {
+                        ByteIterable key = cursor.getSearchKey(indexBi);
+                        if (key != null) {
+                            if (inclusive) {
+                                if (!cursor.getNextNoDup()) {
+                                    cursor.getLast();
+                                    return true;
+                                }
                             }
+                            return cursor.getPrevNoDup();
                         } else {
-                            if (!gotoStart(cursor, start.inclusive(), indexQuery.descending(), indexBi)) {
-                                return map;
+                            key = cursor.getSearchKeyRange(indexBi);
+                            if (key != null) {
+                                return cursor.getPrevNoDup();
+                            } else {
+                                return cursor.getLast();
                             }
                         }
-                    }
-                } else if (!(indexQuery.descending() ? cursor.getLast() : cursor.getNext())) {
-                    return map;
-                }
-
-                IIndexQuery.IBound<K, M> endBound = indexQuery.descending() ? indexQuery.lower() : indexQuery.upper();
-
-                ByteIterable endIndex = endBound != null && endBound.index() != null
-                        ? serialize(indexClass, endBound.index(), true) : null;
-                ByteIterable endKey = endBound != null && endBound.key() != null
-                        ? serialize(keyClass, endBound.key(), false) : null;
-
-                int offsetToGo = indexQuery.offset();
-                do {
-
-                    ByteIterable indexBuffer = cursor.getKey();
-                    ByteIterable keyBuffer = cursor.getValue();
-
-                    if (endIndex != null && endKey == null) {
-                        if (endBound.inclusive() && indexBuffer.compareTo(endIndex) * (indexQuery.descending() ? -1 : 1) > 0
-                                || !endBound.inclusive() && indexBuffer.compareTo(endIndex) * (indexQuery.descending() ? -1 : 1) >= 0) {
-                            break;
-                        }
-                    }
-
-                    if (offsetToGo > 0) {
-                        offsetToGo--;
                     } else {
-                        K key = primary ? (K) deserializeXodus(indexBuffer, indexClass) : deserialize(keyBuffer, keyClass);
-                        V value = primary ? (V) deserialize(keyBuffer, entityDef.valueClass()) : get(entityDef, key, store);
-                        map.put(key, value);
+                        ByteIterable bi = cursor.getSearchBothRange(indexBi, keyBi);
+                        if (bi == null) {
+                            return false;
+                        }
+                        if (bi.equals(keyBi) && !inclusive) {
+                            return cursor.getPrev();
+                        }
+                        return true;
                     }
-                } while ((indexQuery.descending() ? cursor.getPrev() : cursor.getNext()) && (indexQuery.limit() < 0 || map.size() < indexQuery.limit()));
-            }
-            return map;
-        }
-
-        private boolean gotoStart(Cursor cursor, boolean inclusive, boolean descending, ByteIterable indexBi) {
-            return descending ? gotoStartDesc(cursor, inclusive, indexBi) : gotoStartAsc(cursor, inclusive, indexBi);
-        }
-
-        private boolean gotoStartAsc(Cursor cursor, boolean inclusive, ByteIterable indexBi) {
-            ByteIterable firstKey = cursor.getSearchKeyRange(indexBi);
-            if (firstKey == null) {
-                return false;
-            }
-            ByteIterable firstIndex = cursor.getKey();
-            while (!inclusive && firstIndex.equals(indexBi)) {
-                if (!cursor.getNext()) {
-                    return false;
-                }
-                firstIndex = cursor.getKey();
-            }
-            return true;
-        }
-
-        private boolean gotoStartDesc(Cursor cursor, boolean inclusive, ByteIterable indexBi) {
-            ByteIterable key = cursor.getSearchKey(indexBi);
-            if (key != null) {
-                if (inclusive) {
-                    if (!cursor.getNextNoDup()) {
-                        cursor.getLast();
+                } else {
+                    if (indexBi == null) {
+                        return cursor.getNext();
+                    }
+                    if (keyBi == null) {
+                        ByteIterable firstKey = cursor.getSearchKeyRange(indexBi);
+                        if (firstKey == null) {
+                            return false;
+                        }
+                        ByteIterable firstIndex = cursor.getKey();
+                        while (!inclusive && firstIndex.equals(indexBi)) {
+                            if (!cursor.getNext()) {
+                                return false;
+                            }
+                            firstIndex = cursor.getKey();
+                        }
+                        return true;
+                    } else {
+                        ByteIterable key = cursor.getSearchBothRange(indexBi, keyBi);
+                        if (key == null) {
+                            return false;
+                        }
+                        if (key.equals(keyBi) && !inclusive) {
+                            return cursor.getNext();
+                        }
                         return true;
                     }
                 }
-                return cursor.getPrevNoDup();
-            } else {
-                key = cursor.getSearchKeyRange(indexBi);
-                if (key != null) {
-                    return cursor.getPrevNoDup();
-                } else {
-                    return cursor.getLast();
-                }
             }
-        }
-
-        private boolean gotoStart(Cursor cursor, boolean inclusive, boolean descending, ByteIterable indexBi, ByteIterable keyBi) {
-            return descending ? gotoStartDesc(cursor, inclusive, indexBi, keyBi) : gotoStartAsc(cursor, inclusive, indexBi, keyBi);
-        }
-
-        private boolean gotoStartAsc(Cursor cursor, boolean inclusive, ByteIterable indexBi, ByteIterable keyBi) {
-            ByteIterable bi = cursor.getSearchBothRange(indexBi, keyBi);
-            if (bi == null) {
-                return false;
-            }
-            if (bi.equals(keyBi) && !inclusive) {
-                return cursor.getNext();
-            }
-            return true;
-        }
-
-        private boolean gotoStartDesc(Cursor cursor, boolean inclusive, ByteIterable indexBi, ByteIterable keyBi) {
-            ByteIterable bi = cursor.getSearchBothRange(indexBi, keyBi);
-            if (bi == null) {
-                return false;
-            }
-            if (bi.equals(keyBi) && !inclusive) {
-                return cursor.getPrev();
-            }
-            return true;
         }
 
         @Override
@@ -373,10 +413,6 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
         private <V> V deserialize(ByteIterable bi, Class<V> clazz) {
             byte[] bytes = bi.getBytesUnsafe();
             return serializer.deserialize(new ByteArrayInputStream(bytes), clazz);
-        }
-
-        private <V> V deserializeXodus(ByteIterable bi, Class<V> clazz) {
-            return KeyUtil.deserialize(clazz, bi);
         }
 
         private <T> ByteIterable serialize(Class<T> clazz, T object, boolean xodus) {

@@ -21,6 +21,7 @@ import static com.zakgof.velvet.test.base.AssertTools.assertKeyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(ProviderExtension.class)
+// TODO test offset
 public class SecondaryIndexTest {
 
     private final IEntityDef<String, Person> personEntity = Entities.from(Person.class)
@@ -61,8 +62,6 @@ public class SecondaryIndexTest {
 
         assertKeyList(expected, keys);
     }
-
-
 
     @ParameterizedTest
     @CsvSource({
@@ -106,6 +105,25 @@ public class SecondaryIndexTest {
 
     @ParameterizedTest
     @CsvSource({
+            "AX22, AX32|AX42|AX03|AX13|AX23|AX33|AX43|AX04|AX14|AX24|AX34|AX44|AX05|AX15|AX25|AX35|AX45|AX06|AX16|AX26|AX36|AX46|AX07|AX17|AX27|AX37|AX47|AX08|AX18|AX28|AX38|AX48|AX09|AX19|AX29|AX39|AX49",
+            "AX47, AX08|AX18|AX28|AX38|AX48|AX09|AX19|AX29|AX39|AX49",
+            "AX49, ",
+            "AX00, AX10|AX20|AX30|AX40|AX01|AX11|AX21|AX31|AX41|AX02|AX12|AX22|AX32|AX42|AX03|AX13|AX23|AX33|AX43|AX04|AX14|AX24|AX34|AX44|AX05|AX15|AX25|AX35|AX45|AX06|AX16|AX26|AX36|AX46|AX07|AX17|AX27|AX37|AX47|AX08|AX18|AX28|AX38|AX48|AX09|AX19|AX29|AX39|AX49",
+            "AX39, AX49"
+    })
+    void gtK(String key, String expected) {
+        List<String> keys = personEntity.<String>index("ln")
+                .query()
+                .gtK(key)
+                .get()
+                .asKeyList()
+                .execute(velvetEnv);
+
+        assertKeyList(expected, keys);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
             "Smith0, ",
             "Smith7, AX00|AX10|AX20|AX30|AX40|AX01|AX11|AX21|AX31|AX41|AX02|AX12|AX22|AX32|AX42|AX03|AX13|AX23|AX33|AX43|AX04|AX14|AX24|AX34|AX44|AX05|AX15|AX25|AX35|AX45|AX06|AX16|AX26|AX36|AX46",
             "Smith9, AX00|AX10|AX20|AX30|AX40|AX01|AX11|AX21|AX31|AX41|AX02|AX12|AX22|AX32|AX42|AX03|AX13|AX23|AX33|AX43|AX04|AX14|AX24|AX34|AX44|AX05|AX15|AX25|AX35|AX45|AX06|AX16|AX26|AX36|AX46|AX07|AX17|AX27|AX37|AX47|AX08|AX18|AX28|AX38|AX48",
@@ -137,6 +155,25 @@ public class SecondaryIndexTest {
         List<String> keys = personEntity.<String>index("ln")
                 .query()
                 .lte(input)
+                .get()
+                .asKeyList()
+                .execute(velvetEnv);
+
+        assertKeyList(expected, keys);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "AX00, ",
+            "AX07, AX00|AX10|AX20|AX30|AX40|AX01|AX11|AX21|AX31|AX41|AX02|AX12|AX22|AX32|AX42|AX03|AX13|AX23|AX33|AX43|AX04|AX14|AX24|AX34|AX44|AX05|AX15|AX25|AX35|AX45|AX06|AX16|AX26|AX36|AX46",
+            "AX49, AX00|AX10|AX20|AX30|AX40|AX01|AX11|AX21|AX31|AX41|AX02|AX12|AX22|AX32|AX42|AX03|AX13|AX23|AX33|AX43|AX04|AX14|AX24|AX34|AX44|AX05|AX15|AX25|AX35|AX45|AX06|AX16|AX26|AX36|AX46|AX07|AX17|AX27|AX37|AX47|AX08|AX18|AX28|AX38|AX48|AX09|AX19|AX29|AX39",
+            "AX10 ,AX00",
+            "AX43, AX00|AX10|AX20|AX30|AX40|AX01|AX11|AX21|AX31|AX41|AX02|AX12|AX22|AX32|AX42|AX03|AX13|AX23|AX33"
+    })
+    void ltK(String key, String expected) {
+        List<String> keys = personEntity.<String>index("ln")
+                .query()
+                .ltK(key)
                 .get()
                 .asKeyList()
                 .execute(velvetEnv);
@@ -209,6 +246,26 @@ public class SecondaryIndexTest {
 
     @ParameterizedTest
     @CsvSource({
+            "AX00, AX49|AX39|AX29|AX19|AX09|AX48|AX38|AX28|AX18|AX08|AX47|AX37|AX27|AX17|AX07|AX46|AX36|AX26|AX16|AX06|AX45|AX35|AX25|AX15|AX05|AX44|AX34|AX24|AX14|AX04|AX43|AX33|AX23|AX13|AX03|AX42|AX32|AX22|AX12|AX02|AX41|AX31|AX21|AX11|AX01|AX40|AX30|AX20|AX10",
+            "AX47, AX49|AX39|AX29|AX19|AX09|AX48|AX38|AX28|AX18|AX08",
+            "AX39, AX49",
+            "AX48, AX49|AX39|AX29|AX19|AX09",
+            "AX49,"
+    })
+    void gtKDesc(String key, String expected) {
+        List<String> keys = personEntity.<String>index("ln")
+                .query()
+                .gtK(key)
+                .descending(true)
+                .get()
+                .asKeyList()
+                .execute(velvetEnv);
+
+        assertKeyList(expected, keys);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
             "Smith0, ",
             "Smith7, AX46|AX36|AX26|AX16|AX06|AX45|AX35|AX25|AX15|AX05|AX44|AX34|AX24|AX14|AX04|AX43|AX33|AX23|AX13|AX03|AX42|AX32|AX22|AX12|AX02|AX41|AX31|AX21|AX11|AX01|AX40|AX30|AX20|AX10|AX00",
             "Smith9, AX48|AX38|AX28|AX18|AX08|AX47|AX37|AX27|AX17|AX07|AX46|AX36|AX26|AX16|AX06|AX45|AX35|AX25|AX15|AX05|AX44|AX34|AX24|AX14|AX04|AX43|AX33|AX23|AX13|AX03|AX42|AX32|AX22|AX12|AX02|AX41|AX31|AX21|AX11|AX01|AX40|AX30|AX20|AX10|AX00",
@@ -240,6 +297,25 @@ public class SecondaryIndexTest {
     void lteDesc(String input, String expected) {
         List<String> keys = personEntity.<String>index("ln").query()
                 .lte(input)
+                .descending(true)
+                .get()
+                .asKeyList()
+                .execute(velvetEnv);
+
+        assertKeyList(expected, keys);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "AX00, ",
+            "AX07, AX46|AX36|AX26|AX16|AX06|AX45|AX35|AX25|AX15|AX05|AX44|AX34|AX24|AX14|AX04|AX43|AX33|AX23|AX13|AX03|AX42|AX32|AX22|AX12|AX02|AX41|AX31|AX21|AX11|AX01|AX40|AX30|AX20|AX10|AX00",
+            "AX08, AX47|AX37|AX27|AX17|AX07|AX46|AX36|AX26|AX16|AX06|AX45|AX35|AX25|AX15|AX05|AX44|AX34|AX24|AX14|AX04|AX43|AX33|AX23|AX13|AX03|AX42|AX32|AX22|AX12|AX02|AX41|AX31|AX21|AX11|AX01|AX40|AX30|AX20|AX10|AX00",
+            "AX44, AX34|AX24|AX14|AX04|AX43|AX33|AX23|AX13|AX03|AX42|AX32|AX22|AX12|AX02|AX41|AX31|AX21|AX11|AX01|AX40|AX30|AX20|AX10|AX00"
+    })
+    void ltKDesc(String key, String expected) {
+        List<String> keys = personEntity.<String>index("ln")
+                .query()
+                .ltK(key)
                 .descending(true)
                 .get()
                 .asKeyList()

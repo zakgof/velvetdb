@@ -1,4 +1,4 @@
-package com.zakgof.velvetdb.serialize;
+package com.zakgof.velvet.serialize;
 
 import com.zakgof.velvet.serializer.ISerializer;
 import com.zakgof.velvet.serializer.ISerializerProvider;

@@ -1,1 +1,1 @@
-com.zakgof.velvetdb.serialize.KryoSerializerProvider
+com.zakgof.velvet.serialize.KryoSerializerProvider

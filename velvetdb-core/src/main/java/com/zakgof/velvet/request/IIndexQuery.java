@@ -8,8 +8,7 @@ public interface IIndexQuery<K, V, I> {
     int limit();
     int offset();
 
-    IBound<K, I> upper();
-    IBound<K, I> lower();
+    IBound<K, I> [] bounds();
 
     IndexDef<K, V, I> indexDef();
 

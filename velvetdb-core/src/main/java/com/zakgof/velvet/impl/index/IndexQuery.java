@@ -11,9 +11,9 @@ import java.util.Map;
 @Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor
-public class IndexQuery<K, V, M> implements IBatchIndexQuery<K, V, M> {
+public class IndexQuery<K, V, I> implements IBatchIndexQuery<K, V, I> {
 
-    private final IndexDef<K, V, M> indexDef;
+    private final IndexDef<K, V, I> indexDef;
 
     private int limit = -1;
     private int offset = 0;
@@ -28,54 +28,77 @@ public class IndexQuery<K, V, M> implements IBatchIndexQuery<K, V, M> {
         private final boolean inclusive;
     }
 
-    private Bound<K, M> upper;
-    private Bound<K, M> lower;
+    private final Bound<K, I>[] bounds = new Bound[2];
 
     @Override
-    public IndexQuery<K, V, M> eq(M index) {
-        lower = new Bound<>(null, index, true);
-        upper = new Bound<>(null, index, true);
+    public IndexQuery<K, V, I> eq(I index) {
+        bounds[0] = new Bound<>(null, index, true);
+        bounds[1] = new Bound<>(null, index, true);
         return this;
     }
 
     @Override
-    public IndexQuery<K, V, M> gt(M index) {
-        lower = new Bound<>(null, index, false);
+    public IndexQuery<K, V, I> gt(I index) {
+        bounds[0] = new Bound<>(null, index, false);
         return this;
     }
 
     @Override
-    public IndexQuery<K, V, M> gte(M index) {
-        lower = new Bound<>(null, index, true);
+    public IndexQuery<K, V, I> gte(I index) {
+        bounds[0] = new Bound<>(null, index, true);
         return this;
     }
 
     @Override
-    public IndexQuery<K, V, M> lt(M index) {
-        upper = new Bound<>(null, index, false);
+    public IndexQuery<K, V, I> lt(I index) {
+        bounds[1] = new Bound<>(null, index, false);
         return this;
     }
 
     @Override
-    public IndexQuery<K, V, M> lte(M index) {
-        upper = new Bound<>(null, index, true);
+    public IndexQuery<K, V, I> lte(I index) {
+        bounds[1] = new Bound<>(null, index, true);
         return this;
     }
 
     @Override
-    public IndexQuery<K, V, M> limit(int limit) {
+    public IndexQuery<K, V, I> gtK(K key) {
+        bounds[0] = new Bound<>(key, null, false);
+        return this;
+    }
+
+    @Override
+    public IndexQuery<K, V, I> gteK(K key) {
+        bounds[0] = new Bound<>(key, null, true);
+        return this;
+    }
+
+    @Override
+    public IndexQuery<K, V, I> ltK(K key) {
+        bounds[1] = new Bound<>(key, null, false);
+        return this;
+    }
+
+    @Override
+    public IndexQuery<K, V, I> lteK(K key) {
+        bounds[1] = new Bound<>(key, null, true);
+        return this;
+    }
+
+    @Override
+    public IndexQuery<K, V, I> limit(int limit) {
         this.limit = limit;
         return this;
     }
 
     @Override
-    public IndexQuery<K, V, M> offset(int offset) {
+    public IndexQuery<K, V, I> offset(int offset) {
         this.offset = offset;
         return this;
     }
 
     @Override
-    public IndexQuery<K, V, M> descending(boolean descending) {
+    public IndexQuery<K, V, I> descending(boolean descending) {
         this.descending = descending;
         return this;
     }
@@ -87,7 +110,7 @@ public class IndexQuery<K, V, M> implements IBatchIndexQuery<K, V, M> {
 
     @Override
     public IReadCommand<V> next(V value) {
-        lower = new Bound<>(indexDef.entity().keyOf(value), indexDef.getter().apply(value), false);
+        bounds[0] = new Bound<>(indexDef.entity().keyOf(value), indexDef.getter().apply(value), false);
         return readTxn -> readTxn.singleGetIndex(descending(false).limit(1));
     }
 
@@ -98,7 +121,7 @@ public class IndexQuery<K, V, M> implements IBatchIndexQuery<K, V, M> {
 
     @Override
     public IReadCommand<V> prev(V value) {
-        upper = new Bound<>(indexDef.entity().keyOf(value), indexDef.getter().apply(value), false);
+        bounds[1] = new Bound<>(indexDef.entity().keyOf(value), indexDef.getter().apply(value), false);
         return readTxn -> readTxn.singleGetIndex(descending(true).limit(1));
     }
 

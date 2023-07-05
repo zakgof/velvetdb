@@ -13,6 +13,8 @@ public class ProviderExtension implements BeforeEachCallback, AfterEachCallback 
 
     private IVelvetEnvironment velvetEnv;
 
+    public static String testName;
+
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         String provider = context.getConfigurationParameter("provider").get();
@@ -26,6 +28,7 @@ public class ProviderExtension implements BeforeEachCallback, AfterEachCallback 
                 .build();
 
         inject(context);
+        testName = context.getDisplayName();
     }
 
     @Override
@@ -33,6 +36,7 @@ public class ProviderExtension implements BeforeEachCallback, AfterEachCallback 
         velvetEnv.close();
         velvetEnv = null;
         inject(context);
+        testName = null;
     }
 
     private void inject(ExtensionContext context) {

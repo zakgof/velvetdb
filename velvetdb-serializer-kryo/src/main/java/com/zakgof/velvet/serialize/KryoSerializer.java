@@ -1,4 +1,4 @@
-package com.zakgof.velvetdb.serialize;
+package com.zakgof.velvet.serialize;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.SerializerFactory;

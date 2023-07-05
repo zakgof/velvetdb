@@ -7,6 +7,10 @@ public interface IBatchIndexQuery<K, V, I> extends IIndexQuery<K, V, I>{
     IBatchIndexQuery<K, V, I> gte(I value);
     IBatchIndexQuery<K, V, I> lt(I value);
     IBatchIndexQuery<K, V, I> lte(I value);
+    IBatchIndexQuery<K, V, I> gtK(K key);
+    IBatchIndexQuery<K, V, I> ltK(K key);
+    IBatchIndexQuery<K, V, I> gteK(K key);
+    IBatchIndexQuery<K, V, I> lteK(K key);
     IBatchIndexQuery<K, V, I> limit(int limit);
     IBatchIndexQuery<K, V, I> offset(int offset);
     IBatchIndexQuery<K, V, I> descending(boolean descending);
