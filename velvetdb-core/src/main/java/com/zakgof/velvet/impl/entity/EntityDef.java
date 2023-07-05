@@ -76,7 +76,7 @@ public class EntityDef<K, V> implements IEntityDef<K, V> {
     }
 
     @Override
-    public IEntityPut<K, V> put() {
+    public IEntityPut<V> put() {
         return new EntityPut<>(this);
     }
 

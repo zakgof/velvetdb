@@ -20,7 +20,7 @@ import java.util.stream.IntStream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(ProviderExtension.class)
-public class GetTest {
+class GetTest {
 
     private List<Person> batch;
     private final IEntityDef<String, Person> personEntity = Entities.create(Person.class);

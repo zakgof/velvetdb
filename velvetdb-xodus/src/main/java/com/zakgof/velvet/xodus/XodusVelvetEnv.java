@@ -126,32 +126,33 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
         private class SecIndexWalker<K, V, I> {
 
             private final IIndexQuery<K, V, I> indexQuery;
-            private final Function<K, V> valueMapper;
             private final Function<V, I> indexMapper;
 
             private final Store indexStore;
+            private final Store valueStore;
             private final Class<I> indexClass;
-            private final Class<K> keyClass;
             private final Map<K, V> map;
+            private final boolean primary;
+            private final IEntityDef<K, V> entityDef;
 
             private SecIndexWalker(IIndexQuery<K, V, I> indexQuery) {
 
                 IndexDef<K, V, I> indexDef = indexQuery.indexDef();
                 IEntityDef<K, V> entityDef = indexDef.entity();
-                Store valueStore = readStore(entityDef);
 
                 this.indexQuery = indexQuery;
                 this.indexClass = indexDef.type();
-                this.keyClass = entityDef.keyClass();
-                this.indexStore = readStore(indexDef);
-
-                this.valueMapper = key -> (V) get(entityDef, key, valueStore);
+                this.entityDef = entityDef;
+                this.primary = indexDef.name().isEmpty();
+                this.valueStore = readStore(entityDef);
+                this.indexStore = primary ? valueStore : readStore(indexDef);
                 this.indexMapper = indexDef.getter();
-                
                 this.map = new LinkedHashMap<>();
             }
 
             private Map<K, V> walkMap() {
+                if (indexStore == null)
+                    return map;
                 try (Cursor cursor = indexStore.openCursor(txn)) {
                     ByteIterable[] startBIs = collectBIs(0);
                     if (!gotoStart(cursor, startBIs)) {
@@ -168,7 +169,7 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
                         if (endBIs[1] != null) {
                             if (keyBuffer.equals(endBIs[1])) {
                                 if (endInclusive) {
-                                    append(keyBuffer);
+                                    append(indexBuffer, keyBuffer);
                                 }
                                 break;
                             }
@@ -183,7 +184,7 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
                             }
                         }
 
-                        append(keyBuffer);
+                        append(indexBuffer, keyBuffer);
 
                         boolean stepResult = indexQuery.descending() ? cursor.getPrev() : cursor.getNext();
                         if (!stepResult)
@@ -193,9 +194,9 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
                 return map;
             }
 
-            private void append(ByteIterable keyBuffer) {
-                K key = deserialize(keyBuffer, keyClass);
-                V value = valueMapper.apply(key);
+            private void append(ByteIterable indexBI, ByteIterable keyBI) {
+                K key = primary ? (K) deserializeXodus(indexBI, indexClass) : deserialize(keyBI, entityDef.keyClass());
+                V value = primary ? (V) deserialize(keyBI, entityDef.valueClass()) : get(entityDef, key, valueStore);
                 map.put(key, value);
             }
 
@@ -214,7 +215,7 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
                 if (bound != null) {
                     I index = bound.index();
                     if (bound.key() != null) {
-                        V value = valueMapper.apply(bound.key());
+                        V value = get(entityDef, bound.key(), valueStore);
                         if (value == null) {
                             throw new VelvetException("No value exists for index key " + bound.key());
                         }
@@ -224,7 +225,7 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
                         bis[0] = serialize(indexClass, index, true);
                     }
                     if (bound.key() != null) {
-                        bis[1] = serialize(keyClass, bound.key(), false);
+                        bis[1] = serialize(entityDef.keyClass(), bound.key(), false);
                     }
                 }
                 return bis;
@@ -413,6 +414,10 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
         private <V> V deserialize(ByteIterable bi, Class<V> clazz) {
             byte[] bytes = bi.getBytesUnsafe();
             return serializer.deserialize(new ByteArrayInputStream(bytes), clazz);
+        }
+
+        private <V> V deserializeXodus(ByteIterable bi, Class<V> clazz) {
+            return KeyUtil.deserialize(clazz, bi);
         }
 
         private <T> ByteIterable serialize(Class<T> clazz, T object, boolean xodus) {

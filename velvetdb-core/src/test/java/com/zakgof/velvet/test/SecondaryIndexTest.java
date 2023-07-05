@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(ProviderExtension.class)
 // TODO test offset
-public class SecondaryIndexTest {
+class SecondaryIndexTest {
 
     private final IEntityDef<String, Person> personEntity = Entities.from(Person.class)
             .index("ln", Person::lastName, String.class)

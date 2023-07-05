@@ -19,7 +19,7 @@ import java.util.stream.IntStream;
 import static com.zakgof.velvet.test.base.AssertTools.assertKeyList;
 
 @ExtendWith(ProviderExtension.class)
-public class DeleteTest {
+class DeleteTest {
 
     private final ISortedEntityDef<String, Person> personEntity = Entities.from(Person.class)
             .makeSorted();

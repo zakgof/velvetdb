@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.Collection;
 
 @RequiredArgsConstructor
-public class EntityPut<K, V> implements IEntityPut<K, V> {
+public class EntityPut<K, V> implements IEntityPut<V> {
 
     private final EntityDef<K, V> entityDef;
 

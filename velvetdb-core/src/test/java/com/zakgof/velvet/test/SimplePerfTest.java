@@ -21,7 +21,7 @@ import java.util.stream.IntStream;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(ProviderExtension.class)
-public class SimplePerfTest {
+class SimplePerfTest {
 
     private final static int RECORDS = 400;
     private final static int THREADS = 10;

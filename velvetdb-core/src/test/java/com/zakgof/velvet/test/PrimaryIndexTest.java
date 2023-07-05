@@ -22,7 +22,7 @@ import static com.zakgof.velvet.test.base.AssertTools.assertKeyListEmpty;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(ProviderExtension.class)
-public class PrimaryIndexTest {
+class PrimaryIndexTest {
 
     private final ISortedEntityDef<String, Person> personEntity = Entities.from(Person.class)
             .makeSorted();

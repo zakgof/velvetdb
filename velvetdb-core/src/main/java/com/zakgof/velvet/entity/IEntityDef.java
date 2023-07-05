@@ -19,6 +19,6 @@ public interface IEntityDef<K, V> {
     Set<String> indexes();
 
     IEntityGet<K, V> get();
-    IEntityPut<K, V> put();
+    IEntityPut<V> put();
     IEntityDelete<K, V> delete();
 }
