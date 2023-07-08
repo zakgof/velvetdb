@@ -109,7 +109,7 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
         }
 
         @Override
-        public <K, V, M> V singleGetIndex(IIndexQuery<K, V, M> indexQuery) {
+        public <K, V, I> V singleGetIndex(IIndexQuery<K, V, I> indexQuery) {
             Map<K, V> result = batchGetIndexMap(indexQuery);
             if (result.size() > 1) {
                 throw new VelvetException("singleIndexGet returned multiple entries");
@@ -362,7 +362,7 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
             deleteFromIndexStore(store, key, index.entity().keyClass(), indexValue, index.type(), index.entity().sorted());
         }
 
-        private <K, M> void deleteFromIndexStore(Store store, K key, Class<K> keyClass, M indexValue, Class<M> indexClass, boolean keySorted) {
+        private <K, I> void deleteFromIndexStore(Store store, K key, Class<K> keyClass, I indexValue, Class<I> indexClass, boolean keySorted) {
             ByteIterable keyBuffer = serialize(keyClass, key, keySorted);
             ByteIterable indexBuffer = serialize(indexClass, indexValue, true);
 
@@ -416,7 +416,7 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
             return serializer.deserialize(new ByteArrayInputStream(bytes), clazz);
         }
 
-        private <V> V deserializeXodus(ByteIterable bi, Class<V> clazz) {
+        private <T> T deserializeXodus(ByteIterable bi, Class<T> clazz) {
             return KeyUtil.deserialize(clazz, bi);
         }
 

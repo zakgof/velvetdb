@@ -4,9 +4,10 @@ import com.zakgof.velvet.VelvetException;
 import com.zakgof.velvet.annotation.Index;
 import com.zakgof.velvet.annotation.Key;
 import com.zakgof.velvet.annotation.Kind;
+import com.zakgof.velvet.annotation.SortedKey;
 import com.zakgof.velvet.impl.entity.EntityDef;
-import com.zakgof.velvet.impl.index.IndexInfo;
 import com.zakgof.velvet.impl.entity.SortedEntityDef;
+import com.zakgof.velvet.impl.index.IndexInfo;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -15,7 +16,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -89,19 +94,31 @@ public final class Entities {
 
         private IndexInfo<?, V> key(List<Field> fields, List<Method> methods) {
             List<IndexInfo> keyInfos = fields.stream()
-                    .flatMap(field -> anno(field, Key.class)
-                            .map(anno -> createKey(field))
-                    ).collect(Collectors.toList());
+                    .filter(field -> hasAnno(field, Key.class))
+                    .map(this::createKey)
+                    .collect(Collectors.toList());
+            List<IndexInfo> sortedKeyInfos = fields.stream()
+                    .filter(field -> hasAnno(field, SortedKey.class))
+                    .map(this::createKey)
+                    .collect(Collectors.toList());
 
             // TODO: scan methods
+            List<IndexInfo> allKeys = new ArrayList<>();
+            allKeys.addAll(keyInfos);
+            allKeys.addAll(sortedKeyInfos);
 
-            if (keyInfos.size() > 1) {
-                throw new VelvetException("Multiple @Key annotations found");
-            } else if (keyInfos.size() == 1) {
-                return keyInfos.get(0);
+            if (allKeys.size() > 1) {
+                throw new VelvetException("Multiple Key annotations found");
+            } else if (allKeys.size() == 1) {
+                return allKeys.get(0);
             } else {
                 return null;
             }
+        }
+
+        private boolean hasAnno(Field field, Class<? extends Annotation> annoClass) {
+            Object anno = field.getAnnotation(annoClass);
+            return anno != null;
         }
 
         private IndexInfo createKey(Field field) {
