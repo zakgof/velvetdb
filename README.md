@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/zakgof/velvetdb.svg?branch=master)](https://travis-ci.org/zakgof/velvetdb)
-
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/velvetdb-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/velvetdb-core)
 
 # Overview
