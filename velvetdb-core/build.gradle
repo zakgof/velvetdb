@@ -1,100 +1,91 @@
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'signing'
+plugins {
+    id "java"
+    id 'maven-publish'
+    id 'jacoco'
+    id "io.freefair.lombok" version "6.4.2"
+    id 'org.sonarqube' version '3.4.0.2513'
+}
 
-compileJava.options.encoding = 'UTF-8'
-
-group = 'com.github.zakgof'
-archivesBaseName = 'velvetdb-core'
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
 
 dependencies {
-    implementation 'com.google.guava:guava:18.0'
-    implementation 'com.esotericsoftware:kryo:4.0.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
 
-    testImplementation 'junit:junit:4.13'
-    testImplementation 'org.apache.commons:commons-text:1.2'
-    testImplementation 'org.ow2.asm:asm:7.3.1'
-    testImplementation 'org.ow2.asm:asm-commons:7.3.1'
-    testImplementation 'org.objenesis:objenesis:2.6'
-}
-
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
-
-tasks.withType(Javadoc) {
-    options.encoding = 'UTF-8'
-}
-
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task testJar(type: Jar) {
-    classifier = 'tests'
-    from sourceSets.test.output
-}
-
-test {
-    exclude "**"
+    testRuntimeOnly 'org.junit.platform:junit-platform-suite-engine:1.10.0-M1'
+    testImplementation 'org.junit.platform:junit-platform-suite-api:1.10.0-M1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.0-M1'
+    testImplementation 'org.mockito:mockito-core:4.6.1'
+    testImplementation 'org.assertj:assertj-core:3.23.1'
 }
 
 artifacts {
-    archives javadocJar, sourcesJar, testJar
+    archives javadocJar, sourcesJar
 }
 
-signing {
-    sign configurations.archives
-}
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = archivesBaseName
+            groupId = 'com.github.zakgof'
+            version = version
+            from(components["java"])
+            pom {
+                name = 'velvetdb-core'
+                description = 'Java-centric NoSql database'
+                url = 'https://github.com/zakgof/velvetdb'
 
-uploadArchives {
-  repositories {
-    mavenDeployer {
-      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                scm {
+                    connection = 'scm:git:https://github.com/zakgof/velvetdb.git'
+                    developerConnection = 'scm:git:https://github.com/zakgof/velvetdb.git'
+                    url = 'https://github.com/zakgof/velvetdb/tree/master/velvetdb-core'
+                }
 
-      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-        authentication(userName: ossrhUsername, password: ossrhPassword)
-      }
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
 
-      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-        authentication(userName: ossrhUsername, password: ossrhPassword)
-      }
-
-      pom.project {
-        packaging 'jar'
-        artifactId 'velvetdb-core'
-        url 'https://github.com/zakgof/velvetdb'
-        
-        name 'velvetdb'
-        description 'General purpose graph database.'
-
-        scm {
-          connection 'scm:git:https://github.com/zakgof/velvetdb.git'
-          developerConnection 'scm:git:https://github.com/zakgof/velvetdb.git'
-          url 'https://github.com/zakgof/velvetdb/tree/master/velvetdb-core'
+                developers {
+                    developer {
+                        id = 'zakgof'
+                        name = 'Oleksandr Zakusylo'
+                        email = 'zakgof@gmail.com'
+                    }
+                }
+            }
         }
-
-        licenses {
-          license {
-            name 'The Apache License, Version 2.0'
-            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-          }
-        }
-
-        developers {
-          developer {
-            id 'zakgof'
-            name 'Oleksandr Zakusylo'
-            email 'zakgof@gmail.com'
-          }
-        }
-      }
     }
-  }
+    repositories {
+        maven {
+            url = 'https://oss.sonatype.org/content/repositories/snapshots'
+            credentials {
+                username = ossrhUsername
+                password = ossrhPassword
+            }
+        }
+        mavenLocal()
+    }
 }
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "zakgof_velvetdb-core"
+        property "sonar.organization", "zakgof"
+        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.login", project.hasProperty('sonarlogin') ? sonarlogin : null
+    }
+}
+
+tasks['sonarqube'].dependsOn test

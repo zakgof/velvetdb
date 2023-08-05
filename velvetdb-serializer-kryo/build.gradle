@@ -1,95 +1,93 @@
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'signing'
+plugins {
+    id "java"
+    id 'maven-publish'
+    id 'jacoco'
+    id "io.freefair.lombok" version "6.4.2"
+    id 'org.sonarqube' version '3.4.0.2513'
+}
 
-compileJava.options.encoding = 'UTF-8'
-
-group = 'com.github.zakgof'
 archivesBaseName = 'velvetdb-serializer-kryo'
 
 dependencies {
     implementation 'com.github.zakgof:velvetdb-core:' + version
-    implementation 'com.github.zakgof:tools:' + toolsVersion
-    implementation 'com.esotericsoftware:kryo:4.0.0'
+    implementation 'com.esotericsoftware:kryo:5.3.0'
 }
 
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
-
-tasks.withType(Javadoc) {
-    options.encoding = 'UTF-8'
-}
-
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task testJar(type: Jar) {
-    classifier = 'tests'
-    from sourceSets.test.output
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 test {
-    exclude "**"
+    finalizedBy jacocoTestReport
+    useJUnitPlatform()
 }
 
 artifacts {
-    archives javadocJar, sourcesJar, testJar
+    archives javadocJar, sourcesJar
 }
 
-signing {
-    sign configurations.archives
-}
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = archivesBaseName
+            groupId = 'com.github.zakgof'
+            version = version
+            from(components["java"])
+            pom {
+                name = 'velvetdb-serializer-kryo'
+                description = 'Java-centric NoSql database - Kryo serializer'
+                url = 'https://github.com/zakgof/velvetdb'
 
-uploadArchives {
-  repositories {
-    mavenDeployer {
-      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                scm {
+                    connection = 'scm:git:https://github.com/zakgof/velvetdb.git'
+                    developerConnection = 'scm:git:https://github.com/zakgof/velvetdb.git'
+                    url = 'https://github.com/zakgof/velvetdb/tree/master/velvetdb-serializer-kryo'
+                }
 
-      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-        authentication(userName: ossrhUsername, password: ossrhPassword)
-      }
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
 
-      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-        authentication(userName: ossrhUsername, password: ossrhPassword)
-      }
-
-      pom.project {
-        packaging 'jar'
-        artifactId 'velvetdb-serializer-kryo'
-        url 'https://github.com/zakgof/velvetdb'
-
-        name 'velvetdb-serializer-kryo'
-        description 'Kryo serializer plugin for velvetdb'
-
-        scm {
-          connection 'scm:git:https://github.com/zakgof/velvetdb.git'
-          developerConnection 'scm:git:https://github.com/zakgof/velvetdb.git'
-          url 'https://github.com/zakgof/velvetdb/tree/master/velvetdb-serializer-kryo'
+                developers {
+                    developer {
+                        id = 'zakgof'
+                        name = 'Oleksandr Zakusylo'
+                        email = 'zakgof@gmail.com'
+                    }
+                }
+            }
         }
-
-        licenses {
-          license {
-            name 'The Apache License, Version 2.0'
-            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-          }
-        }
-
-        developers {
-          developer {
-            id 'zakgof'
-            name 'Oleksandr Zakusylo'
-            email 'zakgof@gmail.com'
-          }
-        }
-      }
     }
-  }
+    repositories {
+        maven {
+            url = 'https://oss.sonatype.org/content/repositories/snapshots'
+            credentials {
+                username = ossrhUsername
+                password = ossrhPassword
+            }
+        }
+        mavenLocal()
+    }
 }
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "zakgof_" + archivesBaseName
+        property "sonar.organization", "zakgof"
+        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.login", project.hasProperty('sonarlogin') ? sonarlogin : null
+    }
+}
+
+tasks['sonarqube'].dependsOn test
+
