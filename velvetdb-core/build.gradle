@@ -1,5 +1,6 @@
 plugins {
     id "java"
+    id "signing"
     id 'maven-publish'
     id 'jacoco'
     id "io.freefair.lombok" version "6.4.2"
@@ -63,7 +64,7 @@ publishing {
     }
     repositories {
         maven {
-            url = 'https://oss.sonatype.org/content/repositories/snapshots'
+            url = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
             credentials {
                 username = ossrhUsername
                 password = ossrhPassword
@@ -71,6 +72,10 @@ publishing {
         }
         mavenLocal()
     }
+}
+
+signing {
+    sign(publishing.publications["mavenJava"])
 }
 
 jacocoTestReport {
