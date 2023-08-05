@@ -24,7 +24,7 @@ public class ProviderExtension implements BeforeEachCallback, AfterEachCallback 
             file.delete();
 
         velvetEnv = VelvetFactory.builder(provider, dir.toURI().toString())
-                .schemaMigrator("com.zakgof.velvet.entity", new TestSchemaMigrator())
+                .watchSchema("com.zakgof.velvet.entity")
                 .build();
 
         inject(context);

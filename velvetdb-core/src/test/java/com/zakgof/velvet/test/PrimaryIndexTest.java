@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -54,8 +55,7 @@ class PrimaryIndexTest {
                 .asKeyList()
                 .execute(velvetEnv);
 
-        assertKeyList("AX00|AX01|AX02|AX03|AX04|AX05|AX06|AX07|AX08|AX09", keys);
-    }
+        assertKeyList("AX00|AX01|AX02|AX03|AX04|AX05|AX06|AX07|AX08|AX09", keys);    }
 
     @ParameterizedTest
     @CsvSource({
@@ -348,6 +348,44 @@ class PrimaryIndexTest {
                 .execute(velvetEnv);
 
         assertKeyListEmpty(keys);
+    }
+
+    @Test
+    void traverseForward() {
+
+        List<String> keys = new ArrayList<>();
+        Person person = personEntity.index()
+                .query()
+                .first()
+                .execute(velvetEnv);
+
+        while (person !=null) {
+            keys.add(personEntity.keyOf(person));
+            person = personEntity.index()
+                    .query()
+                    .next(person)
+                    .execute(velvetEnv);
+        }
+        assertKeyList("AX00|AX01|AX02|AX03|AX04|AX05|AX06|AX07|AX08|AX09", keys);
+    }
+
+    @Test
+    void traverseBackward() {
+
+        List<String> keys = new ArrayList<>();
+        Person person = personEntity.index()
+                .query()
+                .last()
+                .execute(velvetEnv);
+
+        while (person !=null) {
+            keys.add(personEntity.keyOf(person));
+            person = personEntity.index()
+                    .query()
+                    .prev(person)
+                    .execute(velvetEnv);
+        }
+        assertKeyList("AX09|AX08|AX07|AX06|AX05|AX04|AX03|AX02|AX01|AX00", keys);
     }
 
 

@@ -47,12 +47,14 @@ public class KeyUtil {
         if (bi.getLength() == 0) {
             return null;
         }
-        if (clazz == Byte.class || clazz == byte.class) {
+        if (clazz == Byte.class) {
             return clazz.cast(ByteBinding.entryToByte(bi));
         } else if (clazz == Short.class) {
             return clazz.cast(ShortBinding.entryToShort(bi));
         } else if (clazz == Integer.class) {
             return clazz.cast(IntegerBinding.entryToInt(bi));
+        } else if (clazz == int.class) { // TODO others
+            return (K)(Integer)IntegerBinding.entryToInt(bi);
         } else if (clazz == Long.class) {
             return clazz.cast(LongBinding.entryToLong(bi));
         } else if (clazz == Float.class) {

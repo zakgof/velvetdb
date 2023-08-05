@@ -2,7 +2,6 @@ package com.zakgof.velvet.impl.history;
 
 import com.zakgof.velvet.IVelvetEnvironment;
 import com.zakgof.velvet.VelvetException;
-import com.zakgof.velvet.annotation.Key;
 import com.zakgof.velvet.annotation.SortedKey;
 import com.zakgof.velvet.entity.Entities;
 import com.zakgof.velvet.entity.ISortedEntityDef;
@@ -13,11 +12,14 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NavigableSet;
 
+@RequiredArgsConstructor
 public class VelvetClassHistory implements IClassHistory {
 
     private IVelvetEnvironment velvetEnvironment;
     private final Map<Class<?>, Integer> currentVersionCache = new HashMap<>();
+    private final NavigableSet<String> prefixes;
 
     public void setVelvet(IVelvetEnvironment velvetEnvironment) {
         this.velvetEnvironment = velvetEnvironment;
@@ -25,7 +27,17 @@ public class VelvetClassHistory implements IClassHistory {
 
     @Override
     public int currentVersion(Class<?> clazz) {
-        return currentVersionCache.computeIfAbsent(clazz, this::loadCurrentClassVersion);
+        if (isTracked(clazz)) {
+            return currentVersionCache.computeIfAbsent(clazz, this::loadCurrentClassVersion);
+        } else {
+            return 0;
+        }
+    }
+
+    private boolean isTracked(Class<?> clazz) {
+        String name = clazz.getName();
+        String floor = prefixes.floor(name);
+        return (floor != null && name.startsWith(floor));
     }
 
     private int loadCurrentClassVersion(Class<?> clazz) {
@@ -55,8 +67,6 @@ public class VelvetClassHistory implements IClassHistory {
         classRec.put()
                 .value(csr)
                 .execute(velvetEnvironment);
-
-        currentVersionCache.put(clazz, newVersion);
 
         return newVersion;
     }

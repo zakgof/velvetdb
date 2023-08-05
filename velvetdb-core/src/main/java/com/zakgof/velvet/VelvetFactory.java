@@ -3,17 +3,16 @@ package com.zakgof.velvet;
 import com.zakgof.velvet.impl.history.VelvetClassHistory;
 import com.zakgof.velvet.serializer.ISerializer;
 import com.zakgof.velvet.serializer.SerializerFactory;
-import com.zakgof.velvet.serializer.migrator.ISerializerSchemaMigrator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
-import java.util.Map;
+import java.util.NavigableSet;
 import java.util.ServiceLoader;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -47,7 +46,7 @@ public final class VelvetFactory {
     private static class VelvetEnvironmentBuilder implements IVelvetEnvironmentBuilder {
         private final String velvetProviderName;
         private final String velvetUrl;
-        private final Map<String, ISerializerSchemaMigrator> migrators = new TreeMap<>();
+        private final NavigableSet<String> watchSchema = new TreeSet<>();
         private String serializerProviderName;
 
         @Override
@@ -57,8 +56,8 @@ public final class VelvetFactory {
         }
 
         @Override
-        public IVelvetEnvironmentBuilder schemaMigrator(String prefix, ISerializerSchemaMigrator schemaMigrator) {
-            migrators.put(prefix, schemaMigrator);
+        public IVelvetEnvironmentBuilder watchSchema(String prefix) {
+            watchSchema.add(prefix);
             return this;
         }
 
@@ -70,11 +69,11 @@ public final class VelvetFactory {
                     .findFirst()
                     .orElseThrow(() -> new VelvetException("Velvetdb provider not registered: " + velvetProviderName));
 
-            VelvetClassHistory history = new VelvetClassHistory();
+            VelvetClassHistory history = new VelvetClassHistory(watchSchema);
 
             Supplier<ISerializer> serializerProvider = SerializerFactory.builder()
                     .provider(serializerProviderName)
-                    .schemaMigrators(migrators)
+                   // .schemaMigrators(migrators) TODO
                     .classHistory(history)
                     .build();
 

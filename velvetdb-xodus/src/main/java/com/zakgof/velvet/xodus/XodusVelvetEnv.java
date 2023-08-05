@@ -220,12 +220,13 @@ public class XodusVelvetEnv implements IVelvetEnvironment {
                             throw new VelvetException("No value exists for index key " + bound.key());
                         }
                         index = indexMapper.apply(value);
+
+                        bis[1] = primary ?
+                                serialize(entityDef.valueClass(), value, false) :
+                                serialize(entityDef.keyClass(), bound.key(), false);
                     }
                     if (index != null) {
                         bis[0] = serialize(indexClass, index, true);
-                    }
-                    if (bound.key() != null) {
-                        bis[1] = serialize(entityDef.keyClass(), bound.key(), false);
                     }
                 }
                 return bis;
