@@ -160,6 +160,7 @@ public final class Entities {
         }
 
         private IndexInfo createIndex(Field field, Index anno) {
+            field.setAccessible(true);
             String name = anno.name().isEmpty() ? field.getName() : anno.name();
             return new IndexInfo(name, field.getType(), v -> fieldGet(field, v));
         }
