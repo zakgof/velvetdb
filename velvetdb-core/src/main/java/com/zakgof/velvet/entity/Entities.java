@@ -147,7 +147,7 @@ public final class Entities {
 
         private IndexInfo createKey(Method method) {
             method.setAccessible(true);
-            return new IndexInfo(null, method.getReturnType(), v -> fieldGet(field, v));
+            return new IndexInfo(null, method.getReturnType(), v -> methodGet(method, v));
         }
 
         private List<IndexInfo> indexes(List<Field> fields, List<Method> methods) {
