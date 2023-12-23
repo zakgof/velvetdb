@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -93,19 +94,31 @@ public final class Entities {
         }
 
         private IndexInfo<?, V> key(List<Field> fields, List<Method> methods) {
-            List<IndexInfo> keyInfos = fields.stream()
+            List<IndexInfo> fieldKeyInfos = fields.stream()
                     .filter(field -> hasAnno(field, Key.class))
                     .map(this::createKey)
                     .collect(Collectors.toList());
-            List<IndexInfo> sortedKeyInfos = fields.stream()
+            List<IndexInfo> fieldSortedKeyInfos = fields.stream()
                     .filter(field -> hasAnno(field, SortedKey.class))
+                    .map(this::createKey)
+                    .collect(Collectors.toList());
+            List<IndexInfo> methodKeyInfos = methods.stream()
+                    .filter(method -> hasAnno(method, Key.class))
+                    .peek(this::ensureNoArgs)
+                    .map(this::createKey)
+                    .collect(Collectors.toList());
+            List<IndexInfo> methodSortedKeyInfos = methods.stream()
+                    .filter(method -> hasAnno(method, SortedKey.class))
+                    .peek(this::ensureNoArgs)
                     .map(this::createKey)
                     .collect(Collectors.toList());
 
             // TODO: scan methods
             List<IndexInfo> allKeys = new ArrayList<>();
-            allKeys.addAll(keyInfos);
-            allKeys.addAll(sortedKeyInfos);
+            allKeys.addAll(fieldKeyInfos);
+            allKeys.addAll(fieldSortedKeyInfos);
+            allKeys.addAll(methodKeyInfos);
+            allKeys.addAll(methodSortedKeyInfos);
 
             if (allKeys.size() > 1) {
                 throw new VelvetException("Multiple Key annotations found");
@@ -116,14 +129,25 @@ public final class Entities {
             }
         }
 
-        private boolean hasAnno(Field field, Class<? extends Annotation> annoClass) {
-            Object anno = field.getAnnotation(annoClass);
+        private void ensureNoArgs(Method method) {
+            if (method.getParameterCount() > 0) {
+                throw new VelvetException("Only no-arg methods can have @Key or @SortedKey annotations");
+            }
+        }
+
+        private boolean hasAnno(AnnotatedElement annotatedElement, Class<? extends Annotation> annoClass) {
+            Object anno = annotatedElement.getAnnotation(annoClass);
             return anno != null;
         }
 
         private IndexInfo createKey(Field field) {
             field.setAccessible(true);
             return new IndexInfo(null, field.getType(), v -> fieldGet(field, v));
+        }
+
+        private IndexInfo createKey(Method method) {
+            method.setAccessible(true);
+            return new IndexInfo(null, method.getReturnType(), v -> fieldGet(field, v));
         }
 
         private List<IndexInfo> indexes(List<Field> fields, List<Method> methods) {
@@ -143,6 +167,11 @@ public final class Entities {
         @SneakyThrows
         private Object fieldGet(Field field, Object value) {
             return field.get(value);
+        }
+
+        @SneakyThrows
+        private Object methodGet(Method method, Object value) {
+            return method.invoke(value);
         }
 
         private <A extends Annotation> Stream<A> anno(Field field, Class<A> annoClass) {
