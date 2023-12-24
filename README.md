@@ -32,17 +32,17 @@ Select the artifact matching your choice of backend: velvetdb-xodus, velvetdb-ma
 <dependency>
     <groupId>com.github.zakgof</groupId>
     <artifactId>velvetdb-xodus</artifactId>
-    <version>0.10.2</version>
+    <version>0.11.2</version>
 </dependency>
 <dependency>
     <groupId>com.github.zakgof</groupId>
     <artifactId>velvetdb-core</artifactId>
-    <version>0.10.2</version>
+    <version>0.11.2</version>
 </dependency>
 <dependency>
     <groupId>com.github.zakgof</groupId>
     <artifactId>velvetdb-serializer-kryo</artifactId>
-    <version>0.10.2</version>
+    <version>0.11.2</version>
 </dependency>
 ```
 or, using Gradle:

@@ -5,7 +5,7 @@ plugins {
 allprojects {
 
     compileJava.options.encoding = 'UTF-8'
-    version = '0.11.2-SNAPSHOT'
+    version = '0.11.3-SNAPSHOT'
 
     configurations.all {
         resolutionStrategy {
