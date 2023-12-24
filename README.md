@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/zakgof/velvetdb.svg?branch=master)](https://travis-ci.org/zakgof/velvetdb)
-
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/velvetdb-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/velvetdb-core)
 
 # Overview
@@ -34,24 +32,24 @@ Select the artifact matching your choice of backend: velvetdb-xodus, velvetdb-ma
 <dependency>
     <groupId>com.github.zakgof</groupId>
     <artifactId>velvetdb-xodus</artifactId>
-    <version>0.10.1</version>
+    <version>0.11.2</version>
 </dependency>
 <dependency>
     <groupId>com.github.zakgof</groupId>
     <artifactId>velvetdb-core</artifactId>
-    <version>0.10.1</version>
+    <version>0.11.2</version>
 </dependency>
 <dependency>
     <groupId>com.github.zakgof</groupId>
     <artifactId>velvetdb-serializer-kryo</artifactId>
-    <version>0.10.1</version>
+    <version>0.11.2</version>
 </dependency>
 ```
 or, using Gradle:
 ```groovy
-implementation 'com.github.zakgof:velvetdb-xodus:0.10.1'
-implementation 'com.github.zakgof:velvetdb-core:0.10.1'
-implementation 'com.github.zakgof:velvetdb-serializer-kryo:0.10.1'
+implementation 'com.github.zakgof:velvetdb-xodus:0.10.2'
+implementation 'com.github.zakgof:velvetdb-core:0.10.2'
+implementation 'com.github.zakgof:velvetdb-serializer-kryo:0.10.2'
 ```
 
 ## Initializing a velvetdb environment

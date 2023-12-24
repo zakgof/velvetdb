@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -72,10 +73,10 @@ public final class Entities {
             this.kind = kindOf(clazz);
 
             List<Field> fields = getAllFields(clazz);
-            List<Method> methods = Arrays.asList(clazz.getMethods()); // TODO ?
+            List<Method> methods = Arrays.asList(clazz.getDeclaredMethods());
 
             this.key = key(fields, methods);
-            this.indexes = (List)indexes(fields, methods);
+            this.indexes = (List) indexes(fields, methods);
         }
 
         static List<Field> getAllFields(Class<?> type) {
@@ -93,19 +94,31 @@ public final class Entities {
         }
 
         private IndexInfo<?, V> key(List<Field> fields, List<Method> methods) {
-            List<IndexInfo> keyInfos = fields.stream()
+            List<IndexInfo> fieldKeyInfos = fields.stream()
                     .filter(field -> hasAnno(field, Key.class))
                     .map(this::createKey)
                     .collect(Collectors.toList());
-            List<IndexInfo> sortedKeyInfos = fields.stream()
+            List<IndexInfo> fieldSortedKeyInfos = fields.stream()
                     .filter(field -> hasAnno(field, SortedKey.class))
+                    .map(this::createKey)
+                    .collect(Collectors.toList());
+            List<IndexInfo> methodKeyInfos = methods.stream()
+                    .filter(method -> hasAnno(method, Key.class))
+                    .peek(this::ensureNoArgs)
+                    .map(this::createKey)
+                    .collect(Collectors.toList());
+            List<IndexInfo> methodSortedKeyInfos = methods.stream()
+                    .filter(method -> hasAnno(method, SortedKey.class))
+                    .peek(this::ensureNoArgs)
                     .map(this::createKey)
                     .collect(Collectors.toList());
 
             // TODO: scan methods
             List<IndexInfo> allKeys = new ArrayList<>();
-            allKeys.addAll(keyInfos);
-            allKeys.addAll(sortedKeyInfos);
+            allKeys.addAll(fieldKeyInfos);
+            allKeys.addAll(fieldSortedKeyInfos);
+            allKeys.addAll(methodKeyInfos);
+            allKeys.addAll(methodSortedKeyInfos);
 
             if (allKeys.size() > 1) {
                 throw new VelvetException("Multiple Key annotations found");
@@ -116,8 +129,14 @@ public final class Entities {
             }
         }
 
-        private boolean hasAnno(Field field, Class<? extends Annotation> annoClass) {
-            Object anno = field.getAnnotation(annoClass);
+        private void ensureNoArgs(Method method) {
+            if (method.getParameterCount() > 0) {
+                throw new VelvetException("Only no-arg methods can have @Key, @SortedKey or @Index annotations");
+            }
+        }
+
+        private boolean hasAnno(AnnotatedElement annotatedElement, Class<? extends Annotation> annoClass) {
+            Object anno = annotatedElement.getAnnotation(annoClass);
             return anno != null;
         }
 
@@ -126,18 +145,35 @@ public final class Entities {
             return new IndexInfo(null, field.getType(), v -> fieldGet(field, v));
         }
 
-        private List<IndexInfo> indexes(List<Field> fields, List<Method> methods) {
-            return fields.stream()
-                    .flatMap(field -> anno(field, Index.class)
-                            .map(anno -> createIndex(field, anno))
-                    ).collect(Collectors.toList());
+        private IndexInfo createKey(Method method) {
+            method.setAccessible(true);
+            return new IndexInfo(null, method.getReturnType(), v -> methodGet(method, v));
+        }
 
-            // TODO scan methods
+        private List<IndexInfo> indexes(List<Field> fields, List<Method> methods) {
+            return Stream.concat(
+                    fields.stream()
+                            .flatMap(field -> anno(field, Index.class)
+                                    .map(anno -> createIndex(field, anno))
+                            ),
+                    methods.stream()
+                            .flatMap(method -> anno(method, Index.class)
+                                    .peek(anno -> ensureNoArgs(method))
+                                    .map(anno -> createIndex(method, anno))
+                            )
+            ).collect(Collectors.toList());
         }
 
         private IndexInfo createIndex(Field field, Index anno) {
+            field.setAccessible(true);
             String name = anno.name().isEmpty() ? field.getName() : anno.name();
             return new IndexInfo(name, field.getType(), v -> fieldGet(field, v));
+        }
+
+        private IndexInfo createIndex(Method method, Index anno) {
+            method.setAccessible(true);
+            String name = anno.name().isEmpty() ? method.getName() : anno.name();
+            return new IndexInfo(name, method.getReturnType(), v -> methodGet(method, v));
         }
 
         @SneakyThrows
@@ -145,8 +181,13 @@ public final class Entities {
             return field.get(value);
         }
 
-        private <A extends Annotation> Stream<A> anno(Field field, Class<A> annoClass) {
-            A anno = field.getAnnotation(annoClass);
+        @SneakyThrows
+        private Object methodGet(Method method, Object value) {
+            return method.invoke(value);
+        }
+
+        private <A extends Annotation> Stream<A> anno(AnnotatedElement element, Class<A> annoClass) {
+            A anno = element.getAnnotation(annoClass);
             return anno == null ? Stream.empty() : Stream.of(anno);
         }
 

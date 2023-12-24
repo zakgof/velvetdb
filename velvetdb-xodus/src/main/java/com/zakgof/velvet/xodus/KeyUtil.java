@@ -43,6 +43,7 @@ public class KeyUtil {
 
     }
 
+    @SuppressWarnings("unchecked")
     public static <K> K deserialize(Class<K> clazz, ByteIterable bi) {
         if (bi.getLength() == 0) {
             return null;
@@ -53,14 +54,24 @@ public class KeyUtil {
             return clazz.cast(ShortBinding.entryToShort(bi));
         } else if (clazz == Integer.class) {
             return clazz.cast(IntegerBinding.entryToInt(bi));
-        } else if (clazz == int.class) { // TODO others
-            return (K)(Integer)IntegerBinding.entryToInt(bi);
         } else if (clazz == Long.class) {
             return clazz.cast(LongBinding.entryToLong(bi));
         } else if (clazz == Float.class) {
             return clazz.cast(FloatBinding.entryToFloat(bi));
         } else if (clazz == Double.class) {
             return clazz.cast(DoubleBinding.entryToDouble(bi));
+        } else if (clazz == byte.class) {
+            return (K)(Byte)ByteBinding.entryToByte(bi);
+        } else if (clazz == short.class) {
+            return (K)(Short)ShortBinding.entryToShort(bi);
+        } else if (clazz == int.class) {
+            return (K)(Integer)IntegerBinding.entryToInt(bi);
+        } else if (clazz == long.class) {
+            return (K)(Long)LongBinding.entryToLong(bi);
+        } else if (clazz == float.class) {
+            return (K)(Float)FloatBinding.entryToFloat(bi);
+        } else if (clazz == double.class) {
+            return (K)(Double)DoubleBinding.entryToDouble(bi);
         } else if (clazz == String.class) {
             return clazz.cast(StringBinding.entryToString(bi));
         } else if (clazz == Date.class) {
