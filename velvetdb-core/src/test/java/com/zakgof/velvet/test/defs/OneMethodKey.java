@@ -4,7 +4,12 @@ import com.zakgof.velvet.annotation.Key;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class OneKey {
+public class OneMethodKey {
+
+    private final String value;
+
     @Key
-    private final String key;
+    private String key() {
+        return value;
+    }
 }

@@ -2,7 +2,7 @@ package com.zakgof.velvet.test.defs;
 
 import com.zakgof.velvet.annotation.Key;
 
-public class TwoKeys {
+public class TwoFieldKeys {
     @Key
     private String key1;
 

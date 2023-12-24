@@ -73,10 +73,10 @@ public final class Entities {
             this.kind = kindOf(clazz);
 
             List<Field> fields = getAllFields(clazz);
-            List<Method> methods = Arrays.asList(clazz.getMethods()); // TODO ?
+            List<Method> methods = Arrays.asList(clazz.getDeclaredMethods());
 
             this.key = key(fields, methods);
-            this.indexes = (List)indexes(fields, methods);
+            this.indexes = (List) indexes(fields, methods);
         }
 
         static List<Field> getAllFields(Class<?> type) {
@@ -131,7 +131,7 @@ public final class Entities {
 
         private void ensureNoArgs(Method method) {
             if (method.getParameterCount() > 0) {
-                throw new VelvetException("Only no-arg methods can have @Key or @SortedKey annotations");
+                throw new VelvetException("Only no-arg methods can have @Key, @SortedKey or @Index annotations");
             }
         }
 
@@ -151,18 +151,29 @@ public final class Entities {
         }
 
         private List<IndexInfo> indexes(List<Field> fields, List<Method> methods) {
-            return fields.stream()
-                    .flatMap(field -> anno(field, Index.class)
-                            .map(anno -> createIndex(field, anno))
-                    ).collect(Collectors.toList());
-
-            // TODO scan methods
+            return Stream.concat(
+                    fields.stream()
+                            .flatMap(field -> anno(field, Index.class)
+                                    .map(anno -> createIndex(field, anno))
+                            ),
+                    methods.stream()
+                            .flatMap(method -> anno(method, Index.class)
+                                    .peek(anno -> ensureNoArgs(method))
+                                    .map(anno -> createIndex(method, anno))
+                            )
+            ).collect(Collectors.toList());
         }
 
         private IndexInfo createIndex(Field field, Index anno) {
             field.setAccessible(true);
             String name = anno.name().isEmpty() ? field.getName() : anno.name();
             return new IndexInfo(name, field.getType(), v -> fieldGet(field, v));
+        }
+
+        private IndexInfo createIndex(Method method, Index anno) {
+            method.setAccessible(true);
+            String name = anno.name().isEmpty() ? method.getName() : anno.name();
+            return new IndexInfo(name, method.getReturnType(), v -> methodGet(method, v));
         }
 
         @SneakyThrows
@@ -175,8 +186,8 @@ public final class Entities {
             return method.invoke(value);
         }
 
-        private <A extends Annotation> Stream<A> anno(Field field, Class<A> annoClass) {
-            A anno = field.getAnnotation(annoClass);
+        private <A extends Annotation> Stream<A> anno(AnnotatedElement element, Class<A> annoClass) {
+            A anno = element.getAnnotation(annoClass);
             return anno == null ? Stream.empty() : Stream.of(anno);
         }
 
